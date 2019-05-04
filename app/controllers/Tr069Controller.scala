@@ -7,6 +7,7 @@ import dbi.DBIHolder
 import javax.inject._
 import play.api.Logging
 import play.api.mvc._
+import services.UnitDetailsService
 import tr069.Properties
 import tr069.base.BaseCache
 import tr069.http.HTTPRequestResponseData
@@ -20,7 +21,8 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
                                 properties: Properties,
                                 baseCache: BaseCache,
                                 config: Config,
-                                dbiHolder: DBIHolder) extends AbstractController(cc) with Logging {
+                                dbiHolder: DBIHolder,
+                                unitDetails: UnitDetailsService) extends AbstractController(cc) with Logging {
 
   def provision: Action[AnyContent] = Action.async { req =>
     val methodStr = config.getString("auth.method").toLowerCase
@@ -39,7 +41,7 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
           for {
             result <- Authenticator.authenticate(
               context,
-              (u: String) => Future.successful(u),
+              (u: String) => Future.successful(unitDetails.loadUserByUsername(u).pass),
               method
             )
           } yield {
