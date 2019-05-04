@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.util;
+package dbi.util;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

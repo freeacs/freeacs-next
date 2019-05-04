@@ -1,7 +1,7 @@
 package tr069.base;
 
-import com.github.freeacs.dbi.JobParameter;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.JobParameter;
+import tr069.xml.ParameterValueStruct;
 
 import java.util.Map;
 
@@ -10,25 +10,25 @@ public interface SessionDataI {
 
   void setAcsParameters(ACSParameters acsParameters);
 
-  com.github.freeacs.dbi.Unittype getUnittype();
+  dbi.Unittype getUnittype();
 
-  void setUnittype(com.github.freeacs.dbi.Unittype unittype);
+  void setUnittype(dbi.Unittype unittype);
 
-  com.github.freeacs.dbi.Profile getProfile();
+  dbi.Profile getProfile();
 
-  void setProfile(com.github.freeacs.dbi.Profile profile);
+  void setProfile(dbi.Profile profile);
 
-  com.github.freeacs.dbi.Unit getUnit();
+  dbi.Unit getUnit();
 
-  void setUnit(com.github.freeacs.dbi.Unit unit);
+  void setUnit(dbi.Unit unit);
 
   String getUnitId();
 
   void setUnitId(String unitId);
 
-  com.github.freeacs.dbi.Job getJob();
+  dbi.Job getJob();
 
-  void setJob(com.github.freeacs.dbi.Job job);
+  void setJob(dbi.Job job);
 
   Map<String, JobParameter> getJobParams();
 
@@ -57,7 +57,7 @@ public interface SessionDataI {
 
   String getSerialNumber();
 
-  com.github.freeacs.dbi.util.ProvisioningMessage getProvisioningMessage();
+  dbi.util.ProvisioningMessage getProvisioningMessage();
 
   Long getStartupTmsForSession();
 }

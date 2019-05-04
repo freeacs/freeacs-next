@@ -2,16 +2,16 @@ package tr069.methods.decision.GetParameterValues;
 
 import com.github.freeacs.common.util.Cache;
 import com.github.freeacs.common.util.CacheValue;
-import com.github.freeacs.dbi.*;
-import com.github.freeacs.tr069.CPEParameters;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.base.DBIActions;
-import com.github.freeacs.tr069.base.UnitJob;
-import com.github.freeacs.tr069.exception.TR069DatabaseException;
-import com.github.freeacs.tr069.exception.TR069Exception;
-import com.github.freeacs.tr069.exception.TR069ExceptionShortMessage;
-import com.github.freeacs.tr069.xml.ParameterList;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.*;
+import tr069.CPEParameters;
+import tr069.SessionData;
+import tr069.base.DBIActions;
+import tr069.base.UnitJob;
+import tr069.exception.TR069DatabaseException;
+import tr069.exception.TR069Exception;
+import tr069.exception.TR069ExceptionShortMessage;
+import tr069.xml.ParameterList;
+import tr069.xml.ParameterValueStruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -34,7 +34,7 @@ public class ShellJobLogic {
      */
     private static Cache monitorCache = new Cache();
 
-    public static void execute(SessionData sessionData, com.github.freeacs.dbi.DBI dbi, com.github.freeacs.dbi.Job job, UnitJob uj, boolean discovery, com.github.freeacs.dbi.ScriptExecutions execs)
+    public static void execute(SessionData sessionData, dbi.DBI dbi, dbi.Job job, UnitJob uj, boolean discovery, dbi.ScriptExecutions execs)
             throws TR069Exception {
         String unitId = sessionData.getUnitId();
         CacheValue cv = monitorCache.get(unitId);
@@ -61,7 +61,7 @@ public class ShellJobLogic {
      * Wait for the script to be executed. If shell daemon returns error - should result in Job
      * verification fail (not sure how)
      */
-    private static void executeShellScript(SessionData sessionData, com.github.freeacs.dbi.Job job, UnitJob uj, boolean discovery, com.github.freeacs.dbi.ScriptExecutions execs)
+    private static void executeShellScript(SessionData sessionData, dbi.Job job, UnitJob uj, boolean discovery, dbi.ScriptExecutions execs)
             throws TR069Exception {
         String scriptArgs =
                 "\"-uut:"
@@ -87,17 +87,17 @@ public class ShellJobLogic {
                 Thread.sleep(timeWait);
                 timeWaited += timeWait;
                 timeWaitFactor += 2;
-                com.github.freeacs.dbi.ScriptExecution se = execs.getExecution(sessionData.getUnittype(), requestId);
+                dbi.ScriptExecution se = execs.getExecution(sessionData.getUnittype(), requestId);
                 if (se.getExitStatus() != null) {
                     if (se.getExitStatus()) { // ERROR OCCURRED
                         log.error(se.getErrorMessage());
-                        uj.stop(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED, discovery);
-                    } else uj.stop(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK, discovery);
+                        uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, discovery);
+                    } else uj.stop(dbi.UnitJobStatus.COMPLETED_OK, discovery);
                     break;
                 }
                 if (timeWaited > 30000) {
                     log.error("The execution of the shell script did not complete within 30 sec");
-                    uj.stop(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED, discovery);
+                    uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, discovery);
                     break;
                 }
             } catch (Throwable t) {
@@ -113,9 +113,9 @@ public class ShellJobLogic {
      * Read unit parameters from database, to see if any changes have occurred (during the shell
      * script execution). If ReadWrite parameters differ from CPE, then send them to the CPE.
      */
-    private static void toCPE(SessionData sessionData, com.github.freeacs.dbi.DBI dbi) throws TR069DatabaseException {
-        com.github.freeacs.dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
-        com.github.freeacs.dbi.Unit unit;
+    private static void toCPE(SessionData sessionData, dbi.DBI dbi) throws TR069DatabaseException {
+        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        dbi.Unit unit;
         try {
             unit = dbi.getACSUnit().getUnitById(sessionData.getUnitId());
         } catch (SQLException e) {
@@ -125,9 +125,9 @@ public class ShellJobLogic {
         for (int i = 0; i < sessionData.getValuesFromCPE().size(); i++) {
             ParameterValueStruct pvsCPE = sessionData.getValuesFromCPE().get(i);
             if (pvsCPE == null || pvsCPE.getValue() == null || pvsCPE.getName() == null) continue;
-            com.github.freeacs.dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
+            dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
             if (utp == null || !utp.getFlag().isReadWrite()) continue;
-            com.github.freeacs.dbi.UnitParameter up = unit.getUnitParameters().get(utp.getName());
+            dbi.UnitParameter up = unit.getUnitParameters().get(utp.getName());
             if (up == null || up.getValue() == null) continue;
             if (!up.getValue().equals(pvsCPE.getValue())) {
                 if (pvsCPE.getType() != null) {
@@ -145,14 +145,14 @@ public class ShellJobLogic {
      * In order for the shell script to run with the correct parameters, we must read them from the
      * device and write it to the database, before the script starts.
      */
-    private static void importReadOnlyParameters(SessionData sessionData, com.github.freeacs.dbi.DBI dbi)
+    private static void importReadOnlyParameters(SessionData sessionData, dbi.DBI dbi)
             throws TR069DatabaseException {
-        List<com.github.freeacs.dbi.UnitParameter> unitParameters = new ArrayList<>();
-        com.github.freeacs.dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        List<dbi.UnitParameter> unitParameters = new ArrayList<>();
+        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
         for (int i = 0; i < sessionData.getValuesFromCPE().size(); i++) {
             ParameterValueStruct pvsCPE = sessionData.getValuesFromCPE().get(i);
             if (pvsCPE == null || pvsCPE.getValue() == null || pvsCPE.getName() == null) continue;
-            com.github.freeacs.dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
+            dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
             if (utp == null || !utp.getFlag().isReadOnly()) continue;
             ParameterValueStruct pvsDB = sessionData.getFromDB().get(pvsCPE.getName());
             /* Make sure that all AlwaysRead-params and all populated Read-params are written to DB here. This
@@ -160,12 +160,12 @@ public class ShellJobLogic {
              */
             if (utp.getFlag().isAlwaysRead())
                 unitParameters.add(
-                        new com.github.freeacs.dbi.UnitParameter(
+                        new dbi.UnitParameter(
                                 utp, sessionData.getUnitId(), pvsCPE.getValue(), sessionData.getProfile()));
                 //				toDB.add(pvsCPE);
             else if (pvsDB != null && pvsDB.getValue() != null)
                 unitParameters.add(
-                        new com.github.freeacs.dbi.UnitParameter(
+                        new dbi.UnitParameter(
                                 utp, sessionData.getUnitId(), pvsCPE.getValue(), sessionData.getProfile()));
             //				toDB.add(pvsCPE);
         }
@@ -178,7 +178,7 @@ public class ShellJobLogic {
         }
     }
 
-    private static void prepareSPV(SessionData sessionData, com.github.freeacs.dbi.DBI dbi) throws TR069DatabaseException {
+    private static void prepareSPV(SessionData sessionData, dbi.DBI dbi) throws TR069DatabaseException {
         toCPE(sessionData, dbi);
         List<ParameterValueStruct> toDB = new ArrayList<>();
         sessionData.setToDB(toDB);
@@ -192,9 +192,9 @@ public class ShellJobLogic {
         log.debug("-ACS->ACS      " + PII + " CPE[" + nextPII + "] ACS[" + nextPII + "] Decided by ACS");
         sessionData
                 .getToDB()
-                .add(new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.PERIODIC_INTERVAL, "" + nextPII));
+                .add(new ParameterValueStruct(dbi.util.SystemParameters.PERIODIC_INTERVAL, "" + nextPII));
         log.debug("-ACS->ACS      "
-                        + com.github.freeacs.dbi.util.SystemParameters.PERIODIC_INTERVAL
+                        + dbi.util.SystemParameters.PERIODIC_INTERVAL
                         + " CPE["
                         + nextPII
                         + "] ACS["

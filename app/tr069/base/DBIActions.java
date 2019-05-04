@@ -1,12 +1,12 @@
 package tr069.base;
 
-import com.github.freeacs.dbi.UnitParameter;
-import com.github.freeacs.dbi.UnittypeParameter;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.exception.TR069DatabaseException;
-import com.github.freeacs.tr069.exception.TR069Exception;
-import com.github.freeacs.tr069.exception.TR069ExceptionShortMessage;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.UnitParameter;
+import dbi.UnittypeParameter;
+import tr069.SessionData;
+import tr069.exception.TR069DatabaseException;
+import tr069.exception.TR069Exception;
+import tr069.exception.TR069ExceptionShortMessage;
+import tr069.xml.ParameterValueStruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -20,11 +20,11 @@ import java.util.*;
 @Slf4j
 public abstract class DBIActions {
 
-    static void startUnitJob(String unitId, Integer jobId, com.github.freeacs.dbi.DBI dbi) throws SQLException {
+    static void startUnitJob(String unitId, Integer jobId, dbi.DBI dbi) throws SQLException {
         String action = "startUnitJob";
         try {
-            com.github.freeacs.dbi.UnitJobs unitJobs = new com.github.freeacs.dbi.UnitJobs(dbi.getDataSource());
-            com.github.freeacs.dbi.UnitJob uj = new com.github.freeacs.dbi.UnitJob(unitId, jobId);
+            dbi.UnitJobs unitJobs = new dbi.UnitJobs(dbi.getDataSource());
+            dbi.UnitJob uj = new dbi.UnitJob(unitId, jobId);
             uj.setStartTimestamp(new Date());
             boolean updated = unitJobs.start(uj);
             if (updated) {
@@ -38,12 +38,12 @@ public abstract class DBIActions {
         }
     }
 
-    static void stopUnitJob(String unitId, Integer jobId, String unitJobStatus, com.github.freeacs.dbi.DBI dbi)
+    static void stopUnitJob(String unitId, Integer jobId, String unitJobStatus, dbi.DBI dbi)
             throws SQLException {
         String action = "stopUnitJob";
         try {
-            com.github.freeacs.dbi.UnitJobs unitJobs = new com.github.freeacs.dbi.UnitJobs(dbi.getDataSource());
-            com.github.freeacs.dbi.UnitJob uj = new com.github.freeacs.dbi.UnitJob(unitId, jobId);
+            dbi.UnitJobs unitJobs = new dbi.UnitJobs(dbi.getDataSource());
+            dbi.UnitJob uj = new dbi.UnitJob(unitId, jobId);
             uj.setEndTimestamp(new Date());
             uj.setStatus(unitJobStatus);
             boolean stopped = unitJobs.stop(uj);
@@ -57,17 +57,17 @@ public abstract class DBIActions {
         }
     }
 
-    public static void writeUnittypeProfileUnit(SessionData sessionData, String unittypeName, String unitId, com.github.freeacs.dbi.DBI dbi)
+    public static void writeUnittypeProfileUnit(SessionData sessionData, String unittypeName, String unitId, dbi.DBI dbi)
             throws TR069Exception {
         // If no product class is specified in the inform:
         if (unittypeName == null || "".equals(unittypeName.trim())) {
             unittypeName = getUnittypeName(unitId);
         }
         try {
-            com.github.freeacs.dbi.Unittype ut = dbi.getAcs().getUnittype(unittypeName);
+            dbi.Unittype ut = dbi.getAcs().getUnittype(unittypeName);
             if (ut == null) {
                 sessionData.setUnittypeCreated(false);
-                ut = new com.github.freeacs.dbi.Unittype(unittypeName, unittypeName, "Auto-generated", com.github.freeacs.dbi.Unittype.ProvisioningProtocol.TR069);
+                ut = new dbi.Unittype(unittypeName, unittypeName, "Auto-generated", dbi.Unittype.ProvisioningProtocol.TR069);
                 dbi.getAcs().getUnittypes().addOrChangeUnittype(ut, dbi.getAcs());
                 log.debug("Have created a unittype with the name " + unittypeName + " in discovery mode");
             } else {
@@ -75,9 +75,9 @@ public abstract class DBIActions {
                 log.debug("Unittype " + unittypeName + " already exists, no need to create it in discovery mode");
             }
 
-            com.github.freeacs.dbi.Profile pr = ut.getProfiles().getByName("Default");
+            dbi.Profile pr = ut.getProfiles().getByName("Default");
             if (pr == null) {
-                pr = new com.github.freeacs.dbi.Profile("Default", ut);
+                pr = new dbi.Profile("Default", ut);
                 ut.getProfiles().addOrChangeProfile(pr, dbi.getAcs());
                 log.debug("Have created a profile with the name " + pr.getName() + " in discovery mode");
             }
@@ -85,16 +85,16 @@ public abstract class DBIActions {
             sessionData.setUnittype(ut);
             sessionData.setProfile(pr);
 
-            com.github.freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
+            dbi.ACSUnit acsUnit = dbi.getACSUnit();
             List<String> unitIds = new ArrayList<>();
             unitIds.add(unitId);
             acsUnit.addUnits(unitIds, pr);
             List<UnitParameter> unitParameters = new ArrayList<>();
-            com.github.freeacs.dbi.UnittypeParameter secretUtp = ut.getUnittypeParameters().getByName(com.github.freeacs.dbi.util.SystemParameters.SECRET);
-            com.github.freeacs.dbi.UnitParameter up = new com.github.freeacs.dbi.UnitParameter(secretUtp, unitId, sessionData.getSecret(), pr);
+            dbi.UnittypeParameter secretUtp = ut.getUnittypeParameters().getByName(dbi.util.SystemParameters.SECRET);
+            dbi.UnitParameter up = new dbi.UnitParameter(secretUtp, unitId, sessionData.getSecret(), pr);
             unitParameters.add(up);
             acsUnit.addOrChangeUnitParameters(unitParameters, pr);
-            com.github.freeacs.dbi.Unit unit = readUnit(sessionData.getUnitId(), dbi);
+            dbi.Unit unit = readUnit(sessionData.getUnitId(), dbi);
             sessionData.setUnit(unit);
             log.debug("Have created a unit:" + unitId + " with the obtained secret");
         } catch (Throwable t) {
@@ -107,16 +107,16 @@ public abstract class DBIActions {
         }
     }
 
-    public static void writeUnitSessionParams(SessionData sessionData, com.github.freeacs.dbi.DBI dbi) throws TR069DatabaseException {
+    public static void writeUnitSessionParams(SessionData sessionData, dbi.DBI dbi) throws TR069DatabaseException {
         try {
             List<ParameterValueStruct> parameterValuesToDB = sessionData.getToDB();
-            com.github.freeacs.dbi.Unittype unittype = sessionData.getUnittype();
-            com.github.freeacs.dbi.Profile profile = sessionData.getProfile();
+            dbi.Unittype unittype = sessionData.getUnittype();
+            dbi.Profile profile = sessionData.getProfile();
             List<UnitParameter> unitSessionParameters = new ArrayList<>();
             for (ParameterValueStruct pvs : parameterValuesToDB) {
-                com.github.freeacs.dbi.UnittypeParameter utp = unittype.getUnittypeParameters().getByName(pvs.getName());
+                dbi.UnittypeParameter utp = unittype.getUnittypeParameters().getByName(pvs.getName());
                 if (utp != null) {
-                    com.github.freeacs.dbi.UnitParameter up = new com.github.freeacs.dbi.UnitParameter(utp, sessionData.getUnitId(), pvs.getValue(), profile);
+                    dbi.UnitParameter up = new dbi.UnitParameter(utp, sessionData.getUnitId(), pvs.getValue(), profile);
                     if (utp.getName().startsWith("Device.") || utp.getName().startsWith("InternetGatewayDevice.")) {
                         unitSessionParameters.add(up);
                     }
@@ -125,7 +125,7 @@ public abstract class DBIActions {
                 }
             }
             if (!unitSessionParameters.isEmpty()) {
-                com.github.freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
+                dbi.ACSUnit acsUnit = dbi.getACSUnit();
                 acsUnit.addOrChangeSessionUnitParameters(unitSessionParameters, profile);
             }
         } catch (SQLException sqle) {
@@ -137,13 +137,13 @@ public abstract class DBIActions {
     public static void writeUnitParams(SessionData sessionData) {
         List<ParameterValueStruct> parameterValuesToDB = sessionData.getToDB();
         List<UnitParameter> unitParameters = new ArrayList<>();
-        com.github.freeacs.dbi.Unittype unittype = sessionData.getUnittype();
-        com.github.freeacs.dbi.Profile profile = sessionData.getProfile();
-        com.github.freeacs.dbi.Unit unit = sessionData.getUnit();
+        dbi.Unittype unittype = sessionData.getUnittype();
+        dbi.Profile profile = sessionData.getProfile();
+        dbi.Unit unit = sessionData.getUnit();
         for (ParameterValueStruct pvs : parameterValuesToDB) {
-            com.github.freeacs.dbi.UnittypeParameter utp = unittype.getUnittypeParameters().getByName(pvs.getName());
+            dbi.UnittypeParameter utp = unittype.getUnittypeParameters().getByName(pvs.getName());
             if (utp != null) {
-                unitParameters.add(new com.github.freeacs.dbi.UnitParameter(utp, sessionData.getUnitId(), pvs.getValue(), profile));
+                unitParameters.add(new dbi.UnitParameter(utp, sessionData.getUnitId(), pvs.getValue(), profile));
             } else {
                 log.warn(pvs.getName() + " : does not exist, cannot write value " + pvs.getValue());
             }
@@ -151,7 +151,7 @@ public abstract class DBIActions {
         unitParameters.forEach(unit::toWriteQueue);
     }
 
-    public static void updateParametersFromDB(SessionData sessionData, boolean isDiscoveryMode, com.github.freeacs.dbi.DBI dbi) throws SQLException {
+    public static void updateParametersFromDB(SessionData sessionData, boolean isDiscoveryMode, dbi.DBI dbi) throws SQLException {
         if (sessionData.getFromDB() != null) {
             return;
         }
@@ -176,7 +176,7 @@ public abstract class DBIActions {
             int systemParamCounter = 0;
             while (i.hasNext()) {
                 String utpName = i.next();
-                com.github.freeacs.dbi.UnittypeParameter utp = sessionData.getUnittype().getUnittypeParameters().getByName(utpName);
+                dbi.UnittypeParameter utp = sessionData.getUnittype().getUnittypeParameters().getByName(utpName);
                 if (utp != null && utp.getFlag().isSystem()) {
                     systemParamCounter++;
                     sessionData.getAcsParameters().putPvs(utpName, sessionData.getFromDB().get(utpName));
@@ -191,15 +191,15 @@ public abstract class DBIActions {
         }
     }
 
-    private static void addUnitDataToSession(SessionData sessionData, com.github.freeacs.dbi.DBI dbi) throws SQLException {
-        com.github.freeacs.dbi.Unit unit = readUnit(sessionData.getUnitId(), dbi);
+    private static void addUnitDataToSession(SessionData sessionData, dbi.DBI dbi) throws SQLException {
+        dbi.Unit unit = readUnit(sessionData.getUnitId(), dbi);
         Map<String, ParameterValueStruct> valueMap = new TreeMap<>();
         if (unit != null) {
             sessionData.setUnit(unit);
             sessionData.setUnittype(unit.getUnittype());
             sessionData.setProfile(unit.getProfile());
-            com.github.freeacs.dbi.ProfileParameter[] pparams = unit.getProfile().getProfileParameters().getProfileParameters();
-            for (com.github.freeacs.dbi.ProfileParameter pp : pparams) {
+            dbi.ProfileParameter[] pparams = unit.getProfile().getProfileParameters().getProfileParameters();
+            for (dbi.ProfileParameter pp : pparams) {
                 String utpName = pp.getUnittypeParameter().getName();
                 valueMap.put(utpName, new ParameterValueStruct(utpName, pp.getValue()));
             }
@@ -237,9 +237,9 @@ public abstract class DBIActions {
         sessionData.setFromDB(valueMap);
     }
 
-    public static void writeUnittypeParameters(SessionData sessionData, List<UnittypeParameter> utpList, com.github.freeacs.dbi.DBI dbi) throws SQLException {
+    public static void writeUnittypeParameters(SessionData sessionData, List<UnittypeParameter> utpList, dbi.DBI dbi) throws SQLException {
         try {
-            com.github.freeacs.dbi.Unittype ut = sessionData.getUnittype();
+            dbi.Unittype ut = sessionData.getUnittype();
             ut.getUnittypeParameters().addOrChangeUnittypeParameters(utpList, dbi.getAcs());
             log.debug("Have written " + utpList.size() + " unittype parameters");
         } catch (Throwable t) {
@@ -247,10 +247,10 @@ public abstract class DBIActions {
         }
     }
 
-    private static com.github.freeacs.dbi.Unit readUnit(String unitId, com.github.freeacs.dbi.DBI dbi) throws SQLException {
-        com.github.freeacs.dbi.Unit unit;
+    private static dbi.Unit readUnit(String unitId, dbi.DBI dbi) throws SQLException {
+        dbi.Unit unit;
         try {
-            com.github.freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
+            dbi.ACSUnit acsUnit = dbi.getACSUnit();
             unit = acsUnit.getUnitById(unitId);
             if (unit != null) {
                 log.debug("Found unit "

@@ -1,8 +1,8 @@
 package tr069.methods.decision;
 
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
+import tr069.Properties;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public interface DecisionStrategy {
 
     static DecisionStrategy getStrategy(ProvisioningMethod provisioningMethod,
                                         Properties properties,
-                                        com.github.freeacs.dbi.DBI dbi) {
+                                        dbi.DBI dbi) {
         switch (provisioningMethod) {
             case Empty: return emStrategy(properties, dbi);
             case Inform: return informStrategy();
@@ -50,15 +50,15 @@ public interface DecisionStrategy {
         return new GetParameterNamesDecisionStrategy();
     }
 
-    static DecisionStrategy emStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static DecisionStrategy emStrategy(Properties properties, dbi.DBI dbi) {
         return new EmptyDecisionStrategy(properties, dbi);
     }
 
-    static DecisionStrategy getParameterValuesStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static DecisionStrategy getParameterValuesStrategy(Properties properties, dbi.DBI dbi) {
         return new GetParameterValuesDecisionStrategy(properties, dbi);
     }
 
-    static DecisionStrategy setParameterValuesStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static DecisionStrategy setParameterValuesStrategy(Properties properties, dbi.DBI dbi) {
         return new SetParameterValuesDecisionStrategy(properties, dbi);
     }
 }

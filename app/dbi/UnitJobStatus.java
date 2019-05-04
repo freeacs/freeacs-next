@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 public class UnitJobStatus {
   public static String STARTED = "STARTED";

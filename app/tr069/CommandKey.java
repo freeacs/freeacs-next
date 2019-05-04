@@ -1,6 +1,6 @@
 package tr069;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
+import tr069.http.HTTPRequestResponseData;
 import lombok.Data;
 
 @Data
@@ -10,7 +10,7 @@ public class CommandKey {
 
   public void setServerKey(HTTPRequestResponseData reqRes) {
     this.serverKey =
-        reqRes.getSessionData().getUnit().getParameterValue(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT_KEY);
+        reqRes.getSessionData().getUnit().getParameterValue(dbi.util.SystemParameters.JOB_CURRENT_KEY);
   }
 
   public boolean isEqual() {

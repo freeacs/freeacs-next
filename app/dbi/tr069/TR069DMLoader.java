@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi.tr069;
+package dbi.tr069;
 
-import com.github.freeacs.dbi.tr069.TR069DMParameter.StringType;
+import dbi.tr069.TR069DMParameter.StringType;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;

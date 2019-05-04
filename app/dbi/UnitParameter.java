@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 public class UnitParameter {
   private String unitId;

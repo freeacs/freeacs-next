@@ -1,10 +1,10 @@
 package tr069.methods.decision.GetParameterValues;
 
-import com.github.freeacs.dbi.JobParameter;
-import com.github.freeacs.tr069.CPEParameters;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.base.ACSParameters;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
+import dbi.JobParameter;
+import tr069.CPEParameters;
+import tr069.SessionData;
+import tr069.base.ACSParameters;
+import tr069.http.HTTPRequestResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -14,7 +14,7 @@ public class DownloadLogicTR069 {
 
     public static final String SPACE_SEPARATOR = "--";
 
-    public static boolean isScriptDownloadSetup(HTTPRequestResponseData reqRes, com.github.freeacs.dbi.Job job, String publicUrl) {
+    public static boolean isScriptDownloadSetup(HTTPRequestResponseData reqRes, dbi.Job job, String publicUrl) {
         SessionData sessionData = reqRes.getSessionData();
         ACSParameters oweraParams = sessionData.getAcsParameters();
         CPEParameters cpeParams = sessionData.getCpeParameters();
@@ -23,8 +23,8 @@ public class DownloadLogicTR069 {
         if (job != null) { // retrieve desired-script-version from Job-parameters
             Map<String, JobParameter> jobParams = sessionData.getJobParams();
             for (Map.Entry<String, JobParameter> entry : jobParams.entrySet()) {
-                if (com.github.freeacs.dbi.util.SystemParameters.isTR069ScriptVersionParameter(entry.getKey())) {
-                    scriptName = com.github.freeacs.dbi.util.SystemParameters.getTR069ScriptName(entry.getKey());
+                if (dbi.util.SystemParameters.isTR069ScriptVersionParameter(entry.getKey())) {
+                    scriptName = dbi.util.SystemParameters.getTR069ScriptName(entry.getKey());
                     scriptVersionFromDB = entry.getValue().getParameter().getValue();
                     break;
                 }
@@ -37,19 +37,19 @@ public class DownloadLogicTR069 {
         if (scriptVersionFromDB != null) {
             // scriptVersionFromDB has been found and we must find/build the
             // download-URL
-            com.github.freeacs.dbi.File file =
+            dbi.File file =
                     sessionData
                             .getUnittype()
                             .getFiles()
-                            .getByVersionType(scriptVersionFromDB, com.github.freeacs.dbi.FileType.TR069_SCRIPT);
+                            .getByVersionType(scriptVersionFromDB, dbi.FileType.TR069_SCRIPT);
             if (file == null) {
-                log.error("File-type " + com.github.freeacs.dbi.FileType.TR069_SCRIPT + " and version " + scriptVersionFromDB
+                log.error("File-type " + dbi.FileType.TR069_SCRIPT + " and version " + scriptVersionFromDB
                         + " does not exists - indicate wrong setup of version number");
                 return false;
             }
 
             String downloadURL;
-            String scriptURLName = com.github.freeacs.dbi.util.SystemParameters.getTR069ScriptParameterName(scriptName, com.github.freeacs.dbi.util.SystemParameters.TR069ScriptType.URL);
+            String scriptURLName = dbi.util.SystemParameters.getTR069ScriptParameterName(scriptName, dbi.util.SystemParameters.TR069ScriptType.URL);
             if (oweraParams.getValue(scriptURLName) != null) {
                 downloadURL = oweraParams.getValue(scriptURLName);
             } else {
@@ -60,11 +60,11 @@ public class DownloadLogicTR069 {
                                 sessionData.getUnittype().getName(),
                                 sessionData.getUnitId(),
                                 file.getName(),
-                                com.github.freeacs.dbi.FileType.TR069_SCRIPT,
+                                dbi.FileType.TR069_SCRIPT,
                                 publicUrl);
             }
             log.debug("Download script/config URL found (" + downloadURL + "), may trigger a Download");
-            sessionData.getUnit().toWriteQueue(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT_KEY, scriptVersionFromDB);
+            sessionData.getUnit().toWriteQueue(dbi.util.SystemParameters.JOB_CURRENT_KEY, scriptVersionFromDB);
             sessionData.setDownload(new SessionData.Download(downloadURL, file));
             return true;
         }
@@ -77,7 +77,7 @@ public class DownloadLogicTR069 {
             String unitTypeName,
             String unitId,
             String fileName,
-            com.github.freeacs.dbi.FileType type,
+            dbi.FileType type,
             String publicUrl) {
         String downloadURL;
         downloadURL = publicUrl;
@@ -92,7 +92,7 @@ public class DownloadLogicTR069 {
         return downloadURL.replaceAll(" ", SPACE_SEPARATOR);
     }
 
-    public static boolean isSoftwareDownloadSetup(HTTPRequestResponseData reqRes, com.github.freeacs.dbi.Job job, String publicUrl) {
+    public static boolean isSoftwareDownloadSetup(HTTPRequestResponseData reqRes, dbi.Job job, String publicUrl) {
         SessionData sessionData = reqRes.getSessionData();
         CPEParameters cpeParams = sessionData.getCpeParameters();
         String softwareVersionFromCPE = cpeParams.getValue(cpeParams.SOFTWARE_VERSION);
@@ -101,21 +101,21 @@ public class DownloadLogicTR069 {
         String downloadURL = null;
         if (job == null) {
             ACSParameters oweraParams = sessionData.getAcsParameters();
-            softwareVersionFromDB = oweraParams.getValue(com.github.freeacs.dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION);
-            if (oweraParams.getValue(com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_URL) != null) {
-                downloadURL = oweraParams.getValue(com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_URL);
+            softwareVersionFromDB = oweraParams.getValue(dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION);
+            if (oweraParams.getValue(dbi.util.SystemParameters.SOFTWARE_URL) != null) {
+                downloadURL = oweraParams.getValue(dbi.util.SystemParameters.SOFTWARE_URL);
             }
         } else {
             Map<String, JobParameter> jobParams = job.getDefaultParameters();
-            if (jobParams.get(com.github.freeacs.dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION) != null) {
+            if (jobParams.get(dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION) != null) {
                 softwareVersionFromDB =
-                        jobParams.get(com.github.freeacs.dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION).getParameter().getValue();
+                        jobParams.get(dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION).getParameter().getValue();
             } else {
                 log.error("No desired software version found in job " + job.getId() + " aborting the job");
                 return false;
             }
-            if (jobParams.get(com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_URL) != null) {
-                downloadURL = jobParams.get(com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_URL).getParameter().getValue();
+            if (jobParams.get(dbi.util.SystemParameters.SOFTWARE_URL) != null) {
+                downloadURL = jobParams.get(dbi.util.SystemParameters.SOFTWARE_URL).getParameter().getValue();
             }
         }
         if (downloadURL == null) {
@@ -126,7 +126,7 @@ public class DownloadLogicTR069 {
                             sessionData.getUnittype().getName(),
                             sessionData.getUnitId(),
                             null,
-                            com.github.freeacs.dbi.FileType.SOFTWARE,
+                            dbi.FileType.SOFTWARE,
                             publicUrl);
         }
 
@@ -134,13 +134,13 @@ public class DownloadLogicTR069 {
                 && !"".equals(softwareVersionFromDB.trim())
                 && !softwareVersionFromDB.equals(softwareVersionFromCPE)) {
             log.debug("Download software URL found (" + downloadURL + "), may trigger a Download");
-            com.github.freeacs.dbi.File file =
+            dbi.File file =
                     sessionData
                             .getUnittype()
                             .getFiles()
-                            .getByVersionType(softwareVersionFromDB, com.github.freeacs.dbi.FileType.SOFTWARE);
+                            .getByVersionType(softwareVersionFromDB, dbi.FileType.SOFTWARE);
             if (file == null) {
-                log.error("File-type " + com.github.freeacs.dbi.FileType.SOFTWARE + " and version " + softwareVersionFromDB +
+                log.error("File-type " + dbi.FileType.SOFTWARE + " and version " + softwareVersionFromDB +
                         " does not exists - indicate wrong setup of version number");
                 return false;
             }

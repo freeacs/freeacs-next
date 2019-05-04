@@ -1,7 +1,7 @@
 package tr069.xml;
 
-import com.github.freeacs.tr069.exception.TR069Exception;
-import com.github.freeacs.tr069.exception.TR069ExceptionShortMessage;
+import tr069.exception.TR069Exception;
+import tr069.exception.TR069ExceptionShortMessage;
 import lombok.Data;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;

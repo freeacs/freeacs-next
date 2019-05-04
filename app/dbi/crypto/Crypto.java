@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.crypto;
+package dbi.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;

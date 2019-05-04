@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

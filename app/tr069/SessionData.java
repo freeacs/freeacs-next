@@ -1,13 +1,13 @@
 package tr069;
 
-import com.github.freeacs.dbi.JobParameter;
-import com.github.freeacs.dbi.Unittype.ProvisioningProtocol;
-import com.github.freeacs.tr069.base.ACSParameters;
-import com.github.freeacs.tr069.base.PIIDecision;
-import com.github.freeacs.tr069.base.SessionDataI;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.xml.ParameterList;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.JobParameter;
+import dbi.Unittype.ProvisioningProtocol;
+import tr069.base.ACSParameters;
+import tr069.base.PIIDecision;
+import tr069.base.SessionDataI;
+import tr069.http.HTTPRequestResponseData;
+import tr069.xml.ParameterList;
+import tr069.xml.ParameterValueStruct;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +33,11 @@ public class SessionData implements SessionDataI {
   /** The unique id for the CPE. */
   private String unitId;
   /** The unit-object. */
-  private com.github.freeacs.dbi.Unit unit;
+  private dbi.Unit unit;
   /** The profile name for this CPE (defined i the DB). */
-  private com.github.freeacs.dbi.Profile profile;
+  private dbi.Profile profile;
   /** The unittype for this CPE (defined in the DB). */
-  private com.github.freeacs.dbi.Unittype unittype;
+  private dbi.Unittype unittype;
   /** The keyroot of this CPE (e.g. InternetGatewayDevice.) */
   private String keyRoot;
 
@@ -78,7 +78,7 @@ public class SessionData implements SessionDataI {
   private List<ParameterValueStruct> requestedCPE;
 
   /** Job. */
-  private com.github.freeacs.dbi.Job job;
+  private dbi.Job job;
   /** All parameters from a job. */
   private Map<String, JobParameter> jobParams;
 
@@ -100,7 +100,7 @@ public class SessionData implements SessionDataI {
   private PIIDecision piiDecision;
 
   /** An object to store all kinds of data about the provisioning. */
-  private com.github.freeacs.dbi.util.ProvisioningMessage provisioningMessage = new com.github.freeacs.dbi.util.ProvisioningMessage();
+  private dbi.util.ProvisioningMessage provisioningMessage = new dbi.util.ProvisioningMessage();
 
   /** An object to store data about a download. */
   private Download download;
@@ -188,14 +188,14 @@ public class SessionData implements SessionDataI {
 
   public boolean discoverUnittype() {
     if (acsParameters != null
-        && acsParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.DISCOVER) != null
-        && "1".equals(acsParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.DISCOVER))) {
+        && acsParameters.getValue(dbi.util.SystemParameters.DISCOVER) != null
+        && "1".equals(acsParameters.getValue(dbi.util.SystemParameters.DISCOVER))) {
       return true;
     } else if (acsParameters == null) {
       log.debug("freeacsParameters not found in discoverUnittype()");
-    } else if (acsParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.DISCOVER) != null) {
+    } else if (acsParameters.getValue(dbi.util.SystemParameters.DISCOVER) != null) {
       log.debug("DISCOVER parameter value is "
-              + acsParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.DISCOVER)
+              + acsParameters.getValue(dbi.util.SystemParameters.DISCOVER)
               + " in discoverUnittype()");
     } else {
       log.debug("DISCOVER parameter not found of value is null in discoverUnittype() ");
@@ -223,6 +223,6 @@ public class SessionData implements SessionDataI {
   @AllArgsConstructor
   public static class Download {
     private String url;
-    private com.github.freeacs.dbi.File file;
+    private dbi.File file;
   }
 }

@@ -1,12 +1,12 @@
 package tr069.methods.response;
 
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.xml.Body;
-import com.github.freeacs.tr069.xml.Header;
-import com.github.freeacs.tr069.xml.Response;
-import com.github.freeacs.tr069.xml.TR069TransactionID;
+import tr069.Properties;
+import tr069.SessionData;
+import tr069.http.HTTPRequestResponseData;
+import tr069.xml.Body;
+import tr069.xml.Header;
+import tr069.xml.Response;
+import tr069.xml.TR069TransactionID;
 
 public class DownloadResponseCreateStrategy implements ResponseCreateStrategy {
     private static final String DELAY_SECONDS = "0";
@@ -26,23 +26,23 @@ public class DownloadResponseCreateStrategy implements ResponseCreateStrategy {
         Header header = new Header(reqRes.getTR069TransactionID(), null, null);
         SessionData sessionData = reqRes.getSessionData();
         SessionData.Download download = sessionData.getDownload();
-        com.github.freeacs.dbi.util.ProvisioningMessage pm = sessionData.getProvisioningMessage();
+        dbi.util.ProvisioningMessage pm = sessionData.getProvisioningMessage();
         final String downloadType;
         String tn = download.getFile().getTargetName();
         String commandKey = download.getFile().getVersion();
-        if (download.getFile().getType() == com.github.freeacs.dbi.FileType.SOFTWARE) {
+        if (download.getFile().getType() == dbi.FileType.SOFTWARE) {
             downloadType = "1 Firmware Upgrade Image";
-            pm.setProvOutput(com.github.freeacs.dbi.util.ProvisioningMessage.ProvOutput.SOFTWARE);
-        } else if (download.getFile().getType() == com.github.freeacs.dbi.FileType.TR069_SCRIPT) {
+            pm.setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.SOFTWARE);
+        } else if (download.getFile().getType() == dbi.FileType.TR069_SCRIPT) {
             downloadType = "3 Vendor Configuration File";
-            pm.setProvOutput(com.github.freeacs.dbi.util.ProvisioningMessage.ProvOutput.SCRIPT);
+            pm.setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.SCRIPT);
         } else {
             downloadType = null;
         }
         String version = download.getFile().getVersion();
         pm.setFileVersion(version);
         String username = sessionData.getUnitId();
-        String password = sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.SECRET);
+        String password = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.SECRET);
         Body body = new Body() {
             private boolean fileAuthUsed = properties.isFileAuthUsed();
             private String url = download.getUrl();

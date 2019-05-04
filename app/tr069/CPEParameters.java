@@ -1,6 +1,6 @@
 package tr069;
 
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import tr069.xml.ParameterValueStruct;
 import lombok.Data;
 
 import java.util.HashMap;

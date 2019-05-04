@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 public class UnittypeParameter {
   private Integer id;

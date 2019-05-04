@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.dbi.util.ACSVersionCheck;
+import dbi.util.ACSVersionCheck;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.dbi.util.MapWrapper;
+import dbi.util.MapWrapper;
 import java.util.HashMap;
 import java.util.Map;
 

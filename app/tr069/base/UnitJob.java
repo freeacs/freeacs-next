@@ -1,10 +1,10 @@
 package tr069.base;
 
-import com.github.freeacs.dbi.JobFlag.JobServiceWindow;
-import com.github.freeacs.dbi.JobParameter;
-import com.github.freeacs.dbi.UnitParameter;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.JobFlag.JobServiceWindow;
+import dbi.JobParameter;
+import dbi.UnitParameter;
+import tr069.SessionData;
+import tr069.xml.ParameterValueStruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -15,9 +15,9 @@ import java.util.Objects;
 
 @Slf4j
 public class UnitJob {
-  private final com.github.freeacs.dbi.DBI dbi;
+  private final dbi.DBI dbi;
   private final SessionDataI sessionData;
-  private com.github.freeacs.dbi.Job job;
+  private dbi.Job job;
 
   /**
    * Server-side provisioning differs from TR-069/TFTP/HTTP in several ways 1. Triggered from server
@@ -33,16 +33,16 @@ public class UnitJob {
    */
   private boolean serverSideJob;
 
-  public UnitJob(SessionDataI sessionData, com.github.freeacs.dbi.DBI dbi, com.github.freeacs.dbi.Job job, boolean serverSideJob) {
+  public UnitJob(SessionDataI sessionData, dbi.DBI dbi, dbi.Job job, boolean serverSideJob) {
     this.sessionData = sessionData;
     this.job = job;
     this.serverSideJob = serverSideJob;
     this.dbi = dbi;
   }
 
-  private com.github.freeacs.dbi.UnitParameter makeUnitParameter(String name, String value) {
-    com.github.freeacs.dbi.UnittypeParameter utp = sessionData.getUnittype().getUnittypeParameters().getByName(name);
-    return new com.github.freeacs.dbi.UnitParameter(utp, sessionData.getUnitId(), value, sessionData.getProfile());
+  private dbi.UnitParameter makeUnitParameter(String name, String value) {
+    dbi.UnittypeParameter utp = sessionData.getUnittype().getUnittypeParameters().getByName(name);
+    return new dbi.UnitParameter(utp, sessionData.getUnitId(), value, sessionData.getProfile());
   }
 
   /**
@@ -56,8 +56,8 @@ public class UnitJob {
 
   private void updateSessionWithJobCurrent() {
     ParameterValueStruct jobIdPvs =
-        new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
-    sessionData.getAcsParameters().putPvs(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT, jobIdPvs);
+        new ParameterValueStruct(dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
+    sessionData.getAcsParameters().putPvs(dbi.util.SystemParameters.JOB_CURRENT, jobIdPvs);
   }
 
   /**
@@ -65,18 +65,18 @@ public class UnitJob {
    * parameter. Job id which refer to a no longer existing job will be removed from the
    * comma-separated list.
    */
-  private com.github.freeacs.dbi.UnitParameter makeHistoryParameter(Integer jobId) {
-    com.github.freeacs.dbi.Unittype unittype = sessionData.getUnittype();
-    com.github.freeacs.dbi.Unit unit = sessionData.getUnit();
+  private dbi.UnitParameter makeHistoryParameter(Integer jobId) {
+    dbi.Unittype unittype = sessionData.getUnittype();
+    dbi.Unit unit = sessionData.getUnit();
     Map<String, UnitParameter> upMap = unit.getUnitParameters();
-    com.github.freeacs.dbi.UnittypeParameter jhUtp =
-        unittype.getUnittypeParameters().getByName(com.github.freeacs.dbi.util.SystemParameters.JOB_HISTORY);
-    com.github.freeacs.dbi.UnitParameter jobHistoryUp = upMap.get(jhUtp.getName());
+    dbi.UnittypeParameter jhUtp =
+        unittype.getUnittypeParameters().getByName(dbi.util.SystemParameters.JOB_HISTORY);
+    dbi.UnitParameter jobHistoryUp = upMap.get(jhUtp.getName());
 
-    String jh1 = unit.getParameters().get(com.github.freeacs.dbi.util.SystemParameters.JOB_HISTORY);
+    String jh1 = unit.getParameters().get(dbi.util.SystemParameters.JOB_HISTORY);
     long tms = System.currentTimeMillis();
     if (jh1 == null || "".equals(jh1.trim())) {
-      return makeUnitParameter(com.github.freeacs.dbi.util.SystemParameters.JOB_HISTORY, "," + jobId + ":0:" + tms + ",");
+      return makeUnitParameter(dbi.util.SystemParameters.JOB_HISTORY, "," + jobId + ":0:" + tms + ",");
     }
 
     String jh2 = ","; // + jobId + ",";
@@ -86,7 +86,7 @@ public class UnitJob {
         continue;
       }
       JobHistoryEntry jhEntry = new JobHistoryEntry(entry);
-      com.github.freeacs.dbi.Job entryJob = sessionData.getUnittype().getJobs().getById(Integer.valueOf(String.valueOf(jhEntry.getJobId())));
+      dbi.Job entryJob = sessionData.getUnittype().getJobs().getById(Integer.valueOf(String.valueOf(jhEntry.getJobId())));
       if (entryJob != null) {
         if (Objects.equals(entryJob.getId(), jobId)) { // inc repeated-counter
           jh2 += jhEntry.incEntry(tms) + ",";
@@ -113,7 +113,7 @@ public class UnitJob {
       try {
         String unitId = sessionData.getUnitId();
         if (!serverSideJob) {
-          com.github.freeacs.dbi.UnitParameter jobUp = makeUnitParameter(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
+          dbi.UnitParameter jobUp = makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
           List<UnitParameter> upList = new ArrayList<>();
           upList.add(jobUp);
           upList.forEach(sessionData.getUnit()::toWriteQueue);
@@ -158,7 +158,7 @@ public class UnitJob {
             dbi);
         sessionData.getPIIDecision().setCurrentJobStatus(unitJobStatus);
         // Write directly to database, no queuing, since the all data are flushed in next step (most likely)
-        com.github.freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
+        dbi.ACSUnit acsUnit = dbi.getACSUnit();
         acsUnit.addOrChangeUnitParameters(upList, sessionData.getProfile());
         if (!serverSideJob) {
           sessionData.setFromDB(null);
@@ -179,28 +179,28 @@ public class UnitJob {
   private List<UnitParameter> getUnitParameters(String unitJobStatus) {
     List<UnitParameter> upList = new ArrayList<>();
     if (!serverSideJob) {
-      upList.add(makeUnitParameter(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT, ""));
-      upList.add(makeUnitParameter(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT_KEY, ""));
+      upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT, ""));
+      upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT_KEY, ""));
     }
-    if (unitJobStatus.equals(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK)) {
+    if (unitJobStatus.equals(dbi.UnitJobStatus.COMPLETED_OK)) {
       upList.add(makeHistoryParameter(job.getId()));
       if (job.getFlags().getServiceWindow() == JobServiceWindow.DISRUPTIVE) {
-        upList.add(makeUnitParameter(com.github.freeacs.dbi.util.SystemParameters.JOB_DISRUPTIVE, "1"));
+        upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_DISRUPTIVE, "1"));
       }
       if (serverSideJob) {
         log.debug("UnitJob is COMPLETED, job history is updated");
       } else {
         Map<String, JobParameter> jobParams = job.getDefaultParameters();
         sessionData.setJobParams(jobParams);
-        for (com.github.freeacs.dbi.JobParameter jp : sessionData.getJobParams().values()) {
+        for (dbi.JobParameter jp : sessionData.getJobParams().values()) {
           String jpName = jp.getParameter().getUnittypeParameter().getName();
-          if (com.github.freeacs.dbi.util.SystemParameters.RESTART.equals(jpName)
-              || com.github.freeacs.dbi.util.SystemParameters.RESET.equals(jpName)
+          if (dbi.util.SystemParameters.RESTART.equals(jpName)
+              || dbi.util.SystemParameters.RESET.equals(jpName)
               || jp.getParameter().getUnittypeParameter().getFlag().isReadOnly()) {
             continue;
           }
-          com.github.freeacs.dbi.UnitParameter up =
-              new com.github.freeacs.dbi.UnitParameter(
+          dbi.UnitParameter up =
+              new dbi.UnitParameter(
                   jp.getParameter(), sessionData.getUnitId(), sessionData.getProfile());
           upList.add(up);
         }
@@ -239,7 +239,7 @@ public class UnitJob {
           irrelevant = true;
           return this;
         }
-        String jobIdStr = sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT);
+        String jobIdStr = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_CURRENT);
         if (jobIdStr == null) {
           irrelevant = true;
           return this;
@@ -255,12 +255,12 @@ public class UnitJob {
                 + ", will stop unit job with unit job status set to "
                 + unitJobStatus);
         job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobIdStr));
-        if (job == null && !unitJobStatus.equals(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED)) {
+        if (job == null && !unitJobStatus.equals(dbi.UnitJobStatus.CONFIRMED_FAILED)) {
           log.warn("Couldn't find job with jobId "
                   + jobId
                   + ", unit job status changed to "
-                  + com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED);
-          unitJobStatus = com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED;
+                  + dbi.UnitJobStatus.CONFIRMED_FAILED);
+          unitJobStatus = dbi.UnitJobStatus.CONFIRMED_FAILED;
         }
       }
       irrelevant = false;

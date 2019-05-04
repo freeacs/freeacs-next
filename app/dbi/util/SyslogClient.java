@@ -1,8 +1,8 @@
-package com.github.freeacs.dbi.util;
+package dbi.util;
 
-import com.github.freeacs.dbi.Identity;
-import com.github.freeacs.dbi.Syslog;
-import com.github.freeacs.dbi.SyslogConstants;
+import dbi.Identity;
+import dbi.Syslog;
+import dbi.SyslogConstants;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

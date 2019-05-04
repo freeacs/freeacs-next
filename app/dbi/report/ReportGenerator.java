@@ -1,15 +1,15 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
-import com.github.freeacs.dbi.ACS;
-import com.github.freeacs.dbi.ACSUnit;
-import com.github.freeacs.dbi.DynamicStatement;
-import com.github.freeacs.dbi.Group;
-import com.github.freeacs.dbi.Identity;
-import com.github.freeacs.dbi.Profile;
-import com.github.freeacs.dbi.SyslogFilter;
-import com.github.freeacs.dbi.Unit;
-import com.github.freeacs.dbi.Unittype;
-import com.github.freeacs.dbi.Users;
+import dbi.ACS;
+import dbi.ACSUnit;
+import dbi.DynamicStatement;
+import dbi.Group;
+import dbi.Identity;
+import dbi.Profile;
+import dbi.SyslogFilter;
+import dbi.Unit;
+import dbi.Unittype;
+import dbi.Users;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

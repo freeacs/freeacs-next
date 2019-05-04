@@ -1,11 +1,11 @@
 package tr069.methods.response;
 
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.xml.Body;
-import com.github.freeacs.tr069.xml.Header;
-import com.github.freeacs.tr069.xml.Response;
-import com.github.freeacs.tr069.xml.TR069TransactionID;
+import tr069.Properties;
+import tr069.http.HTTPRequestResponseData;
+import tr069.xml.Body;
+import tr069.xml.Header;
+import tr069.xml.Response;
+import tr069.xml.TR069TransactionID;
 
 public class GetParameterNamesResponseCreateStrategy implements ResponseCreateStrategy {
     private final Properties properties;

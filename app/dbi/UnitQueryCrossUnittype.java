@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.dbi.util.SystemParameters;
+import dbi.util.SystemParameters;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

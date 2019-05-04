@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
-import com.github.freeacs.dbi.*;
+import dbi.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

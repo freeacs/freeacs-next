@@ -1,7 +1,7 @@
 package tr069.background;
 
 import com.github.freeacs.common.scheduler.TaskDefaultImpl;
-import com.github.freeacs.dbi.SyslogEntry;
+import dbi.SyslogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,11 +11,11 @@ import java.util.Map.Entry;
 public class ActiveDeviceDetectionTask extends TaskDefaultImpl {
   private static Logger logger = LoggerFactory.getLogger(ActiveDeviceDetectionTask.class);
 
-  private com.github.freeacs.dbi.DBI dbi;
+  private dbi.DBI dbi;
 
   public static Map<String, Long> activeDevicesMap = new HashMap<>();
 
-  public ActiveDeviceDetectionTask(String taskName, com.github.freeacs.dbi.DBI dbi) {
+  public ActiveDeviceDetectionTask(String taskName, dbi.DBI dbi) {
     super(taskName);
     this.dbi = dbi;
   }
@@ -36,15 +36,15 @@ public class ActiveDeviceDetectionTask extends TaskDefaultImpl {
         "ActiveDeviceDetectionTask: Have found " + inactiveUnits.size() + " inactive devices");
     for (Entry<String, Long> entry : inactiveUnits.entrySet()) {
       String unitId = entry.getKey();
-      com.github.freeacs.dbi.Syslog syslog = dbi.getSyslog();
-      com.github.freeacs.dbi.SyslogFilter sf = new com.github.freeacs.dbi.SyslogFilter();
+      dbi.Syslog syslog = dbi.getSyslog();
+      dbi.SyslogFilter sf = new dbi.SyslogFilter();
       sf.setCollectorTmsStart(new Date(anHourAgo)); // look for syslog newer than 1 hour
       sf.setUnitId(unitId);
       boolean active = false;
       List<SyslogEntry> entries = syslog.read(sf, dbi.getAcs());
-      for (com.github.freeacs.dbi.SyslogEntry sentry : entries) {
-        if (sentry.getFacility() < com.github.freeacs.dbi.SyslogConstants.FACILITY_SHELL
-            && !sentry.getContent().contains(com.github.freeacs.dbi.Heartbeat.MISSING_HEARTBEAT_ID)) {
+      for (dbi.SyslogEntry sentry : entries) {
+        if (sentry.getFacility() < dbi.SyslogConstants.FACILITY_SHELL
+            && !sentry.getContent().contains(dbi.Heartbeat.MISSING_HEARTBEAT_ID)) {
           logger.info(
               "ActivceDeviceDetection: Found syslog activity for unit "
                   + unitId
@@ -57,7 +57,7 @@ public class ActiveDeviceDetectionTask extends TaskDefaultImpl {
         }
       }
       if (active) {
-        com.github.freeacs.dbi.util.SyslogClient.info(
+        dbi.util.SyslogClient.info(
             entry.getKey(),
             "ProvMsg: No provisioning at "
                 + new Date(entry.getValue())

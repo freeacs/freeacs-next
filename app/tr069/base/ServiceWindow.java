@@ -22,20 +22,20 @@ public class ServiceWindow {
     this.ACSParameters = sessionData.getAcsParameters();
     if (disruptive) {
       timeWindow =
-          new TimeWindow(ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_DISRUPTIVE));
+          new TimeWindow(ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_DISRUPTIVE));
     } else {
-      timeWindow = new TimeWindow(ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_REGULAR));
+      timeWindow = new TimeWindow(ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_REGULAR));
     }
   }
 
   private boolean isEnabled() {
-    String enable = ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_ENABLE);
+    String enable = ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_ENABLE);
     return enable == null || (!"0".equals(enable) && !"false".equalsIgnoreCase(enable));
   }
 
   /** Return the number of provisionings per week. Default value is once per day. */
   private float findFrequency() {
-    String freq = ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_FREQUENCY);
+    String freq = ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_FREQUENCY);
     float freqFloat = timeWindow.getWeeklyLength() / timeWindow.getDailyLength();
     if (freq != null) {
       try {
@@ -47,8 +47,8 @@ public class ServiceWindow {
   }
 
   private float findSpread() {
-    float freqFloat = (float) com.github.freeacs.dbi.util.SystemConstants.DEFAULT_SERVICEWINDOW_SPREAD_INT / 100f;
-    String freq = ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_SPREAD);
+    float freqFloat = (float) dbi.util.SystemConstants.DEFAULT_SERVICEWINDOW_SPREAD_INT / 100f;
+    String freq = ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_SPREAD);
     if (freq != null) {
       try {
         freqFloat = Float.valueOf(freq) / 100f;
@@ -194,7 +194,7 @@ public class ServiceWindow {
       return nextPII;
     } else {
       // Make sure frequency is set to once pr day
-      String freq = ACSParameters.getValue(com.github.freeacs.dbi.util.SystemParameters.SERVICE_WINDOW_FREQUENCY);
+      String freq = ACSParameters.getValue(dbi.util.SystemParameters.SERVICE_WINDOW_FREQUENCY);
       float freqFloat = 7; // default - once pr day
       if (freq != null) {
         try {

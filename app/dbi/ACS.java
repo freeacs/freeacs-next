@@ -1,9 +1,9 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.common.util.NumberComparator;
-import com.github.freeacs.dbi.Unittype.ProvisioningProtocol;
-import com.github.freeacs.dbi.util.ACSVersionCheck;
-import com.github.freeacs.dbi.util.MapWrapper;
+import common.util.NumberComparator;
+import dbi.Unittype.ProvisioningProtocol;
+import dbi.util.ACSVersionCheck;
+import dbi.util.MapWrapper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

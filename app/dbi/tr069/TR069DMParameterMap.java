@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.tr069;
+package dbi.tr069;
 
 import java.util.Map;
 

@@ -1,8 +1,8 @@
 package tr069.methods.response;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.xml.EmptyResponse;
-import com.github.freeacs.tr069.xml.Response;
+import tr069.http.HTTPRequestResponseData;
+import tr069.xml.EmptyResponse;
+import tr069.xml.Response;
 
 public class EmptyResponseCreateStrategy implements ResponseCreateStrategy {
     @Override

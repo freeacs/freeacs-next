@@ -1,11 +1,11 @@
 package tr069.methods.response;
 
-import com.github.freeacs.tr069.CPEParameters;
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.*;
+import tr069.CPEParameters;
+import tr069.Properties;
+import tr069.SessionData;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -29,10 +29,10 @@ public class GetParameterValuesResponseCreateStrategy implements ResponseCreateS
         }
         Header header = new Header(reqRes.getTR069TransactionID(), null, null);
         SessionData sessionData = reqRes.getSessionData();
-        com.github.freeacs.dbi.util.ProvisioningMode mode = sessionData.getUnit().getProvisioningMode();
+        dbi.util.ProvisioningMode mode = sessionData.getUnit().getProvisioningMode();
         List<ParameterValueStruct> parameterValueList = new ArrayList<>();
-        if (mode == com.github.freeacs.dbi.util.ProvisioningMode.READALL) {
-            log.debug("Asks for all params (" + sessionData.getKeyRoot() + "), since in " + com.github.freeacs.dbi.util.ProvisioningMode.READALL + " mode");
+        if (mode == dbi.util.ProvisioningMode.READALL) {
+            log.debug("Asks for all params (" + sessionData.getKeyRoot() + "), since in " + dbi.util.ProvisioningMode.READALL + " mode");
             ParameterValueStruct pvs = new ParameterValueStruct(sessionData.getKeyRoot(), "");
             parameterValueList.add(pvs);
         } else { // mode == ProvisioningMode.PERIODIC
@@ -79,7 +79,7 @@ public class GetParameterValuesResponseCreateStrategy implements ResponseCreateS
     private void addCPEParameters(SessionData sessionData, Properties properties) {
         Map<String, ParameterValueStruct> paramValueMap = sessionData.getFromDB();
         CPEParameters cpeParams = sessionData.getCpeParameters();
-        com.github.freeacs.dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
 
         // If device is not old Ping Communication device (NPA201E or RGW208EN) and
         // vendor config file is not explicitely turned off,

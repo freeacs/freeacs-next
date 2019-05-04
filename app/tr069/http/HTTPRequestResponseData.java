@@ -1,9 +1,9 @@
 package tr069.http;
 
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.base.BaseCache;
-import com.github.freeacs.tr069.base.BaseCacheException;
-import com.github.freeacs.tr069.xml.TR069TransactionID;
+import tr069.SessionData;
+import tr069.base.BaseCache;
+import tr069.base.BaseCacheException;
+import tr069.xml.TR069TransactionID;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;

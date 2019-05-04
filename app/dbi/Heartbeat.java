@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 public class Heartbeat {
   public static String MISSING_HEARTBEAT_ID = "Heartbeat missing";

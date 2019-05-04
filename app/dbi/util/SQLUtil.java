@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi.util;
+package dbi.util;
 
-import com.github.freeacs.dbi.DynamicStatement;
+import dbi.DynamicStatement;
 
 public class SQLUtil {
   /**

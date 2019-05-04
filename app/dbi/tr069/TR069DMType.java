@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.tr069;
+package dbi.tr069;
 
 public enum TR069DMType {
   BOOLEAN(0, 1, "xsd:boolean"),

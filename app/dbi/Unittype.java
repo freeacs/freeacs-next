@@ -1,8 +1,8 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.common.util.NumberComparator;
-import com.github.freeacs.dbi.util.MapWrapper;
-import com.github.freeacs.dbi.util.SystemParameters;
+import common.util.NumberComparator;
+import dbi.util.MapWrapper;
+import dbi.util.SystemParameters;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,14 +1,14 @@
 package tr069;
 
-import com.github.freeacs.dbi.util.ProvisioningMessage.ErrorResponsibility;
-import com.github.freeacs.dbi.util.ProvisioningMessage.ProvOutput;
-import com.github.freeacs.dbi.util.ProvisioningMessage.ProvStatus;
-import com.github.freeacs.tr069.base.Log;
-import com.github.freeacs.tr069.http.HTTPRequestData;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.http.HTTPResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.util.ProvisioningMessage.ErrorResponsibility;
+import dbi.util.ProvisioningMessage.ProvOutput;
+import dbi.util.ProvisioningMessage.ProvStatus;
+import tr069.base.Log;
+import tr069.http.HTTPRequestData;
+import tr069.http.HTTPRequestResponseData;
+import tr069.http.HTTPResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.ParameterValueStruct;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +32,7 @@ public class SessionLogging {
       Log.event(eventMsg);
 
       // The new logging to syslog
-      com.github.freeacs.dbi.util.ProvisioningMessage pm = sessionData.getProvisioningMessage();
+      dbi.util.ProvisioningMessage pm = sessionData.getProvisioningMessage();
 
       if (pm.getProvOutput() == null) {
         pm.setProvOutput(ProvOutput.EMPTY);
@@ -48,7 +48,7 @@ public class SessionLogging {
         if (sessionData.getUnit() != null) {
           pm.setProvMode(sessionData.getUnit().getProvisioningMode());
         } else {
-          pm.setProvMode(com.github.freeacs.dbi.util.ProvisioningMode.REGULAR);
+          pm.setProvMode(dbi.util.ProvisioningMode.REGULAR);
         }
       }
       pm.setSessionLength((int) diff);
@@ -56,7 +56,7 @@ public class SessionLogging {
       // We're not sending the facility-version, since the message is used in a report - where
       // the version of the TR-069 is much more interesting (will be added automatically be the
       // syslog server)
-      com.github.freeacs.dbi.util.SyslogClient.send(pm.syslogMsg(16, null, com.github.freeacs.dbi.Users.USER_ADMIN));
+      dbi.util.SyslogClient.send(pm.syslogMsg(16, null, dbi.Users.USER_ADMIN));
     } catch (Throwable t) {
       log.warn("An error ocurred when logging at endOfSession. Does not affect provisioning", t);
     }

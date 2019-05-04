@@ -1,10 +1,10 @@
 package tr069.methods.response;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.Body;
-import com.github.freeacs.tr069.xml.Header;
-import com.github.freeacs.tr069.xml.Response;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.Body;
+import tr069.xml.Header;
+import tr069.xml.Response;
 
 public class GetRPCMethodsResponseCreateStrategy implements ResponseCreateStrategy {
     @Override

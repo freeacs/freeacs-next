@@ -1,8 +1,8 @@
 package tr069.methods.decision;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.Fault;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.Fault;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

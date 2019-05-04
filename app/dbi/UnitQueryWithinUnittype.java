@@ -1,7 +1,7 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.common.util.Cache;
-import com.github.freeacs.common.util.CacheValue;
+import common.util.Cache;
+import common.util.CacheValue;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

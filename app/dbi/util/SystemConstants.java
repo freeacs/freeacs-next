@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.util;
+package dbi.util;
 
 public class SystemConstants {
   public static String DEFAULT_INSPECTION_MESSAGE = "N/A";

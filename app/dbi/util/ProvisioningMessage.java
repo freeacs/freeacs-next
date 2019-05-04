@@ -1,8 +1,8 @@
-package com.github.freeacs.dbi.util;
+package dbi.util;
 
-import com.github.freeacs.dbi.Syslog;
-import com.github.freeacs.dbi.SyslogConstants;
-import com.github.freeacs.dbi.Unittype.ProvisioningProtocol;
+import dbi.Syslog;
+import dbi.SyslogConstants;
+import dbi.Unittype.ProvisioningProtocol;
 import java.util.Date;
 
 public class ProvisioningMessage {

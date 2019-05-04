@@ -15,7 +15,7 @@ public class Log {
         || sessionData.getUnit().getUnitParameters() == null) {
       return;
     }
-    com.github.freeacs.dbi.UnitParameter debugUp = sessionData.getUnit().getUnitParameters().get(com.github.freeacs.dbi.util.SystemParameters.DEBUG);
+    dbi.UnitParameter debugUp = sessionData.getUnit().getUnitParameters().get(dbi.util.SystemParameters.DEBUG);
     if (debugUp != null && "1".equals(debugUp.getValue())) {
       debugLog.info(message);
     }

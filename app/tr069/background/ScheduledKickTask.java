@@ -10,23 +10,23 @@ import java.util.List;
 
 public class ScheduledKickTask extends TaskDefaultImpl {
   public static class UnitKick {
-    private com.github.freeacs.dbi.Unit unit;
+    private dbi.Unit unit;
     private long initiatedTms;
     private int kickCount;
     private long nextTms;
 
-    public UnitKick(com.github.freeacs.dbi.Unit u) {
+    public UnitKick(dbi.Unit u) {
       this.unit = u;
       this.initiatedTms = System.currentTimeMillis();
       this.kickCount = 0;
       this.nextTms = initiatedTms + 5000;
     }
 
-    public com.github.freeacs.dbi.Unit getUnit() {
+    public dbi.Unit getUnit() {
       return unit;
     }
 
-    public void setUnit(com.github.freeacs.dbi.Unit unit) {
+    public void setUnit(dbi.Unit unit) {
       this.unit = unit;
     }
 
@@ -48,12 +48,12 @@ public class ScheduledKickTask extends TaskDefaultImpl {
   }
 
   private static Logger logger = LoggerFactory.getLogger(ScheduledKickTask.class);
-  private com.github.freeacs.dbi.DBI dbi;
+  private dbi.DBI dbi;
   private static final Object syncMonitor = new Object();
 
   private static List<UnitKick> kickList = new ArrayList<>();
 
-  public ScheduledKickTask(String taskName, com.github.freeacs.dbi.DBI dbi) {
+  public ScheduledKickTask(String taskName, dbi.DBI dbi) {
     super(taskName);
     this.dbi = dbi;
   }
@@ -76,10 +76,10 @@ public class ScheduledKickTask extends TaskDefaultImpl {
           listIterator.remove();
           continue;
         }
-        com.github.freeacs.dbi.Unit unit = uk.getUnit();
-        com.github.freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
+        dbi.Unit unit = uk.getUnit();
+        dbi.ACSUnit acsUnit = dbi.getACSUnit();
         acsUnit.addOrChangeQueuedUnitParameters(unit);
-        dbi.publishKick(unit, com.github.freeacs.dbi.SyslogConstants.FACILITY_STUN);
+        dbi.publishKick(unit, dbi.SyslogConstants.FACILITY_STUN);
         uk.setNextTms(now + 30000);
         uk.setKickCount(uk.getKickCount() + 1);
         logger.debug(
@@ -96,7 +96,7 @@ public class ScheduledKickTask extends TaskDefaultImpl {
   }
 
   // TODO remove?
-  public static void addUnit(com.github.freeacs.dbi.Unit u) {
+  public static void addUnit(dbi.Unit u) {
     removeUnit(u.getId());
     synchronized (syncMonitor) {
       kickList.add(new UnitKick(u));

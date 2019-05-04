@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 import java.util.ArrayList;
 import java.util.Iterator;

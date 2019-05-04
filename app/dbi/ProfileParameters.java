@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 import java.sql.Connection;
 import java.sql.SQLException;

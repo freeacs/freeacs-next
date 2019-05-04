@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

@@ -69,17 +69,17 @@ public class BaseCache {
     cache.remove(key);
   }
 
-  public static com.github.freeacs.dbi.File getFirmware(String firmwareName, String unittypeName) {
+  public static dbi.File getFirmware(String firmwareName, String unittypeName) {
     String key = firmwareName + unittypeName + FIRMWAREIMAGE_KEY;
     CacheValue cv = cache.get(key);
     if (cv != null) {
-      return (com.github.freeacs.dbi.File) cv.getObject();
+      return (dbi.File) cv.getObject();
     } else {
       return null;
     }
   }
 
-  public static void putFirmware(String firmwareName, String unittypeName, com.github.freeacs.dbi.File firmware) {
+  public static void putFirmware(String firmwareName, String unittypeName, dbi.File firmware) {
     String key = firmwareName + unittypeName + FIRMWAREIMAGE_KEY;
     if (firmware != null) {
       CacheValue cv = new CacheValue(firmware, Cache.ABSOLUTE, FIRMWAREIMAGE_CACHE_TIMEOUT);

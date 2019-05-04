@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
 public class KeyElement {
   private String name;

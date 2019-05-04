@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi.report;
+package dbi.report;
 
 public class Average {
   private Counter weightedCounter = new Counter();

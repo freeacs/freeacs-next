@@ -1,16 +1,16 @@
 package tr069.methods.request;
 
-import com.github.freeacs.dbi.UnittypeParameter;
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.base.DBIActions;
-import com.github.freeacs.tr069.exception.TR069Exception;
-import com.github.freeacs.tr069.exception.TR069ExceptionShortMessage;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.ParameterInfoStruct;
-import com.github.freeacs.tr069.xml.ParameterList;
-import com.github.freeacs.tr069.xml.Parser;
+import dbi.UnittypeParameter;
+import tr069.Properties;
+import tr069.SessionData;
+import tr069.base.DBIActions;
+import tr069.exception.TR069Exception;
+import tr069.exception.TR069ExceptionShortMessage;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.ParameterInfoStruct;
+import tr069.xml.ParameterList;
+import tr069.xml.Parser;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -18,11 +18,11 @@ import java.util.List;
 
 @Slf4j
 public class GetParameterNamesProcessStrategy implements RequestProcessStrategy {
-    private final com.github.freeacs.dbi.DBI dbi;
+    private final dbi.DBI dbi;
 
     private Properties properties;
 
-    GetParameterNamesProcessStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    GetParameterNamesProcessStrategy(Properties properties, dbi.DBI dbi) {
         this.properties = properties;
         this.dbi = dbi;
     }
@@ -41,7 +41,7 @@ public class GetParameterNamesProcessStrategy implements RequestProcessStrategy 
             sessionData.setNoMoreRequests(true);
         }
         try {
-            com.github.freeacs.dbi.Unittype ut = sessionData.getUnittype();
+            dbi.Unittype ut = sessionData.getUnittype();
             List<UnittypeParameter> utpList = new ArrayList<>();
             for (ParameterInfoStruct pis : pisList) {
                 if (pis.getName().endsWith(".")) {
@@ -53,9 +53,9 @@ public class GetParameterNamesProcessStrategy implements RequestProcessStrategy 
                 } else {
                     newFlag = "R";
                 }
-                com.github.freeacs.dbi.UnittypeParameter utp = ut.getUnittypeParameters().getByName(pis.getName());
+                dbi.UnittypeParameter utp = ut.getUnittypeParameters().getByName(pis.getName());
                 if (utp == null) {
-                    utp = new com.github.freeacs.dbi.UnittypeParameter(ut, pis.getName(), new com.github.freeacs.dbi.UnittypeParameterFlag(newFlag));
+                    utp = new dbi.UnittypeParameter(ut, pis.getName(), new dbi.UnittypeParameterFlag(newFlag));
                 } else { // modify existing flag - only change (if necessary) R->RW or RW->R, leave other
                     // flags untouched!
                     String existingFlag = utp.getFlag().getFlag();
@@ -66,7 +66,7 @@ public class GetParameterNamesProcessStrategy implements RequestProcessStrategy 
                         newFlag = existingFlag.replace("W", "");
                         newFlag = newFlag.replace("R", "RW");
                     }
-                    utp.setFlag(new com.github.freeacs.dbi.UnittypeParameterFlag(newFlag));
+                    utp.setFlag(new dbi.UnittypeParameterFlag(newFlag));
                 }
                 if (!utpList.contains(utp)) {
                     utpList.add(utp);

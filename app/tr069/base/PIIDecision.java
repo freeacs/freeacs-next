@@ -35,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PIIDecision {
   private SessionDataI sessionData;
-  private com.github.freeacs.dbi.Job currentJob;
+  private dbi.Job currentJob;
   private String currentJobStatus;
-  private com.github.freeacs.dbi.Job[] allJobs;
+  private dbi.Job[] allJobs;
   private long calcTms;
   private ServiceWindow disruptiveSW;
 
@@ -55,7 +55,7 @@ public class PIIDecision {
   public long nextPII() {
     if (currentJob != null) {
       if (currentJobStatus != null) {
-        if (currentJobStatus.equals(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK)) {
+        if (currentJobStatus.equals(dbi.UnitJobStatus.COMPLETED_OK)) {
           log(MINIMUM_PII, "Job is found and completed OK");
           return MINIMUM_PII;
         } // continue to next steps
@@ -70,10 +70,10 @@ public class PIIDecision {
     // Find the next Job to schedule for, and then remove nextPII from all job-object
     // to avoid this information leak over to another thread/session (since Job-objects are
     // part of the XAPS-cache
-    com.github.freeacs.dbi.Job nextScheduledJob = null;
+    dbi.Job nextScheduledJob = null;
     Long nextScheduledJobPII = null;
     if (allJobs != null) {
-      for (com.github.freeacs.dbi.Job job : allJobs) {
+      for (dbi.Job job : allJobs) {
         if (job.getNextPII() != null) {
           if (nextScheduledJob == null || nextScheduledJobPII > job.getNextPII()) {
             nextScheduledJob = job;
@@ -129,7 +129,7 @@ public class PIIDecision {
    *
    * @param currentJob
    */
-  public void setCurrentJob(com.github.freeacs.dbi.Job currentJob) {
+  public void setCurrentJob(dbi.Job currentJob) {
     this.currentJob = currentJob;
   }
 
@@ -147,7 +147,7 @@ public class PIIDecision {
    *
    * @param allJobs
    */
-  public void setAllJobs(com.github.freeacs.dbi.Job[] allJobs) {
+  public void setAllJobs(dbi.Job[] allJobs) {
     this.allJobs = allJobs;
   }
 

@@ -1,35 +1,35 @@
 package tr069.methods;
 
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.base.Log;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.decision.DecisionStrategy;
-import com.github.freeacs.tr069.methods.request.RequestProcessStrategy;
-import com.github.freeacs.tr069.methods.response.ResponseCreateStrategy;
-import com.github.freeacs.tr069.xml.Response;
-import com.github.freeacs.tr069.xml.XMLFormatterUtils;
+import tr069.Properties;
+import tr069.base.Log;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.decision.DecisionStrategy;
+import tr069.methods.request.RequestProcessStrategy;
+import tr069.methods.response.ResponseCreateStrategy;
+import tr069.xml.Response;
+import tr069.xml.XMLFormatterUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static com.github.freeacs.tr069.CwmpVersion.extractVersionFrom;
-import static com.github.freeacs.tr069.methods.ProvisioningMethod.extractMethodFrom;
+import static tr069.CwmpVersion.extractVersionFrom;
+import static tr069.methods.ProvisioningMethod.extractMethodFrom;
 
 @Slf4j
 public abstract class ProvisioningStrategy {
 
     public abstract void process(HTTPRequestResponseData reqRes) throws Exception;
 
-    public static ProvisioningStrategy getStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    public static ProvisioningStrategy getStrategy(Properties properties, dbi.DBI dbi) {
         return new NormalProvisioningStrategy(properties, dbi);
     }
 
     private static class NormalProvisioningStrategy extends ProvisioningStrategy {
 
         private final Properties properties;
-        private final com.github.freeacs.dbi.DBI dbi;
+        private final dbi.DBI dbi;
 
-        private NormalProvisioningStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+        private NormalProvisioningStrategy(Properties properties, dbi.DBI dbi) {
             this.properties = properties;
             this.dbi = dbi;
         }

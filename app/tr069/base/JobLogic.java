@@ -1,9 +1,9 @@
 package tr069.base;
 
-import com.github.freeacs.dbi.Job;
-import com.github.freeacs.dbi.JobFlag.JobServiceWindow;
-import com.github.freeacs.dbi.JobFlag.JobType;
-import com.github.freeacs.dbi.JobParameter;
+import dbi.Job;
+import dbi.JobFlag.JobServiceWindow;
+import dbi.JobFlag.JobType;
+import dbi.JobParameter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -19,59 +19,59 @@ import java.util.Map.Entry;
  */
 @Slf4j
 public class JobLogic {
-  public static boolean checkJobOK(SessionDataI sessionData, com.github.freeacs.dbi.DBI dbi, boolean isDiscoveryMode) {
+  public static boolean checkJobOK(SessionDataI sessionData, dbi.DBI dbi, boolean isDiscoveryMode) {
     try {
-      String jobId = sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT);
+      String jobId = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_CURRENT);
       if (jobId != null && !jobId.trim().isEmpty()) {
         log.debug("Verification stage entered for job " + jobId);
-        com.github.freeacs.dbi.Job job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobId));
+        dbi.Job job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobId));
         if (job == null) {
           log.warn("Current job " + jobId + " does no longer exist, cannot be verified");
           return false;
         }
         UnitJob uj = new UnitJob(sessionData, dbi, job, false);
-        if (!com.github.freeacs.dbi.JobStatus.STARTED.equals(job.getStatus())) {
+        if (!dbi.JobStatus.STARTED.equals(job.getStatus())) {
           log.warn("Current job is not STARTED, UnitJob must be STOPPED");
-          uj.stop(com.github.freeacs.dbi.UnitJobStatus.STOPPED, isDiscoveryMode);
+          uj.stop(dbi.UnitJobStatus.STOPPED, isDiscoveryMode);
           return false;
         } else {
           JobType type = job.getFlags().getType();
           if (type == JobType.CONFIG) {
             boolean parameterKeyEquality = sessionData.lastProvisioningOK();
             if (parameterKeyEquality) {
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("The parameterkeys from CPE and ACS does not match, UnitJob FAILED");
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           } else if (type == JobType.RESTART
               || type == JobType.RESET
               || type == JobType.KICK
               || type == JobType.SHELL) {
-            uj.stop(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+            uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
             return true;
           } else if (type == JobType.SOFTWARE) {
             Map<String, JobParameter> jpMap = job.getDefaultParameters();
-            com.github.freeacs.dbi.JobParameter dsw = jpMap.get(com.github.freeacs.dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION);
+            dbi.JobParameter dsw = jpMap.get(dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION);
             String sw = sessionData.getSoftwareVersion();
             if (dsw != null && sw != null && dsw.getParameter().getValue().equals(sw)) {
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("Software version on CPE and ACS (desired) does not match, UnitJob FAILED");
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           } else if (type == JobType.TR069_SCRIPT) {
             boolean commandKeyEquality = sessionData.lastProvisioningOK();
             if (commandKeyEquality) {
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("Script/Config version on CPE and ACS (desired) does not match, UnitJob FAILED");
-              uj.stop(com.github.freeacs.dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           }
@@ -84,9 +84,9 @@ public class JobLogic {
     }
   }
 
-  public static UnitJob checkNewJob(SessionDataI sessionData, com.github.freeacs.dbi.DBI dbi, int downloadLimit) {
-    if (sessionData.getUnit().getProvisioningMode() == com.github.freeacs.dbi.util.ProvisioningMode.REGULAR) {
-      com.github.freeacs.dbi.Job job = getJob(sessionData, downloadLimit);
+  public static UnitJob checkNewJob(SessionDataI sessionData, dbi.DBI dbi, int downloadLimit) {
+    if (sessionData.getUnit().getProvisioningMode() == dbi.util.ProvisioningMode.REGULAR) {
+      dbi.Job job = getJob(sessionData, downloadLimit);
       if (job != null) {
         UnitJob uj;
         if (job.getFlags().getType() == JobType.SHELL) {
@@ -107,13 +107,13 @@ public class JobLogic {
    * The method filters through all kinds of factors to find which Job (if any) should be the next
    * to run.
    */
-  private static com.github.freeacs.dbi.Job getJob(SessionDataI sessionData, int downloadLimit) {
-    com.github.freeacs.dbi.Unit unit = sessionData.getUnit();
-    com.github.freeacs.dbi.Jobs jobs = sessionData.getUnittype().getJobs();
+  private static dbi.Job getJob(SessionDataI sessionData, int downloadLimit) {
+    dbi.Unit unit = sessionData.getUnit();
+    dbi.Jobs jobs = sessionData.getUnittype().getJobs();
     String message = "";
-    com.github.freeacs.dbi.Job[] allJobs = jobs.getJobs();
+    dbi.Job[] allJobs = jobs.getJobs();
     sessionData.getPIIDecision().setAllJobs(allJobs);
-    com.github.freeacs.dbi.Job chosenJob = null;
+    dbi.Job chosenJob = null;
     try {
       Map<Integer, Job> possibleJobs = filterOnStatusAndType(allJobs);
       message += "Status/Type:" + possibleJobs.size() + ", ";
@@ -153,7 +153,7 @@ public class JobLogic {
         return null;
       }
 
-      com.github.freeacs.dbi.Job j = findJobWithHighestPriority(possibleJobs);
+      dbi.Job j = findJobWithHighestPriority(possibleJobs);
       if (j == null) {
         message += "Priority:0";
         return null;
@@ -184,7 +184,7 @@ public class JobLogic {
           Map<Integer, Job> possibleJobs, Map<Integer, JobHistoryEntry> jobHistory) {
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
     while (i.hasNext()) {
-      com.github.freeacs.dbi.Job j = i.next().getValue();
+      dbi.Job j = i.next().getValue();
       // The job depends on another job, but the other job has not yet run (according to history)
       if (j.getDependency() != null && jobHistory.get(j.getDependency().getId()) == null) {
         i.remove();
@@ -231,14 +231,14 @@ public class JobLogic {
      *
      * Morten Simonsen, Nov 2011
      */
-    String disruptiveJob = sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.JOB_DISRUPTIVE);
+    String disruptiveJob = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_DISRUPTIVE);
     boolean inDisruptiveJobChain = "1".equals(disruptiveJob);
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
     long lowestNRT = Long.MAX_VALUE;
-    com.github.freeacs.dbi.Job nextRepeatableJob = null;
+    dbi.Job nextRepeatableJob = null;
     while (i.hasNext()) {
       Entry<Integer, Job> entry = i.next();
-      com.github.freeacs.dbi.Job job = entry.getValue();
+      dbi.Job job = entry.getValue();
       boolean repeatable = job.getRepeatCount() != null && job.getRepeatCount() > 0;
       boolean isDisruptiveSw =
           entry.getValue().getFlags().getServiceWindow() == JobServiceWindow.DISRUPTIVE;
@@ -286,7 +286,7 @@ public class JobLogic {
       Iterator<Entry<Integer, Job>> i2 = possibleJobs.entrySet().iterator();
       while (i2.hasNext()) {
         Entry<Integer, Job> entry = i2.next();
-        com.github.freeacs.dbi.Job job = entry.getValue();
+        dbi.Job job = entry.getValue();
         boolean repeatable = job.getRepeatCount() != null && job.getRepeatCount() > 0;
         if (repeatable && !job.getId().equals(nextRepeatableJob.getId())) {
           log.debug("FilterOnRunTime removed job "
@@ -322,7 +322,7 @@ public class JobLogic {
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
     while (i.hasNext()) {
       Entry<Integer, Job> entry = i.next();
-      com.github.freeacs.dbi.Job job = entry.getValue();
+      dbi.Job job = entry.getValue();
       JobType type = job.getFlags().getType();
       if ((type == JobType.SOFTWARE || type == JobType.TR069_SCRIPT)
           && !DownloadLogic.downloadAllowed(job, downloadLimit)) {
@@ -332,10 +332,10 @@ public class JobLogic {
     return possibleJobs;
   }
 
-  private static Map<Integer, Job> filterOnGroupMatch(Map<Integer, Job> possibleJobs, com.github.freeacs.dbi.Unit unit) {
+  private static Map<Integer, Job> filterOnGroupMatch(Map<Integer, Job> possibleJobs, dbi.Unit unit) {
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
     while (i.hasNext()) {
-      com.github.freeacs.dbi.Job job = i.next().getValue();
+      dbi.Job job = i.next().getValue();
       if (!job.getGroup().match(unit)) {
         i.remove();
       }
@@ -343,11 +343,11 @@ public class JobLogic {
     return possibleJobs;
   }
 
-  private static Map<Integer, Job> filterOnStatusAndType(com.github.freeacs.dbi.Job[] allJobs) {
+  private static Map<Integer, Job> filterOnStatusAndType(dbi.Job[] allJobs) {
     Map<Integer, Job> possibleJobs = new HashMap<>();
-    for (com.github.freeacs.dbi.Job j : allJobs) {
+    for (dbi.Job j : allJobs) {
       JobType type = j.getFlags().getType();
-      if (com.github.freeacs.dbi.JobStatus.STARTED.equals(j.getStatus())
+      if (dbi.JobStatus.STARTED.equals(j.getStatus())
           && type != JobType.KICK
           && type != JobType.TELNET) {
         possibleJobs.put(j.getId(), j);
@@ -356,10 +356,10 @@ public class JobLogic {
     return possibleJobs;
   }
 
-  private static Map<Integer, JobHistoryEntry> getJobHistory(com.github.freeacs.dbi.Unit unit, com.github.freeacs.dbi.Jobs jobs) {
+  private static Map<Integer, JobHistoryEntry> getJobHistory(dbi.Unit unit, dbi.Jobs jobs) {
     Map<Integer, JobHistoryEntry> jobHistoryMap = new HashMap<>();
-    String utpJobHistory = com.github.freeacs.dbi.util.SystemParameters.JOB_HISTORY;
-    com.github.freeacs.dbi.UnitParameter jobHistoryUp = unit.getUnitParameters().get(utpJobHistory);
+    String utpJobHistory = dbi.util.SystemParameters.JOB_HISTORY;
+    dbi.UnitParameter jobHistoryUp = unit.getUnitParameters().get(utpJobHistory);
     if (jobHistoryUp != null) {
       String[] jobHistoryArr = jobHistoryUp.getValue().split(",");
       for (String str : jobHistoryArr) {
@@ -385,7 +385,7 @@ public class JobLogic {
           Map<Integer, Job> possibleJobs, Map<Integer, JobHistoryEntry> jobHistory) {
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
     while (i.hasNext()) {
-      com.github.freeacs.dbi.Job job = i.next().getValue();
+      dbi.Job job = i.next().getValue();
       JobHistoryEntry jhEntry = jobHistory.get(job.getId());
       if (jhEntry == null) {
         continue;
@@ -412,12 +412,12 @@ public class JobLogic {
    * over those that are repeatable. 2. Non-dependent jobs have priority over those that are
    * dependent.
    */
-  private static com.github.freeacs.dbi.Job findJobWithHighestPriority(Map<Integer, Job> possibleJobs) {
+  private static dbi.Job findJobWithHighestPriority(Map<Integer, Job> possibleJobs) {
     Iterator<Entry<Integer, Job>> i = possibleJobs.entrySet().iterator();
-    com.github.freeacs.dbi.Job nonRepeatableAndDependent = null;
-    com.github.freeacs.dbi.Job repeatableJob = null;
+    dbi.Job nonRepeatableAndDependent = null;
+    dbi.Job repeatableJob = null;
     while (i.hasNext()) {
-      com.github.freeacs.dbi.Job job = i.next().getValue();
+      dbi.Job job = i.next().getValue();
       boolean repeatable = job.getRepeatCount() != null && job.getRepeatCount() > 0;
       if (!repeatable && job.getDependency() == null) {
         return job;

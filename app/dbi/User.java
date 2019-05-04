@@ -1,6 +1,6 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.dbi.crypto.Crypto;
+import dbi.crypto.Crypto;
 import java.sql.SQLException;
 
 public class User {

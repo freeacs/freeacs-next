@@ -1,8 +1,8 @@
 package tr069;
 
-import com.github.freeacs.dbi.JobParameter;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import dbi.JobParameter;
+import tr069.http.HTTPRequestResponseData;
+import tr069.xml.ParameterValueStruct;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,11 +28,11 @@ public class ParameterKey {
   private static String calculateParameterKey(HTTPRequestResponseData reqRes)
       throws NoSuchAlgorithmException {
     SessionData sessionData = reqRes.getSessionData();
-    com.github.freeacs.dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+    dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
     Map<String, ParameterValueStruct> fromDB = sessionData.getFromDB();
-    String jobId = sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.JOB_CURRENT);
+    String jobId = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_CURRENT);
     if (jobId != null && !"".equals(jobId.trim())) {
-      com.github.freeacs.dbi.Job job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobId));
+      dbi.Job job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobId));
       if (job != null) {
         log.debug("Current job has jobId: "
                 + job.getId()
@@ -57,7 +57,7 @@ public class ParameterKey {
     for (Entry<String, ParameterValueStruct> entry : fromDB.entrySet()) {
       String utpName = entry.getKey();
       //			ParameterInfoStruct pis = infoMap.get(utpName);
-      com.github.freeacs.dbi.UnittypeParameter utp = utps.getByName(utpName);
+      dbi.UnittypeParameter utp = utps.getByName(utpName);
       //			if (pis != null && pis.isWritable()) {
       if (utp != null && utp.getFlag().isReadWrite()) {
         if (utpName.contains("PeriodicInformInterval")

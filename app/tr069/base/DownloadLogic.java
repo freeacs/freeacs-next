@@ -38,7 +38,7 @@ public class DownloadLogic {
     return downloadList.size();
   }
 
-  public static boolean downloadAllowed(com.github.freeacs.dbi.Job job, int downloadLimit) {
+  public static boolean downloadAllowed(dbi.Job job, int downloadLimit) {
     int timeout = 10 * 60 * 1000; // 10 min
     if (job != null) {
       timeout = job.getUnconfirmedTimeout() * 1000;

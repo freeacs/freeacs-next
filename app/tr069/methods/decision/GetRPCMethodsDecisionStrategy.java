@@ -1,7 +1,7 @@
 package tr069.methods.decision;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
 
 public class GetRPCMethodsDecisionStrategy implements DecisionStrategy {
     @Override

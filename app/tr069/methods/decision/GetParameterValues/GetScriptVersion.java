@@ -1,7 +1,7 @@
 package tr069.methods.decision.GetParameterValues;
 
-import com.github.freeacs.tr069.CPEParameters;
-import com.github.freeacs.tr069.base.ACSParameters;
+import tr069.CPEParameters;
+import tr069.base.ACSParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +30,9 @@ public class GetScriptVersion {
 
     public GetScriptVersion build() {
         oweraParams.getAcsParams().entrySet().stream().flatMap(entry -> {
-            if (com.github.freeacs.dbi.util.SystemParameters.isTR069ScriptVersionParameter(entry.getKey())) {
+            if (dbi.util.SystemParameters.isTR069ScriptVersionParameter(entry.getKey())) {
                 // The config-file-name is the same as the script-name retrieved from the system-parameter
-                String name = com.github.freeacs.dbi.util.SystemParameters.getTR069ScriptName(entry.getKey());
+                String name = dbi.util.SystemParameters.getTR069ScriptName(entry.getKey());
                 String scriptVersionFromCPE = cpeParams.getConfigFileMap().get(name);
                 if (scriptVersionFromCPE == null) {
                     logger.error("No script version found for " + name);

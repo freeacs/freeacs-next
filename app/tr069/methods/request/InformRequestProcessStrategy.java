@@ -1,16 +1,16 @@
 package tr069.methods.request;
 
-import com.github.freeacs.tr069.*;
-import com.github.freeacs.tr069.background.ScheduledKickTask;
-import com.github.freeacs.tr069.base.BaseCache;
-import com.github.freeacs.tr069.base.DBIActions;
-import com.github.freeacs.tr069.base.JobLogic;
-import com.github.freeacs.tr069.exception.TR069DatabaseException;
-import com.github.freeacs.tr069.exception.TR069Exception;
-import com.github.freeacs.tr069.exception.TR069ExceptionShortMessage;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.*;
+import tr069.*;
+import tr069.background.ScheduledKickTask;
+import tr069.base.BaseCache;
+import tr069.base.DBIActions;
+import tr069.base.JobLogic;
+import tr069.exception.TR069DatabaseException;
+import tr069.exception.TR069Exception;
+import tr069.exception.TR069ExceptionShortMessage;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,10 +25,10 @@ import java.util.TreeSet;
 
 @Slf4j
 public class InformRequestProcessStrategy implements RequestProcessStrategy {
-    private final com.github.freeacs.dbi.DBI dbi;
+    private final dbi.DBI dbi;
     private Properties properties;
 
-    InformRequestProcessStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    InformRequestProcessStrategy(Properties properties, dbi.DBI dbi) {
         this.properties = properties;
         this.dbi = dbi;
     }
@@ -204,13 +204,13 @@ public class InformRequestProcessStrategy implements RequestProcessStrategy {
     private static void logPeriodicInformTiming(SessionData sessionData) {
         try {
             if (sessionData.getUnit() != null && sessionData.isPeriodic()) {
-                com.github.freeacs.dbi.Unit unit = sessionData.getUnit();
+                dbi.Unit unit = sessionData.getUnit();
                 if (unit.getUnitParameters() != null) {
-                    String PII = unit.getParameterValue(com.github.freeacs.dbi.util.SystemParameters.PERIODIC_INTERVAL, false);
-                    String LCT = unit.getParameterValue(com.github.freeacs.dbi.util.SystemParameters.LAST_CONNECT_TMS, false);
+                    String PII = unit.getParameterValue(dbi.util.SystemParameters.PERIODIC_INTERVAL, false);
+                    String LCT = unit.getParameterValue(dbi.util.SystemParameters.LAST_CONNECT_TMS, false);
                     if (PII != null && LCT != null) {
                         long shouldConnectTms =
-                                com.github.freeacs.dbi.util.TimestampWrapper.tmsFormat.parse(LCT).getTime() + Integer.parseInt(PII) * 1000;
+                                dbi.util.TimestampWrapper.tmsFormat.parse(LCT).getTime() + Integer.parseInt(PII) * 1000;
                         long diff = System.currentTimeMillis() - shouldConnectTms;
                         if (diff > -5000 && diff < 5000) {
                             log.info("Periodic Inform recorded on time   (" + diff / 1000 + " sec). Deviation: " + (diff / 10) / Integer.parseInt(PII) + " %");

@@ -1,4 +1,4 @@
-package com.github.freeacs.dbi;
+package dbi;
 
 import common.util.Sleep;
 import java.sql.Connection;

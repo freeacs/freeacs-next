@@ -1,9 +1,9 @@
 package tr069.methods.request;
 
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.Header;
-import com.github.freeacs.tr069.xml.Parser;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.Header;
+import tr069.xml.Parser;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

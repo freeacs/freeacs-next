@@ -1,6 +1,6 @@
 package tr069.http;
 
-import com.github.freeacs.tr069.xml.Fault;
+import tr069.xml.Fault;
 
 public class HTTPRequestData {
   private String method;

@@ -1,12 +1,12 @@
 package tr069.methods.decision;
 
-import com.github.freeacs.tr069.InformParameters;
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.SessionData;
-import com.github.freeacs.tr069.base.DBIActions;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
-import com.github.freeacs.tr069.xml.ParameterValueStruct;
+import tr069.InformParameters;
+import tr069.Properties;
+import tr069.SessionData;
+import tr069.base.DBIActions;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
+import tr069.xml.ParameterValueStruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -17,10 +17,10 @@ import java.util.List;
 
 @Slf4j
 public class EmptyDecisionStrategy implements DecisionStrategy {
-    private final com.github.freeacs.dbi.DBI dbi;
+    private final dbi.DBI dbi;
     private final Properties properties;
 
-    EmptyDecisionStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    EmptyDecisionStrategy(Properties properties, dbi.DBI dbi) {
         this.properties = properties;
         this.dbi = dbi;
     }
@@ -44,7 +44,7 @@ public class EmptyDecisionStrategy implements DecisionStrategy {
             } else if (sessionData.discoverUnittype()) {
                 writeSystemParameters(
                         reqRes,
-                        Collections.singletonList(new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.DISCOVER, "0")),
+                        Collections.singletonList(new ParameterValueStruct(dbi.util.SystemParameters.DISCOVER, "0")),
                         false);
                 log.info("EM-Decision is GPN since unit has DISCOVER parameter set to 1");
                 reqRes.getResponseData().setMethod(ProvisioningMethod.GetParameterNames.name());
@@ -82,27 +82,27 @@ public class EmptyDecisionStrategy implements DecisionStrategy {
         if (params != null) {
             toDB = new ArrayList<>(params);
         }
-        String timestamp = com.github.freeacs.dbi.util.TimestampWrapper.tmsFormat.format(new Date());
-        toDB.add(new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.LAST_CONNECT_TMS, timestamp));
-        if (sessionData.getAcsParameters().getValue(com.github.freeacs.dbi.util.SystemParameters.FIRST_CONNECT_TMS) == null) {
-            toDB.add(new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.FIRST_CONNECT_TMS, timestamp));
+        String timestamp = dbi.util.TimestampWrapper.tmsFormat.format(new Date());
+        toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.LAST_CONNECT_TMS, timestamp));
+        if (sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.FIRST_CONNECT_TMS) == null) {
+            toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.FIRST_CONNECT_TMS, timestamp));
         }
         String currentIPAddress =
-                sessionData.getUnit().getParameters().get(com.github.freeacs.dbi.util.SystemParameters.IP_ADDRESS);
+                sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.IP_ADDRESS);
         String actualIPAddress = reqRes.getRealIPAddress();
         if (currentIPAddress == null || !currentIPAddress.equals(actualIPAddress)) {
-            toDB.add(new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.IP_ADDRESS, actualIPAddress));
+            toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.IP_ADDRESS, actualIPAddress));
         }
-        String swVersion = sessionData.getUnit().getParameters().get(com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_VERSION);
+        String swVersion = sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.SOFTWARE_VERSION);
         if (swVersion == null || !swVersion.equals(reqRes.getSessionData().getSoftwareVersion())) {
             toDB.add(
                     new ParameterValueStruct(
-                            com.github.freeacs.dbi.util.SystemParameters.SOFTWARE_VERSION, reqRes.getSessionData().getSoftwareVersion()));
+                            dbi.util.SystemParameters.SOFTWARE_VERSION, reqRes.getSessionData().getSoftwareVersion()));
         }
-        String sn = sessionData.getUnit().getParameters().get(com.github.freeacs.dbi.util.SystemParameters.SERIAL_NUMBER);
+        String sn = sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.SERIAL_NUMBER);
         if (sn == null || !sn.equals(sessionData.getSerialNumber())) {
             toDB.add(
-                    new ParameterValueStruct(com.github.freeacs.dbi.util.SystemParameters.SERIAL_NUMBER, sessionData.getSerialNumber()));
+                    new ParameterValueStruct(dbi.util.SystemParameters.SERIAL_NUMBER, sessionData.getSerialNumber()));
         }
         InformParameters ifmp = sessionData.getInformParameters();
         if (ifmp != null

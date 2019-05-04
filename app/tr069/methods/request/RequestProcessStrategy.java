@@ -1,8 +1,8 @@
 package tr069.methods.request;
 
-import com.github.freeacs.tr069.Properties;
-import com.github.freeacs.tr069.http.HTTPRequestResponseData;
-import com.github.freeacs.tr069.methods.ProvisioningMethod;
+import tr069.Properties;
+import tr069.http.HTTPRequestResponseData;
+import tr069.methods.ProvisioningMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +12,7 @@ public interface RequestProcessStrategy {
 
     void process(HTTPRequestResponseData reqRes) throws Exception;
 
-    static RequestProcessStrategy getStrategy(ProvisioningMethod provisioningMethod, Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static RequestProcessStrategy getStrategy(ProvisioningMethod provisioningMethod, Properties properties, dbi.DBI dbi) {
         switch (provisioningMethod) {
             case Empty: return doNotProcessStrategy();
             case Download: return downloadStrategy();
@@ -59,11 +59,11 @@ public interface RequestProcessStrategy {
         return reqRes -> {};
     }
 
-    static RequestProcessStrategy informStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static RequestProcessStrategy informStrategy(Properties properties, dbi.DBI dbi) {
         return new InformRequestProcessStrategy(properties, dbi);
     }
 
-    static RequestProcessStrategy getParameterNamesStrategy(Properties properties, com.github.freeacs.dbi.DBI dbi) {
+    static RequestProcessStrategy getParameterNamesStrategy(Properties properties, dbi.DBI dbi) {
         return new GetParameterNamesProcessStrategy(properties, dbi);
     }
 
@@ -71,7 +71,7 @@ public interface RequestProcessStrategy {
         return new GetParameterValuesRequestProcessStrategy();
     }
 
-    static RequestProcessStrategy setParameterValuesStrategy(com.github.freeacs.dbi.DBI dbi) {
+    static RequestProcessStrategy setParameterValuesStrategy(dbi.DBI dbi) {
         return new SetParameterValuesRequestProcessStrategy(dbi);
     }
 }

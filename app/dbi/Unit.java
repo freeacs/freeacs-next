@@ -1,8 +1,8 @@
-package com.github.freeacs.dbi;
+package dbi;
 
-import com.github.freeacs.dbi.util.MapWrapper;
-import com.github.freeacs.dbi.util.ProvisioningMode;
-import com.github.freeacs.dbi.util.SystemParameters;
+import dbi.util.MapWrapper;
+import dbi.util.ProvisioningMode;
+import dbi.util.SystemParameters;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
