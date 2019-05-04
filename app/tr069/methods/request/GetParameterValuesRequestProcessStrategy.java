@@ -6,9 +6,7 @@ import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.ParameterValueStruct;
 import tr069.xml.Parser;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class GetParameterValuesRequestProcessStrategy implements RequestProcessStrategy {
 
     @SuppressWarnings("Duplicates")
@@ -41,9 +39,6 @@ public class GetParameterValuesRequestProcessStrategy implements RequestProcessS
             if (pvs.getName().contains(cpeParams.CONFIG_FILES)) {
                 counter++;
                 cpeParams.getCpeParams().put(pvs.getName(), pvs);
-                //			} else if (pvs.getName().contains(cpeParams.CONFIG_VERSION)) {
-                //				counter++;
-                //				cpeParams.putPvs(pvs.getName(), pvs);
             } else if (pvs.getName().equals(cpeParams.CONNECTION_URL)) {
                 counter++;
                 cpeParams.getCpeParams().put(cpeParams.CONNECTION_URL, pvs);

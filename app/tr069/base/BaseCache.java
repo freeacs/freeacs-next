@@ -1,7 +1,7 @@
 package tr069.base;
 
-import com.github.freeacs.common.util.Cache;
-import com.github.freeacs.common.util.CacheValue;
+import common.util.Cache;
+import common.util.CacheValue;
 
 import java.util.ArrayList;
 import java.util.List;

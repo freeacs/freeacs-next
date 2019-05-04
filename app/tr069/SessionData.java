@@ -8,9 +8,6 @@ import tr069.base.SessionDataI;
 import tr069.http.HTTPRequestResponseData;
 import tr069.xml.ParameterList;
 import tr069.xml.ParameterValueStruct;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,32 +15,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Data
-@Slf4j
 public class SessionData implements SessionDataI {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SessionData.class);
+  private static final Logger log = LoggerFactory.getLogger(SessionData.class);
 
-  /** The session-id. */
-  private String id;
-  /** Data for monitoring/logging. */
-  private List<HTTPRequestResponseData> reqResList = new ArrayList<>();
-  /** When did the session start? */
+  private final String id;
+  private final List<HTTPRequestResponseData> reqResList = new ArrayList<>();
   private Long startupTmsForSession;
 
-  /** The unique id for the CPE. */
   private String unitId;
-  /** The unit-object. */
   private dbi.Unit unit;
-  /** The profile name for this CPE (defined i the DB). */
   private dbi.Profile profile;
-  /** The unittype for this CPE (defined in the DB). */
   private dbi.Unittype unittype;
-  /** The keyroot of this CPE (e.g. InternetGatewayDevice.) */
   private String keyRoot;
 
   private String serialNumber;
 
-  /** Tells whether the CPE is doing a periodic inform or not. */
   private boolean periodic;
   /* other event codes */
   private boolean factoryReset;
@@ -54,55 +40,34 @@ public class SessionData implements SessionDataI {
   private boolean diagnosticsComplete;
   private boolean booted;
 
-  /** Tells whether a job is under execution - important not to start on another job. */
   private boolean jobUnderExecution;
-  /** The event code of the inform. */
   private String eventCodes;
 
-  /** Owera parameters. */
   private ACSParameters acsParameters;
-  /** Special parameters, will always be retrieved. */
   private CPEParameters cpeParameters;
-  /** Special parameter, will only be retrieved from the Inform. */
   private InformParameters informParameters;
 
-  /** All parameters found in the DB, except system parameters (X). */
   private Map<String, ParameterValueStruct> fromDB;
-  /** All parameters read from the CPE. */
   private List<ParameterValueStruct> valuesFromCPE;
-  /** All parameters that shall be written to the CPE. */
   private ParameterList toCPE;
-  /** All parameters that shall be written to the DB. */
   private List<ParameterValueStruct> toDB;
-  /** All parameters requested from CPE. */
   private List<ParameterValueStruct> requestedCPE;
 
-  /** Job. */
   private dbi.Job job;
-  /** All parameters from a job. */
   private Map<String, JobParameter> jobParams;
 
-  /** Parameterkey contains a hash of all values sent to CPE. */
   private ParameterKey parameterKey;
-  /** Commandkey contains the version number of the last download - if a download was sent. */
   private CommandKey commandKey;
-  /** Provisioning allowed. False if outside servicewindow or not allowed by unitJob */
   private boolean provisioningAllowed = true;
 
-  /** The secret obtained by discovery-mode, basic auth. */
   private String secret;
-  /** The flag signals a first-time connect in discovery-mode. */
   private boolean firstConnect;
-  /** Unittype has been created, but unitId remains unknown, only for discovery-mode. */
   private boolean unittypeCreated = true;
 
-  /** PIIDecision is important to decide the final outcome of the next Periodic Inform Interval. */
   private PIIDecision piiDecision;
 
-  /** An object to store all kinds of data about the provisioning. */
   private dbi.util.ProvisioningMessage provisioningMessage = new dbi.util.ProvisioningMessage();
 
-  /** An object to store data about a download. */
   private Download download;
 
   private String cwmpVersionNumber;
@@ -126,7 +91,7 @@ public class SessionData implements SessionDataI {
   }
 
   public void setNoMoreRequests(boolean noMoreRequests) {
-    LOGGER.warn("Setting unused noMoreRequests field to " + noMoreRequests);
+    log.warn("Setting unused noMoreRequests field to " + noMoreRequests);
   }
 
   public void setToDB(List<ParameterValueStruct> toDB) {
@@ -137,7 +102,7 @@ public class SessionData implements SessionDataI {
   }
 
   public String getMethodBeforePreviousResponseMethod() {
-    if (reqResList != null && reqResList.size() > 2) {
+    if (reqResList.size() > 2) {
       return reqResList.get(reqResList.size() - 3).getResponseData().getMethod();
     } else {
       return null;
@@ -145,7 +110,7 @@ public class SessionData implements SessionDataI {
   }
 
   public String getPreviousResponseMethod() {
-    if (reqResList != null && reqResList.size() > 1) {
+    if (reqResList.size() > 1) {
       return reqResList.get(reqResList.size() - 2).getResponseData().getMethod();
     } else {
       return null;
@@ -158,24 +123,20 @@ public class SessionData implements SessionDataI {
   }
 
   public String getSoftwareVersion() {
-    CPEParameters cpeParams = getCpeParameters();
-    if (cpeParams != null) {
-      return cpeParams.getValue(cpeParams.SOFTWARE_VERSION);
+    if (cpeParameters != null) {
+      return cpeParameters.getValue(cpeParameters.SOFTWARE_VERSION);
     }
     return null;
   }
 
   public void setSoftwareVersion(String softwareVersion) {
-    CPEParameters cpeParams = getCpeParameters();
-    if (cpeParams != null) {
-      cpeParams.getCpeParams().put(
-          cpeParams.SOFTWARE_VERSION,
-          new ParameterValueStruct(cpeParams.SOFTWARE_VERSION, softwareVersion));
+    if (cpeParameters != null) {
+      cpeParameters.getCpeParams().put(cpeParameters.SOFTWARE_VERSION, new ParameterValueStruct(cpeParameters.SOFTWARE_VERSION, softwareVersion));
     }
   }
 
   public boolean lastProvisioningOK() {
-    return getParameterKey().isEqual() && getCommandKey().isEqual();
+    return parameterKey.isEqual() && commandKey.isEqual();
   }
 
   @Override
@@ -219,10 +180,358 @@ public class SessionData implements SessionDataI {
     return version;
   }
 
-  @Data
-  @AllArgsConstructor
+  /** The session-id. */
+  public String getId() {
+    return id;
+  }
+
+  /** The unique id for the CPE. */
+  @Override
+  public String getUnitId() {
+    return unitId;
+  }
+
+  /** The unit-object. */
+  @Override
+  public dbi.Unit getUnit() {
+    return unit;
+  }
+
+  @Override
+  public void setUnit(dbi.Unit unit) {
+    this.unit = unit;
+  }
+
+  /** The profile name for this CPE (defined i the DB). */
+  @Override
+  public dbi.Profile getProfile() {
+    return profile;
+  }
+
+  @Override
+  public void setProfile(dbi.Profile profile) {
+    this.profile = profile;
+  }
+
+  /** The unittype for this CPE (defined in the DB). */
+  @Override
+  public dbi.Unittype getUnittype() {
+    return unittype;
+  }
+
+  @Override
+  public void setUnittype(dbi.Unittype unittype) {
+    this.unittype = unittype;
+  }
+
+  /** The keyroot of this CPE (e.g. InternetGatewayDevice.) */
+  public String getKeyRoot() {
+    return keyRoot;
+  }
+
+  @Override
+  public String getSerialNumber() {
+    return serialNumber;
+  }
+
+  @Override
+  public void setSerialNumber(String serialNumber) {
+    this.serialNumber = serialNumber;
+  }
+
+  /** Tells whether the CPE is doing a periodic inform or not. */
+  public boolean isPeriodic() {
+    return periodic;
+  }
+
+  public void setPeriodic(boolean periodic) {
+    this.periodic = periodic;
+  }
+
+  public boolean isFactoryReset() {
+    return factoryReset;
+  }
+
+  public void setFactoryReset(boolean factoryReset) {
+    this.factoryReset = factoryReset;
+  }
+
+  public boolean isValueChange() {
+    return valueChange;
+  }
+
+  public void setValueChange(boolean valueChange) {
+    this.valueChange = valueChange;
+  }
+
+  public boolean isKicked() {
+    return kicked;
+  }
+
+  public void setKicked(boolean kicked) {
+    this.kicked = kicked;
+  }
+
+  public boolean isTransferComplete() {
+    return transferComplete;
+  }
+
+  public void setTransferComplete(boolean transferComplete) {
+    this.transferComplete = transferComplete;
+  }
+
+  public boolean isAutonomousTransferComplete() {
+    return autonomousTransferComplete;
+  }
+
+  public void setAutonomousTransferComplete(boolean autonomousTransferComplete) {
+    this.autonomousTransferComplete = autonomousTransferComplete;
+  }
+
+  public boolean isDiagnosticsComplete() {
+    return diagnosticsComplete;
+  }
+
+  public void setDiagnosticsComplete(boolean diagnosticsComplete) {
+    this.diagnosticsComplete = diagnosticsComplete;
+  }
+
+  public boolean isBooted() {
+    return booted;
+  }
+
+  public void setBooted(boolean booted) {
+    this.booted = booted;
+  }
+
+  /** Tells whether a job is under execution - important not to start on another job. */
+  public boolean isJobUnderExecution() {
+    return jobUnderExecution;
+  }
+
+  public void setJobUnderExecution(boolean jobUnderExecution) {
+    this.jobUnderExecution = jobUnderExecution;
+  }
+
+  /** The event code of the inform. */
+  public String getEventCodes() {
+    return eventCodes;
+  }
+
+  /** Owera parameters. */
+  @Override
+  public ACSParameters getAcsParameters() {
+    return acsParameters;
+  }
+
+  @Override
+  public void setAcsParameters(ACSParameters acsParameters) {
+    this.acsParameters = acsParameters;
+  }
+
+  /** Special parameters, will always be retrieved. */
+  public CPEParameters getCpeParameters() {
+    return cpeParameters;
+  }
+
+  public void setCpeParameters(CPEParameters cpeParameters) {
+    this.cpeParameters = cpeParameters;
+  }
+
+  /** Special parameter, will only be retrieved from the Inform. */
+  public InformParameters getInformParameters() {
+    return informParameters;
+  }
+
+  public void setInformParameters(InformParameters informParameters) {
+    this.informParameters = informParameters;
+  }
+
+  /** All parameters found in the DB, except system parameters (X). */
+  @Override
+  public Map<String, ParameterValueStruct> getFromDB() {
+    return fromDB;
+  }
+
+  @Override
+  public void setFromDB(Map<String, ParameterValueStruct> fromDB) {
+    this.fromDB = fromDB;
+  }
+
+  /** All parameters read from the CPE. */
+  public List<ParameterValueStruct> getValuesFromCPE() {
+    return valuesFromCPE;
+  }
+
+  public void setValuesFromCPE(List<ParameterValueStruct> valuesFromCPE) {
+    this.valuesFromCPE = valuesFromCPE;
+  }
+
+  /** All parameters that shall be written to the CPE. */
+  public ParameterList getToCPE() {
+    return toCPE;
+  }
+
+  public void setToCPE(ParameterList toCPE) {
+    this.toCPE = toCPE;
+  }
+
+  /** All parameters that shall be written to the DB. */
+  public List<ParameterValueStruct> getToDB() {
+    return toDB;
+  }
+
+  /** All parameters requested from CPE. */
+  public List<ParameterValueStruct> getRequestedCPE() {
+    return requestedCPE;
+  }
+
+  public void setRequestedCPE(List<ParameterValueStruct> requestedCPE) {
+    this.requestedCPE = requestedCPE;
+  }
+
+  /** Job. */
+  @Override
+  public dbi.Job getJob() {
+    return job;
+  }
+
+  @Override
+  public void setJob(dbi.Job job) {
+    this.job = job;
+  }
+
+  /** All parameters from a job. */
+  @Override
+  public Map<String, JobParameter> getJobParams() {
+    return jobParams;
+  }
+
+  @Override
+  public void setJobParams(Map<String, JobParameter> jobParams) {
+    this.jobParams = jobParams;
+  }
+
+  /** Parameterkey contains a hash of all values sent to CPE. */
+  public ParameterKey getParameterKey() {
+    return parameterKey;
+  }
+
+  public void setParameterKey(ParameterKey parameterKey) {
+    this.parameterKey = parameterKey;
+  }
+
+  /** Commandkey contains the version number of the last download - if a download was sent. */
+  public CommandKey getCommandKey() {
+    return commandKey;
+  }
+
+  public void setCommandKey(CommandKey commandKey) {
+    this.commandKey = commandKey;
+  }
+
+  /** Provisioning allowed. False if outside servicewindow or not allowed by unitJob */
+  public boolean isProvisioningAllowed() {
+    return provisioningAllowed;
+  }
+
+  public void setProvisioningAllowed(boolean provisioningAllowed) {
+    this.provisioningAllowed = provisioningAllowed;
+  }
+
+  /** The secret obtained by discovery-mode, basic auth. */
+  public String getSecret() {
+    return secret;
+  }
+
+  public void setSecret(String secret) {
+    this.secret = secret;
+  }
+
+  /** The flag signals a first-time connect in discovery-mode. */
+  public boolean isFirstConnect() {
+    return firstConnect;
+  }
+
+  public void setFirstConnect(boolean firstConnect) {
+    this.firstConnect = firstConnect;
+  }
+
+  /** Unittype has been created, but unitId remains unknown, only for discovery-mode. */
+  public boolean isUnittypeCreated() {
+    return unittypeCreated;
+  }
+
+  public void setUnittypeCreated(boolean unittypeCreated) {
+    this.unittypeCreated = unittypeCreated;
+  }
+
+  /** PIIDecision is important to decide the final outcome of the next Periodic Inform Interval. */
+  public PIIDecision getPiiDecision() {
+    return piiDecision;
+  }
+
+  public void setPiiDecision(PIIDecision piiDecision) {
+    this.piiDecision = piiDecision;
+  }
+
+  /** An object to store all kinds of data about the provisioning. */
+  @Override
+  public dbi.util.ProvisioningMessage getProvisioningMessage() {
+    return provisioningMessage;
+  }
+
+  public void setProvisioningMessage(dbi.util.ProvisioningMessage provisioningMessage) {
+    this.provisioningMessage = provisioningMessage;
+  }
+
+  /** An object to store data about a download. */
+  public Download getDownload() {
+    return download;
+  }
+
+  public void setDownload(Download download) {
+    this.download = download;
+  }
+
+  public String getCwmpVersionNumber() {
+    return cwmpVersionNumber;
+  }
+
+  public void setCwmpVersionNumber(String cwmpVersionNumber) {
+    this.cwmpVersionNumber = cwmpVersionNumber;
+  }
+
+  /** When did the session start? */
+  @Override
+  public Long getStartupTmsForSession() {
+    return startupTmsForSession;
+  }
+
+  public void setStartupTmsForSession(Long startupTmsForSession) {
+    this.startupTmsForSession = startupTmsForSession;
+  }
+
+  /** Data for monitoring/logging. */
+  public List<HTTPRequestResponseData> getReqResList() {
+    return reqResList;
+  }
+
   public static class Download {
-    private String url;
-    private dbi.File file;
+    private final String url;
+    private final dbi.File file;
+
+    public Download(String url, dbi.File file) {
+      this.url = url;
+      this.file = file;
+    }
+
+    public String getUrl() {
+      return url;
+    }
+
+    public dbi.File getFile() {
+      return file;
+    }
   }
 }

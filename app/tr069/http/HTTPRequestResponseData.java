@@ -1,23 +1,24 @@
 package tr069.http;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.SessionData;
 import tr069.base.BaseCache;
 import tr069.base.BaseCacheException;
 import tr069.xml.TR069TransactionID;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.Optional;
 
-@Slf4j
 public class HTTPRequestResponseData {
+
+  private static final Logger log = LoggerFactory.getLogger(HTTPRequestResponseData.class);
 
   private HTTPRequestData requestData;
 
   private HTTPResponseData responseData;
 
-  private HttpServletRequest rawRequest;
+  private String remoteHost;
+
+  private final String realIp;
 
   private Throwable throwable;
 
@@ -25,27 +26,15 @@ public class HTTPRequestResponseData {
 
   private SessionData sessionData;
 
-  public HTTPRequestResponseData(HttpServletRequest rawRequest) {
-    this.rawRequest = rawRequest;
+  public HTTPRequestResponseData(String remoteHost, String realIp, String sessionId) {
+    this.remoteHost = remoteHost;
+    this.realIp = realIp;
     this.requestData = new HTTPRequestData();
     this.responseData = new HTTPResponseData();
-
-    String sessionId = rawRequest.getSession().getId();
     try {
       sessionData = (SessionData) BaseCache.getSessionData(sessionId);
     } catch (BaseCacheException tr069Ex) {
-      HttpSession session = rawRequest.getSession();
-      log.debug("Sessionid "
-              + sessionId
-              + " did not return a SessionData object from cache, must create a new SessionData object");
-      log.debug("Sessionid "
-              + session.getId()
-              + " created: "
-              + session.getCreationTime()
-              + ", lastAccess:"
-              + session.getLastAccessedTime()
-              + ", mxInactiveInterval:"
-              + session.getMaxInactiveInterval());
+      log.debug("Sessionid " + sessionId + " did not return a SessionData object from cache, must create a new SessionData object");
       sessionData = new SessionData(sessionId);
       BaseCache.putSessionData(sessionId, sessionData);
     }
@@ -80,15 +69,11 @@ public class HTTPRequestResponseData {
     TR069TransactionID = transactionID;
   }
 
-  public HttpServletRequest getRawRequest() {
-    return rawRequest;
-  }
-
   public SessionData getSessionData() {
     return sessionData;
   }
 
   public String getRealIPAddress() {
-    return Optional.ofNullable(rawRequest.getHeader("X-Real-IP")).orElseGet(() -> rawRequest.getRemoteAddr());
+    return Optional.ofNullable(realIp).orElseGet(() -> remoteHost);
   }
 }

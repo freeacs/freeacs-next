@@ -1,19 +1,19 @@
 package tr069;
 
 import dbi.JobParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.http.HTTPRequestResponseData;
 import tr069.xml.ParameterValueStruct;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@Data
-@Slf4j
 public class ParameterKey {
+  private static final Logger log = LoggerFactory.getLogger(ParameterKey.class);
+
   private String cpeKey;
   private String serverKey;
 
@@ -87,4 +87,20 @@ public class ParameterKey {
       return pk;
     }
   }
+
+    public String getCpeKey() {
+        return cpeKey;
+    }
+
+    public void setCpeKey(String cpeKey) {
+        this.cpeKey = cpeKey;
+    }
+
+    public String getServerKey() {
+        return serverKey;
+    }
+
+    public void setServerKey(String serverKey) {
+        this.serverKey = serverKey;
+    }
 }

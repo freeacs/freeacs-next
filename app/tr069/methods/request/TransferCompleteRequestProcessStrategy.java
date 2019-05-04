@@ -4,9 +4,7 @@ import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.Header;
 import tr069.xml.Parser;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class TransferCompleteRequestProcessStrategy implements RequestProcessStrategy {
     @SuppressWarnings("Duplicates")
     @Override

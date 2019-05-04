@@ -3,15 +3,15 @@ package tr069;
 import dbi.util.ProvisioningMessage.ErrorResponsibility;
 import dbi.util.ProvisioningMessage.ProvOutput;
 import dbi.util.ProvisioningMessage.ProvStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.base.Log;
 import tr069.http.HTTPRequestData;
 import tr069.http.HTTPRequestResponseData;
 import tr069.http.HTTPResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -20,8 +20,9 @@ import java.util.List;
  * @author Morten
  * @author Jarl
  */
-@Slf4j
 public class SessionLogging {
+  private static final Logger log = LoggerFactory.getLogger(SessionLogging.class);
+
   public static void log(HTTPRequestResponseData reqRes) {
     try {
       SessionData sessionData = reqRes.getSessionData();
@@ -52,7 +53,7 @@ public class SessionLogging {
         }
       }
       pm.setSessionLength((int) diff);
-      pm.setIpAddress(reqRes.getRawRequest().getRemoteHost());
+      pm.setIpAddress(reqRes.getRealIPAddress());
       // We're not sending the facility-version, since the message is used in a report - where
       // the version of the TR-069 is much more interesting (will be added automatically be the
       // syslog server)
@@ -112,11 +113,8 @@ public class SessionLogging {
 
   private static String makeEventMsg(HTTPRequestResponseData reqRes, long diff, String methodsUsed) {
     List<HTTPRequestResponseData> reqResList = reqRes.getSessionData().getReqResList();
-    HttpServletRequest req = reqRes.getRawRequest();
     SessionData sessionData = reqRes.getSessionData();
-    String eventMsg =
-        String.format("%1$-16s %2$6dms %3$-60s", req.getRemoteHost(), diff, methodsUsed);
-    //		String eventMsg = "[" + req.getRemoteHost() + "] [" + diff + " ms] [" + methodsUsed + "]";
+    String eventMsg = String.format("%1$-16s %2$6dms %3$-60s", reqRes.getRealIPAddress(), diff, methodsUsed);
     String job = "      ";
     if (sessionData.getJob() != null) {
       job = String.format("%-6s", sessionData.getJob().getId());

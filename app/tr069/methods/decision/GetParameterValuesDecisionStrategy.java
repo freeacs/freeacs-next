@@ -1,56 +1,72 @@
 package tr069.methods.decision;
 
-import dbi.*;
+import dbi.DBI;
+import dbi.Job;
+import dbi.JobFlag;
+import dbi.JobParameter;
+import dbi.Parameter;
+import dbi.ScriptExecutions;
+import dbi.UnittypeParameter;
+import dbi.UnittypeParameterFlag;
+import dbi.UnittypeParameters;
+import dbi.tr069.TR069DMParameter;
+import dbi.tr069.TR069DMParameterMap;
+import dbi.util.ProvisioningMessage;
+import dbi.util.ProvisioningMode;
+import dbi.util.SystemParameters;
 import tr069.CPEParameters;
 import tr069.Properties;
 import tr069.SessionData;
 import tr069.background.ActiveDeviceDetectionTask;
-import tr069.base.*;
+import tr069.base.DBIActions;
+import tr069.base.DownloadLogic;
+import tr069.base.JobLogic;
+import tr069.base.ResetUtil;
+import tr069.base.ServiceWindow;
+import tr069.base.UnitJob;
 import tr069.exception.TR069DatabaseException;
 import tr069.exception.TR069Exception;
 import tr069.exception.TR069ExceptionShortMessage;
 import tr069.http.HTTPRequestResponseData;
-import tr069.methods.*;
+import tr069.methods.ProvisioningMethod;
 import tr069.methods.decision.GetParameterValues.DownloadLogicTR069;
 import tr069.methods.decision.GetParameterValues.ShellJobLogic;
 import tr069.xml.ParameterList;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
     private final Properties properties;
-    private final dbi.DBI dbi;
-    private final dbi.ScriptExecutions scriptExecutions;
+    private final DBI dbi;
+    private final ScriptExecutions scriptExecutions;
 
-    GetParameterValuesDecisionStrategy(Properties properties, dbi.DBI dbi) {
+    GetParameterValuesDecisionStrategy(Properties properties, DBI dbi) {
         this.properties = properties;
         this.dbi = dbi;
-        this.scriptExecutions = new dbi.ScriptExecutions(dbi.getDataSource());
+        this.scriptExecutions = new ScriptExecutions(dbi.getDataSource());
     }
 
     @SuppressWarnings("Duplicates")
     @Override
     public void makeDecision(HTTPRequestResponseData reqRes) throws Exception {
         SessionData sessionData = reqRes.getSessionData();
-        dbi.util.ProvisioningMode mode = sessionData.getUnit().getProvisioningMode();
+        ProvisioningMode mode = sessionData.getUnit().getProvisioningMode();
         log.debug("Mode was detected to be: " + mode);
-        dbi.util.ProvisioningMessage pm = sessionData.getProvisioningMessage();
+        ProvisioningMessage pm = sessionData.getProvisioningMessage();
         pm.setProvMode(mode);
         boolean PIIsupport = supportPII(sessionData);
         if (!PIIsupport) {
             reqRes.getResponseData().setMethod(ProvisioningMethod.Empty.name());
-            pm.setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.EMPTY);
+            pm.setProvOutput(ProvisioningMessage.ProvOutput.EMPTY);
             pm.setErrorMessage("The device does not support PII");
-            pm.setProvStatus(dbi.util.ProvisioningMessage.ProvStatus.ERROR);
-            pm.setErrorResponsibility(dbi.util.ProvisioningMessage.ErrorResponsibility.CLIENT);
-        } else if (mode == dbi.util.ProvisioningMode.REGULAR) {
+            pm.setProvStatus(ProvisioningMessage.ProvStatus.ERROR);
+            pm.setErrorResponsibility(ProvisioningMessage.ErrorResponsibility.CLIENT);
+        } else if (mode == ProvisioningMode.REGULAR) {
             processPeriodic(reqRes, properties.isDiscoveryMode(), properties.getPublicUrl(), properties.getConcurrentDownloadLimit());
-        } else if (mode == dbi.util.ProvisioningMode.READALL) {
+        } else if (mode == ProvisioningMode.READALL) {
             processExtraction(reqRes);
         }
         updateActiveDeviceMap(reqRes);
@@ -86,10 +102,10 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
                                             int concurrentDownloadLimit) {
         ServiceWindow serviceWindow;
         SessionData sessionData = reqRes.getSessionData();
-        String reset = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.RESET);
-        String reboot = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.RESTART);
+        String reset = sessionData.getAcsParameters().getValue(SystemParameters.RESET);
+        String reboot = sessionData.getAcsParameters().getValue(SystemParameters.RESTART);
         if ("1".equals(reset)) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.RESET);
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.RESET);
             serviceWindow = new ServiceWindow(sessionData, true);
             if (serviceWindow.isWithin()) {
                 ResetUtil.resetReset(sessionData);
@@ -99,7 +115,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
                 sessionData.getPIIDecision().setDisruptiveSW(serviceWindow);
             }
         } else if ("1".equals(reboot)) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.REBOOT);
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.REBOOT);
             serviceWindow = new ServiceWindow(sessionData, true);
             if (serviceWindow.isWithin()) {
                 ResetUtil.resetReboot(sessionData);
@@ -120,7 +136,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
                 sessionData.getPIIDecision().setDisruptiveSW(serviceWindow);
             }
         } else {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.CONFIG);
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.CONFIG);
             serviceWindow = new ServiceWindow(sessionData, false);
             if (serviceWindow.isWithin()) {
                 prepareSPV(sessionData);
@@ -152,7 +168,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
             updateUnitParameters(sessionData);
             uj = JobLogic.checkNewJob(sessionData, dbi, concurrentDownloadLimit); // may find a new job
         }
-        dbi.Job job = sessionData.getJob();
+        Job job = sessionData.getJob();
         if (job != null) { // No job is present - process according to
             // profile/unit-parameters
             jobProvisioning(reqRes, job, uj, isDiscoveryMode, publicUrl);
@@ -163,40 +179,40 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
 
     @SuppressWarnings("Duplicates")
     private void jobProvisioning(HTTPRequestResponseData reqRes,
-                                 dbi.Job job,
+                                 Job job,
                                  UnitJob unitJob,
                                  boolean isDiscoveryMode,
                                  String publicUrl)
             throws TR069Exception {
         SessionData sessionData = reqRes.getSessionData();
         sessionData.getProvisioningMessage().setJobId(job.getId());
-        dbi.JobFlag.JobType type = job.getFlags().getType();
-        if (type == dbi.JobFlag.JobType.RESET) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.RESET);
+        JobFlag.JobType type = job.getFlags().getType();
+        if (type == JobFlag.JobType.RESET) {
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.RESET);
             reqRes.getResponseData().setMethod(ProvisioningMethod.FactoryReset.name());
-        } else if (type == dbi.JobFlag.JobType.RESTART) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.REBOOT);
+        } else if (type == JobFlag.JobType.RESTART) {
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.REBOOT);
             reqRes.getResponseData().setMethod(ProvisioningMethod.Reboot.name());
-        } else if (type == dbi.JobFlag.JobType.SOFTWARE) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.SOFTWARE);
+        } else if (type == JobFlag.JobType.SOFTWARE) {
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.SOFTWARE);
             if (!DownloadLogicTR069.isSoftwareDownloadSetup(reqRes, job, publicUrl)) {
                 throw new RuntimeException("Not possible to setup a Software Download job");
             }
             reqRes.getResponseData().setMethod(ProvisioningMethod.Download.name());
-        } else if (type == dbi.JobFlag.JobType.TR069_SCRIPT) {
-            sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.SCRIPT);
+        } else if (type == JobFlag.JobType.TR069_SCRIPT) {
+            sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.SCRIPT);
             if (!DownloadLogicTR069.isScriptDownloadSetup(reqRes, job, publicUrl)) {
                 throw new RuntimeException("Not possible to setup a Script Download job");
             }
             reqRes.getResponseData().setMethod(ProvisioningMethod.Download.name());
         } else {
-            if (type == dbi.JobFlag.JobType.SHELL) {
-                sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.SHELL);
+            if (type == JobFlag.JobType.SHELL) {
+                sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.SHELL);
                 ShellJobLogic.execute(sessionData, dbi, job, unitJob, isDiscoveryMode, scriptExecutions);
             } else { // type == JobType.CONFIG
                 // The service-window is unimportant for next PII calculation, will
                 // be set to 31 no matter what, since a job is "in the process".
-                sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.CONFIG);
+                sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.CONFIG);
                 // ServiceWindow serviceWindow = new ServiceWindow(sessionData, false);
                 prepareSPVForConfigJob(sessionData);
             }
@@ -208,7 +224,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
     private boolean supportPII(SessionData sessionData) {
         CPEParameters cpeParams = sessionData.getCpeParameters();
         String PII = cpeParams.PERIODIC_INFORM_INTERVAL;
-        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
         if (utps.getByName(PII) != null && cpeParams.getValue(PII) != null) {
             log.debug("CPE supports PeriodicInformInterval");
             return true;
@@ -226,7 +242,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
     private void prepareSPVLimited(HTTPRequestResponseData reqRes) {
         SessionData sessionData = reqRes.getSessionData();
         sessionData.setProvisioningAllowed(false);
-        sessionData.getProvisioningMessage().setProvStatus(dbi.util.ProvisioningMessage.ProvStatus.DELAYED);
+        sessionData.getProvisioningMessage().setProvStatus(ProvisioningMessage.ProvStatus.DELAYED);
         CPEParameters cpeParams = sessionData.getCpeParameters();
         String PII = cpeParams.PERIODIC_INFORM_INTERVAL;
         ParameterValueStruct pvs = cpeParams.getCpeParams().get(PII);
@@ -244,9 +260,9 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
         log.debug("-ACS->ACS      " + PII + " CPE[" + nextPII + "] ACS[" + nextPII + "] Decided by ACS");
         sessionData
                 .getToDB()
-                .add(new ParameterValueStruct(dbi.util.SystemParameters.PERIODIC_INTERVAL, String.valueOf(nextPII)));
+                .add(new ParameterValueStruct(SystemParameters.PERIODIC_INTERVAL, String.valueOf(nextPII)));
         log.debug("-ACS->ACS      "
-                        + dbi.util.SystemParameters.PERIODIC_INTERVAL
+                        + SystemParameters.PERIODIC_INTERVAL
                         + " CPE["
                         + nextPII
                         + "] ACS["
@@ -260,21 +276,21 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
         // populate to collections from job-params
         // impl.
         ParameterList toCPE = new ParameterList();
-        dbi.tr069.TR069DMParameterMap dataModel;
+        TR069DMParameterMap dataModel;
         try {
-            dataModel = dbi.tr069.TR069DMParameterMap.getTR069ParameterMap();
+            dataModel = TR069DMParameterMap.getTR069ParameterMap();
         } catch (Exception e) {
             throw new TR069Exception("TR069 Data model not found", TR069ExceptionShortMessage.MISC, e);
         }
-        for (dbi.JobParameter jp : sessionData.getJobParams().values()) {
-            dbi.Parameter jup = jp.getParameter();
+        for (JobParameter jp : sessionData.getJobParams().values()) {
+            Parameter jup = jp.getParameter();
             String jpName = jup.getUnittypeParameter().getName();
-            if (dbi.util.SystemParameters.JOB_CURRENT.equals(jpName)
-                    || dbi.util.SystemParameters.JOB_HISTORY.equals(jpName)) {
+            if (SystemParameters.JOB_CURRENT.equals(jpName)
+                    || SystemParameters.JOB_HISTORY.equals(jpName)) {
                 continue;
             }
 
-            dbi.UnittypeParameterFlag upFlag = jup.getUnittypeParameter().getFlag();
+            UnittypeParameterFlag upFlag = jup.getUnittypeParameter().getFlag();
             String jpValue = jup.getValue();
             // ParameterValueStruct jpPvs = new ParameterValueStruct(jpName, jpValue);
 
@@ -284,7 +300,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
                                 + " since it's a system/read-only parameter, cannot be set in the CPE");
             } else {
                 log.debug("Added " + jpName + ", value:[" + jpValue + "] to session - will be asked for in GPV");
-                dbi.tr069.TR069DMParameter dmp = dataModel.getParameter(jpName);
+                TR069DMParameter dmp = dataModel.getParameter(jpName);
                 if (dmp != null) {
                     toCPE.addParameterValueStruct(
                             new ParameterValueStruct(jpName, jpValue, dmp.getDatatype().getXsdType()));
@@ -314,9 +330,9 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
             log.debug("-ACS->ACS      " + PII + " CPE[" + nextPII + "] ACS[" + nextPII + "] Decided by ACS");
             sessionData
                     .getToDB()
-                    .add(new ParameterValueStruct(dbi.util.SystemParameters.PERIODIC_INTERVAL, nextPII));
+                    .add(new ParameterValueStruct(SystemParameters.PERIODIC_INTERVAL, nextPII));
             log.debug("-ACS->ACS      "
-                            + dbi.util.SystemParameters.PERIODIC_INTERVAL
+                            + SystemParameters.PERIODIC_INTERVAL
                             + " CPE["
                             + nextPII
                             + "] ACS["
@@ -334,11 +350,11 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
         String nextPII = String.valueOf(sessionData.getPIIDecision().nextPII());
 
         // Cleanup after all jobs have been completed
-        String disruptiveJob = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_DISRUPTIVE);
+        String disruptiveJob = sessionData.getAcsParameters().getValue(SystemParameters.JOB_DISRUPTIVE);
         if ("1".equals(disruptiveJob)) {
             log.debug("No more jobs && disruptive flag set -> disruptive flag reset (to 0)");
             ParameterValueStruct disruptivePvs =
-                    new ParameterValueStruct(dbi.util.SystemParameters.JOB_DISRUPTIVE, "0");
+                    new ParameterValueStruct(SystemParameters.JOB_DISRUPTIVE, "0");
             sessionData.getToDB().add(disruptivePvs);
         }
 
@@ -358,9 +374,9 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
             log.debug("-ACS->ACS      " + PII + " CPE[" + nextPII + "] ACS[" + nextPII + "] Decided by ACS");
             sessionData
                     .getToDB()
-                    .add(new ParameterValueStruct(dbi.util.SystemParameters.PERIODIC_INTERVAL, nextPII));
+                    .add(new ParameterValueStruct(SystemParameters.PERIODIC_INTERVAL, nextPII));
             log.debug("-ACS->ACS      "
-                            + dbi.util.SystemParameters.PERIODIC_INTERVAL
+                            + SystemParameters.PERIODIC_INTERVAL
                             + " CPE["
                             + nextPII
                             + "] ACS["
@@ -402,7 +418,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
     }
 
     @SuppressWarnings("Duplicates")
-    private String msg(dbi.UnittypeParameter utp, String cpeValue, String acsValue, String action, String cause) {
+    private String msg(UnittypeParameter utp, String cpeValue, String acsValue, String action, String cause) {
         if (utp.getFlag().isConfidential()) {
             return "-"
                     + String.format("%-15s", action)
@@ -430,14 +446,14 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
 
     @SuppressWarnings("Duplicates")
     private void populateToCollections(SessionData sessionData) {
-        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
         ParameterList toCPE = new ParameterList();
         List<ParameterValueStruct> toDB = new ArrayList<>();
 
         for (int i = 0; i < sessionData.getValuesFromCPE().size(); i++) {
             ParameterValueStruct pvsCPE = sessionData.getValuesFromCPE().get(i);
             ParameterValueStruct pvsDB = sessionData.getFromDB().get(pvsCPE.getName());
-            dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
+            UnittypeParameter utp = utps.getByName(pvsCPE.getName());
             String cpeV = pvsCPE.getValue();
             String acsV = null;
             if (pvsDB != null) {
@@ -547,10 +563,10 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
     @SuppressWarnings("Duplicates")
     private void processExtraction(HTTPRequestResponseData reqRes) throws TR069DatabaseException {
         SessionData sessionData = reqRes.getSessionData();
-        dbi.UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
+        UnittypeParameters utps = sessionData.getUnittype().getUnittypeParameters();
         List<ParameterValueStruct> toDB = new ArrayList<>();
         log.info("Provisioning in "
-                        + dbi.util.ProvisioningMode.READALL
+                        + ProvisioningMode.READALL
                         + " mode, "
                         + sessionData.getValuesFromCPE().size()
                         + " params from CPE may be copied to ACS session storage");
@@ -558,7 +574,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
         // sessionData.getFromCPE().size() + " params from CPE may be copied to ACS session storage");
         for (int i = 0; i < sessionData.getValuesFromCPE().size(); i++) {
             ParameterValueStruct pvsCPE = sessionData.getValuesFromCPE().get(i);
-            dbi.UnittypeParameter utp = utps.getByName(pvsCPE.getName());
+            UnittypeParameter utp = utps.getByName(pvsCPE.getName());
             if (utp == null) {
                 log.debug(pvsCPE.getName() + " could not be stored in ACS, since name was unrecognized in ACS");
                 continue;
@@ -573,7 +589,7 @@ public class GetParameterValuesDecisionStrategy implements DecisionStrategy {
         DBIActions.writeUnitSessionParams(sessionData, dbi);
         log.debug(toDB.size() + " params written to ACS session storage");
         reqRes.getResponseData().setMethod(ProvisioningMethod.Empty.name());
-        sessionData.getProvisioningMessage().setProvOutput(dbi.util.ProvisioningMessage.ProvOutput.EMPTY);
+        sessionData.getProvisioningMessage().setProvOutput(ProvisioningMessage.ProvOutput.EMPTY);
     }
 }
 

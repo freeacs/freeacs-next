@@ -1,9 +1,7 @@
 package tr069;
 
 import tr069.http.HTTPRequestResponseData;
-import lombok.Data;
 
-@Data
 public class CommandKey {
   private String cpeKey;
   private String serverKey;
@@ -17,5 +15,21 @@ public class CommandKey {
     return serverKey == null
         || "".equals(serverKey.trim())
         || (cpeKey != null && cpeKey.equals(serverKey));
+  }
+
+  public String getCpeKey() {
+    return cpeKey;
+  }
+
+  public void setCpeKey(String cpeKey) {
+    this.cpeKey = cpeKey;
+  }
+
+  public String getServerKey() {
+    return serverKey;
+  }
+
+  public void setServerKey(String serverKey) {
+    this.serverKey = serverKey;
   }
 }

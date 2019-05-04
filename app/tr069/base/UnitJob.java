@@ -2,10 +2,13 @@ package tr069.base;
 
 import dbi.JobFlag.JobServiceWindow;
 import dbi.JobParameter;
+import dbi.UnitJobStatus;
 import dbi.UnitParameter;
+import dbi.util.SystemParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.SessionData;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,8 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@Slf4j
 public class UnitJob {
+  private static final Logger log = LoggerFactory.getLogger(UnitJob.class);
+
   private final dbi.DBI dbi;
   private final SessionDataI sessionData;
   private dbi.Job job;
@@ -56,8 +60,8 @@ public class UnitJob {
 
   private void updateSessionWithJobCurrent() {
     ParameterValueStruct jobIdPvs =
-        new ParameterValueStruct(dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
-    sessionData.getAcsParameters().putPvs(dbi.util.SystemParameters.JOB_CURRENT, jobIdPvs);
+        new ParameterValueStruct(SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
+    sessionData.getAcsParameters().putPvs(SystemParameters.JOB_CURRENT, jobIdPvs);
   }
 
   /**
@@ -70,13 +74,13 @@ public class UnitJob {
     dbi.Unit unit = sessionData.getUnit();
     Map<String, UnitParameter> upMap = unit.getUnitParameters();
     dbi.UnittypeParameter jhUtp =
-        unittype.getUnittypeParameters().getByName(dbi.util.SystemParameters.JOB_HISTORY);
+        unittype.getUnittypeParameters().getByName(SystemParameters.JOB_HISTORY);
     dbi.UnitParameter jobHistoryUp = upMap.get(jhUtp.getName());
 
-    String jh1 = unit.getParameters().get(dbi.util.SystemParameters.JOB_HISTORY);
+    String jh1 = unit.getParameters().get(SystemParameters.JOB_HISTORY);
     long tms = System.currentTimeMillis();
     if (jh1 == null || "".equals(jh1.trim())) {
-      return makeUnitParameter(dbi.util.SystemParameters.JOB_HISTORY, "," + jobId + ":0:" + tms + ",");
+      return makeUnitParameter(SystemParameters.JOB_HISTORY, "," + jobId + ":0:" + tms + ",");
     }
 
     String jh2 = ","; // + jobId + ",";
@@ -113,7 +117,7 @@ public class UnitJob {
       try {
         String unitId = sessionData.getUnitId();
         if (!serverSideJob) {
-          dbi.UnitParameter jobUp = makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
+          dbi.UnitParameter jobUp = makeUnitParameter(SystemParameters.JOB_CURRENT, String.valueOf(job.getId()));
           List<UnitParameter> upList = new ArrayList<>();
           upList.add(jobUp);
           upList.forEach(sessionData.getUnit()::toWriteQueue);
@@ -179,13 +183,13 @@ public class UnitJob {
   private List<UnitParameter> getUnitParameters(String unitJobStatus) {
     List<UnitParameter> upList = new ArrayList<>();
     if (!serverSideJob) {
-      upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT, ""));
-      upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_CURRENT_KEY, ""));
+      upList.add(makeUnitParameter(SystemParameters.JOB_CURRENT, ""));
+      upList.add(makeUnitParameter(SystemParameters.JOB_CURRENT_KEY, ""));
     }
-    if (unitJobStatus.equals(dbi.UnitJobStatus.COMPLETED_OK)) {
+    if (unitJobStatus.equals(UnitJobStatus.COMPLETED_OK)) {
       upList.add(makeHistoryParameter(job.getId()));
       if (job.getFlags().getServiceWindow() == JobServiceWindow.DISRUPTIVE) {
-        upList.add(makeUnitParameter(dbi.util.SystemParameters.JOB_DISRUPTIVE, "1"));
+        upList.add(makeUnitParameter(SystemParameters.JOB_DISRUPTIVE, "1"));
       }
       if (serverSideJob) {
         log.debug("UnitJob is COMPLETED, job history is updated");
@@ -194,8 +198,8 @@ public class UnitJob {
         sessionData.setJobParams(jobParams);
         for (dbi.JobParameter jp : sessionData.getJobParams().values()) {
           String jpName = jp.getParameter().getUnittypeParameter().getName();
-          if (dbi.util.SystemParameters.RESTART.equals(jpName)
-              || dbi.util.SystemParameters.RESET.equals(jpName)
+          if (SystemParameters.RESTART.equals(jpName)
+              || SystemParameters.RESET.equals(jpName)
               || jp.getParameter().getUnittypeParameter().getFlag().isReadOnly()) {
             continue;
           }
@@ -239,7 +243,7 @@ public class UnitJob {
           irrelevant = true;
           return this;
         }
-        String jobIdStr = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_CURRENT);
+        String jobIdStr = sessionData.getAcsParameters().getValue(SystemParameters.JOB_CURRENT);
         if (jobIdStr == null) {
           irrelevant = true;
           return this;
@@ -255,12 +259,12 @@ public class UnitJob {
                 + ", will stop unit job with unit job status set to "
                 + unitJobStatus);
         job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobIdStr));
-        if (job == null && !unitJobStatus.equals(dbi.UnitJobStatus.CONFIRMED_FAILED)) {
+        if (job == null && !unitJobStatus.equals(UnitJobStatus.CONFIRMED_FAILED)) {
           log.warn("Couldn't find job with jobId "
                   + jobId
                   + ", unit job status changed to "
-                  + dbi.UnitJobStatus.CONFIRMED_FAILED);
-          unitJobStatus = dbi.UnitJobStatus.CONFIRMED_FAILED;
+                  + UnitJobStatus.CONFIRMED_FAILED);
+          unitJobStatus = UnitJobStatus.CONFIRMED_FAILED;
         }
       }
       irrelevant = false;

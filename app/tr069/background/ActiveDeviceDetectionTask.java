@@ -1,7 +1,10 @@
 package tr069.background;
 
-import com.github.freeacs.common.scheduler.TaskDefaultImpl;
+import common.scheduler.TaskDefaultImpl;
+import dbi.Heartbeat;
+import dbi.SyslogConstants;
 import dbi.SyslogEntry;
+import dbi.util.SyslogClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +46,8 @@ public class ActiveDeviceDetectionTask extends TaskDefaultImpl {
       boolean active = false;
       List<SyslogEntry> entries = syslog.read(sf, dbi.getAcs());
       for (dbi.SyslogEntry sentry : entries) {
-        if (sentry.getFacility() < dbi.SyslogConstants.FACILITY_SHELL
-            && !sentry.getContent().contains(dbi.Heartbeat.MISSING_HEARTBEAT_ID)) {
+        if (sentry.getFacility() < SyslogConstants.FACILITY_SHELL
+            && !sentry.getContent().contains(Heartbeat.MISSING_HEARTBEAT_ID)) {
           logger.info(
               "ActivceDeviceDetection: Found syslog activity for unit "
                   + unitId
@@ -57,7 +60,7 @@ public class ActiveDeviceDetectionTask extends TaskDefaultImpl {
         }
       }
       if (active) {
-        dbi.util.SyslogClient.info(
+        SyslogClient.info(
             entry.getKey(),
             "ProvMsg: No provisioning at "
                 + new Date(entry.getValue())

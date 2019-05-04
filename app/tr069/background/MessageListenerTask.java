@@ -1,6 +1,7 @@
 package tr069.background;
 
 import common.scheduler.TaskDefaultImpl;
+import dbi.SyslogConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ public class MessageListenerTask extends TaskDefaultImpl {
 
   public MessageListenerTask(String taskName, dbi.DBI dbi) {
     super(taskName);
-    tr069ServerListenerInbox.addFilter(new dbi.Message(null, null, dbi.SyslogConstants.FACILITY_TR069, null));
+    tr069ServerListenerInbox.addFilter(new dbi.Message(null, null, SyslogConstants.FACILITY_TR069, null));
     dbi.registerInbox("tr069ServerListener", tr069ServerListenerInbox);
   }
 

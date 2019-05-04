@@ -1,13 +1,22 @@
 package tr069.xml;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 class ParameterAttributeStruct {
   private String name;
   private int notifcation;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public int getNotifcation() {
+    return notifcation;
+  }
+
+  public void setNotifcation(int notifcation) {
+    this.notifcation = notifcation;
+  }
 }

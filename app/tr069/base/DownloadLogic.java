@@ -1,12 +1,14 @@
 package tr069.base;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
 
-@Slf4j
 public class DownloadLogic {
+  private static final Logger log = LoggerFactory.getLogger(DownloadLogic.class);
+
   private static List<Long> downloadList = new LinkedList<>();
 
   public static void add() {

@@ -1,8 +1,10 @@
 package tr069.methods.decision.GetParameterValues;
 
-import com.github.freeacs.common.util.Cache;
-import com.github.freeacs.common.util.CacheValue;
-import dbi.*;
+import common.util.Cache;
+import common.util.CacheValue;
+import dbi.util.SystemParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.CPEParameters;
 import tr069.SessionData;
 import tr069.base.DBIActions;
@@ -12,7 +14,6 @@ import tr069.exception.TR069Exception;
 import tr069.exception.TR069ExceptionShortMessage;
 import tr069.xml.ParameterList;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,8 +21,8 @@ import java.util.List;
 import java.util.Random;
 
 /** This class performs a SHELL-job */
-@Slf4j
 public class ShellJobLogic {
+    private static final Logger log = LoggerFactory.getLogger(ShellJobLogic.class);
 
     private static Random random = new Random();
 
@@ -192,9 +193,9 @@ public class ShellJobLogic {
         log.debug("-ACS->ACS      " + PII + " CPE[" + nextPII + "] ACS[" + nextPII + "] Decided by ACS");
         sessionData
                 .getToDB()
-                .add(new ParameterValueStruct(dbi.util.SystemParameters.PERIODIC_INTERVAL, "" + nextPII));
+                .add(new ParameterValueStruct(SystemParameters.PERIODIC_INTERVAL, "" + nextPII));
         log.debug("-ACS->ACS      "
-                        + dbi.util.SystemParameters.PERIODIC_INTERVAL
+                        + SystemParameters.PERIODIC_INTERVAL
                         + " CPE["
                         + nextPII
                         + "] ACS["

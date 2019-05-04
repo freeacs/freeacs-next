@@ -1,15 +1,8 @@
 package tr069.xml;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class Fault {
   private String soapFaultCode;
   private String soapFaultString;
@@ -23,6 +16,9 @@ public class Fault {
     this.faultCode = faultCode;
     this.faultString = faultString;
     this.parameterFaults = new ArrayList<>();
+  }
+
+  public Fault() {
   }
 
   void addParameterValuesFault(SetParameterValuesFault paramFault) {
@@ -45,5 +41,45 @@ public class Fault {
       }
     }
     return str.toString();
+  }
+
+  public String getSoapFaultCode() {
+    return soapFaultCode;
+  }
+
+  public void setSoapFaultCode(String soapFaultCode) {
+    this.soapFaultCode = soapFaultCode;
+  }
+
+  public String getSoapFaultString() {
+    return soapFaultString;
+  }
+
+  public void setSoapFaultString(String soapFaultString) {
+    this.soapFaultString = soapFaultString;
+  }
+
+  public String getFaultCode() {
+    return faultCode;
+  }
+
+  public void setFaultCode(String faultCode) {
+    this.faultCode = faultCode;
+  }
+
+  public String getFaultString() {
+    return faultString;
+  }
+
+  public void setFaultString(String faultString) {
+    this.faultString = faultString;
+  }
+
+  public List<SetParameterValuesFault> getParameterFaults() {
+    return parameterFaults;
+  }
+
+  public void setParameterFaults(List<SetParameterValuesFault> parameterFaults) {
+    this.parameterFaults = parameterFaults;
   }
 }

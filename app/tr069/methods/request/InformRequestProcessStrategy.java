@@ -1,5 +1,7 @@
 package tr069.methods.request;
 
+import dbi.util.SystemParameters;
+import dbi.util.TimestampWrapper;
 import tr069.*;
 import tr069.background.ScheduledKickTask;
 import tr069.base.BaseCache;
@@ -11,7 +13,6 @@ import tr069.exception.TR069ExceptionShortMessage;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.*;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-@Slf4j
 public class InformRequestProcessStrategy implements RequestProcessStrategy {
     private final dbi.DBI dbi;
     private Properties properties;
@@ -178,8 +178,8 @@ public class InformRequestProcessStrategy implements RequestProcessStrategy {
                 if (pvs.getName().equals(cpeParams.CONNECTION_URL)) {
                     cpeParams.getCpeParams().put(cpeParams.CONNECTION_URL, pvs);
                 }
-                if (pvs.getName().equals(informParams.UDP_CONNECTION_URL)) {
-                    informParams.getCpeParams().put(informParams.UDP_CONNECTION_URL, pvs);
+                if (pvs.getName().equals(informParams.getUDP_CONNECTION_URL())) {
+                    informParams.getCpeParams().put(informParams.getUDP_CONNECTION_URL(), pvs);
                 }
             }
             if (pvs.getName().contains("ParameterKey")) {
@@ -206,11 +206,10 @@ public class InformRequestProcessStrategy implements RequestProcessStrategy {
             if (sessionData.getUnit() != null && sessionData.isPeriodic()) {
                 dbi.Unit unit = sessionData.getUnit();
                 if (unit.getUnitParameters() != null) {
-                    String PII = unit.getParameterValue(dbi.util.SystemParameters.PERIODIC_INTERVAL, false);
-                    String LCT = unit.getParameterValue(dbi.util.SystemParameters.LAST_CONNECT_TMS, false);
+                    String PII = unit.getParameterValue(SystemParameters.PERIODIC_INTERVAL, false);
+                    String LCT = unit.getParameterValue(SystemParameters.LAST_CONNECT_TMS, false);
                     if (PII != null && LCT != null) {
-                        long shouldConnectTms =
-                                dbi.util.TimestampWrapper.tmsFormat.parse(LCT).getTime() + Integer.parseInt(PII) * 1000;
+                        long shouldConnectTms = TimestampWrapper.tmsFormat.parse(LCT).getTime() + Integer.parseInt(PII) * 1000;
                         long diff = System.currentTimeMillis() - shouldConnectTms;
                         if (diff > -5000 && diff < 5000) {
                             log.info("Periodic Inform recorded on time   (" + diff / 1000 + " sec). Deviation: " + (diff / 10) / Integer.parseInt(PII) + " %");

@@ -1,11 +1,9 @@
 package tr069.xml;
 
-import lombok.Data;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@Data
 public class DeviceIdStruct {
   private static final char[] ALLOWED_CHARS_IN_PRODUCT_CLASS =
           "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_".toCharArray();
@@ -28,7 +26,35 @@ public class DeviceIdStruct {
     this.productClass = DeviceIdStructHelper.parseProductClass(productClass);
   }
 
-  private interface DeviceIdStructHelper {
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
+    }
+
+    public String getOui() {
+        return oui;
+    }
+
+    public void setOui(String oui) {
+        this.oui = oui;
+    }
+
+    public String getProductClass() {
+        return productClass;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    private interface DeviceIdStructHelper {
     static String parseProductClass(String productClass) {
       return Optional.ofNullable(productClass)
           .map(DeviceIdStruct::safeChar)

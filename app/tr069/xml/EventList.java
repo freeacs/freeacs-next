@@ -1,15 +1,15 @@
 package tr069.xml;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 public class EventList {
   public static final String ID = "EventList";
 
   private List<EventStruct> eventList = new ArrayList<>();
+
+  public EventList() {
+  }
 
   void addEvent(EventStruct event) {
     this.eventList.add(event);
@@ -22,5 +22,13 @@ public class EventList {
       clonedEventList.addEvent(clonedEvent);
     }
     return clonedEventList;
+  }
+
+  public List<EventStruct> getEventList() {
+    return eventList;
+  }
+
+  public void setEventList(List<EventStruct> eventList) {
+    this.eventList = eventList;
   }
 }

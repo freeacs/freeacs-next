@@ -1,6 +1,7 @@
 package tr069.background;
 
-import com.github.freeacs.common.scheduler.TaskDefaultImpl;
+import common.scheduler.TaskDefaultImpl;
+import dbi.SyslogConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +80,7 @@ public class ScheduledKickTask extends TaskDefaultImpl {
         dbi.Unit unit = uk.getUnit();
         dbi.ACSUnit acsUnit = dbi.getACSUnit();
         acsUnit.addOrChangeQueuedUnitParameters(unit);
-        dbi.publishKick(unit, dbi.SyslogConstants.FACILITY_STUN);
+        dbi.publishKick(unit, SyslogConstants.FACILITY_STUN);
         uk.setNextTms(now + 30000);
         uk.setKickCount(uk.getKickCount() + 1);
         logger.debug(

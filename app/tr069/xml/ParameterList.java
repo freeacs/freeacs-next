@@ -1,11 +1,9 @@
 package tr069.xml;
 
-import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 public class ParameterList {
     private List<ParameterValueStruct> parameterValueList = new ArrayList<>();
     private List<ParameterInfoStruct> parameterInfoList = new ArrayList<>();
@@ -44,5 +42,29 @@ public class ParameterList {
         if (!changed) {
             this.parameterValueList.add(new ParameterValueStruct(key, value, type));
         }
+    }
+
+    public List<ParameterValueStruct> getParameterValueList() {
+        return parameterValueList;
+    }
+
+    public void setParameterValueList(List<ParameterValueStruct> parameterValueList) {
+        this.parameterValueList = parameterValueList;
+    }
+
+    public List<ParameterInfoStruct> getParameterInfoList() {
+        return parameterInfoList;
+    }
+
+    public void setParameterInfoList(List<ParameterInfoStruct> parameterInfoList) {
+        this.parameterInfoList = parameterInfoList;
+    }
+
+    public List<ParameterAttributeStruct> getParameterAttributeList() {
+        return parameterAttributeList;
+    }
+
+    public void setParameterAttributeList(List<ParameterAttributeStruct> parameterAttributeList) {
+        this.parameterAttributeList = parameterAttributeList;
     }
 }

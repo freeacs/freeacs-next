@@ -1,41 +1,35 @@
 package tr069;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import com.typesafe.config.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Data
-@Slf4j
-@Component
+import javax.inject.Singleton;
+
+@Singleton
 public class Properties {
-  private String digestSecret;
-  private boolean fileAuthUsed;
-  private boolean discoveryMode;
-  private String[] discoveryBlock;
-  private String authMethod;
-  private int concurrentDownloadLimit;
-  private String publicUrl;
-  private boolean appendHwVersion;
+  private static final Logger log = LoggerFactory.getLogger(Properties.class);
 
-  private Environment environment;
+  private final String digestSecret;
+  private final boolean fileAuthUsed;
+  private final boolean discoveryMode;
+  private final String[] discoveryBlock;
+  private final String authMethod;
+  private final int concurrentDownloadLimit;
+  private final String publicUrl;
+  private final boolean appendHwVersion;
+  private final Config config;
 
-  public Properties(Environment environment) {
-    this.environment = environment;
-    setAuthMethod(environment.getProperty("auth.method"));
-    setFileAuthUsed(environment.getProperty("file.auth.used", Boolean.class, true));
-    setPublicUrl(environment.getProperty("public.url"));
-    setDigestSecret(environment.getProperty("digest.secret"));
-    setDiscoveryMode(environment.getProperty("discovery.mode", Boolean.class, false));
-    setDiscoveryBlock(environment.getProperty("discovery.block", String.class, null));
-    setConcurrentDownloadLimit(environment.getProperty("concurrent.download.limit", Integer.class, 50));
-    setAppendHwVersion(environment.getProperty("unit.type.append-hw-version", Boolean.class, false));
-  }
-
-  private void setDiscoveryBlock(String discoveryBlock) {
-    this.discoveryBlock =
-        StringUtils.isEmpty(discoveryBlock) ? new String[0] : discoveryBlock.split("\\s*,\\s*");
+  public Properties(Config config) {
+    this.config = config;
+    this.authMethod = config.getString("auth.method");
+    this.fileAuthUsed = config.getBoolean("file.auth.used");
+    this.publicUrl = config.getString("public.url");
+    this.digestSecret = config.getString("digest.secret");
+    this.discoveryMode = config.getBoolean("discovery.mode");
+    this.discoveryBlock = config.getStringList("discovery.block").toArray(new String[]{});
+    this.concurrentDownloadLimit = config.getInt("concurrent.download.limit");
+    this.appendHwVersion = config.getBoolean("unit.type.append-hw-version");
   }
 
   public boolean isParameterkeyQuirk(SessionData sessionData) {
@@ -80,16 +74,50 @@ public class Properties {
 
   private String[] getQuirks(String unittypeName, String version) {
     String quirks = null;
-    if (version != null && environment.getProperty("quirks." + unittypeName + "." + version) != null) {
-      quirks = environment.getProperty("quirks." + unittypeName + "." + version);
+    String versionPath = "quirks." + unittypeName + "." + version;
+    if (version != null && config.hasPath(versionPath)) {
+      quirks = config.getString(versionPath);
     }
-    if (quirks == null && environment.getProperty("quirks." + unittypeName) != null) {
-      quirks = environment.getProperty("quirks." + unittypeName);
+    String unittypePath = "quirks." + unittypeName;
+    if (quirks == null && config.hasPath(unittypePath)) {
+      quirks = config.getString(unittypePath);
     }
     if (quirks != null) {
       return quirks.split("\\s*,\\s*");
     } else {
       return new String[0];
     }
+  }
+
+  public String getDigestSecret() {
+    return digestSecret;
+  }
+
+  public boolean isFileAuthUsed() {
+    return fileAuthUsed;
+  }
+
+  public boolean isDiscoveryMode() {
+    return discoveryMode;
+  }
+
+  public String[] getDiscoveryBlock() {
+    return discoveryBlock;
+  }
+
+  public String getAuthMethod() {
+    return authMethod;
+  }
+
+  public int getConcurrentDownloadLimit() {
+    return concurrentDownloadLimit;
+  }
+
+  public String getPublicUrl() {
+    return publicUrl;
+  }
+
+  public boolean isAppendHwVersion() {
+    return appendHwVersion;
   }
 }

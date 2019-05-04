@@ -4,7 +4,12 @@ import dbi.Job;
 import dbi.JobFlag.JobServiceWindow;
 import dbi.JobFlag.JobType;
 import dbi.JobParameter;
-import lombok.extern.slf4j.Slf4j;
+import dbi.JobStatus;
+import dbi.UnitJobStatus;
+import dbi.util.ProvisioningMode;
+import dbi.util.SystemParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,11 +22,12 @@ import java.util.Map.Entry;
  *
  * @author morten
  */
-@Slf4j
 public class JobLogic {
+  private static final Logger log = LoggerFactory.getLogger(JobLogic.class);
+
   public static boolean checkJobOK(SessionDataI sessionData, dbi.DBI dbi, boolean isDiscoveryMode) {
     try {
-      String jobId = sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.JOB_CURRENT);
+      String jobId = sessionData.getAcsParameters().getValue(SystemParameters.JOB_CURRENT);
       if (jobId != null && !jobId.trim().isEmpty()) {
         log.debug("Verification stage entered for job " + jobId);
         dbi.Job job = sessionData.getUnittype().getJobs().getById(Integer.valueOf(jobId));
@@ -30,48 +36,48 @@ public class JobLogic {
           return false;
         }
         UnitJob uj = new UnitJob(sessionData, dbi, job, false);
-        if (!dbi.JobStatus.STARTED.equals(job.getStatus())) {
+        if (!JobStatus.STARTED.equals(job.getStatus())) {
           log.warn("Current job is not STARTED, UnitJob must be STOPPED");
-          uj.stop(dbi.UnitJobStatus.STOPPED, isDiscoveryMode);
+          uj.stop(UnitJobStatus.STOPPED, isDiscoveryMode);
           return false;
         } else {
           JobType type = job.getFlags().getType();
           if (type == JobType.CONFIG) {
             boolean parameterKeyEquality = sessionData.lastProvisioningOK();
             if (parameterKeyEquality) {
-              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("The parameterkeys from CPE and ACS does not match, UnitJob FAILED");
-              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           } else if (type == JobType.RESTART
               || type == JobType.RESET
               || type == JobType.KICK
               || type == JobType.SHELL) {
-            uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+            uj.stop(UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
             return true;
           } else if (type == JobType.SOFTWARE) {
             Map<String, JobParameter> jpMap = job.getDefaultParameters();
-            dbi.JobParameter dsw = jpMap.get(dbi.util.SystemParameters.DESIRED_SOFTWARE_VERSION);
+            dbi.JobParameter dsw = jpMap.get(SystemParameters.DESIRED_SOFTWARE_VERSION);
             String sw = sessionData.getSoftwareVersion();
             if (dsw != null && sw != null && dsw.getParameter().getValue().equals(sw)) {
-              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("Software version on CPE and ACS (desired) does not match, UnitJob FAILED");
-              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           } else if (type == JobType.TR069_SCRIPT) {
             boolean commandKeyEquality = sessionData.lastProvisioningOK();
             if (commandKeyEquality) {
-              uj.stop(dbi.UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
+              uj.stop(UnitJobStatus.COMPLETED_OK, isDiscoveryMode);
               return true;
             } else {
               log.warn("Script/Config version on CPE and ACS (desired) does not match, UnitJob FAILED");
-              uj.stop(dbi.UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
+              uj.stop(UnitJobStatus.CONFIRMED_FAILED, isDiscoveryMode);
               return false;
             }
           }
@@ -85,7 +91,7 @@ public class JobLogic {
   }
 
   public static UnitJob checkNewJob(SessionDataI sessionData, dbi.DBI dbi, int downloadLimit) {
-    if (sessionData.getUnit().getProvisioningMode() == dbi.util.ProvisioningMode.REGULAR) {
+    if (sessionData.getUnit().getProvisioningMode() == ProvisioningMode.REGULAR) {
       dbi.Job job = getJob(sessionData, downloadLimit);
       if (job != null) {
         UnitJob uj;

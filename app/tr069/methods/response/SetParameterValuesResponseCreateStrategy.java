@@ -4,12 +4,11 @@ import tr069.ParameterKey;
 import tr069.Properties;
 import tr069.http.HTTPRequestResponseData;
 import tr069.xml.*;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-@Slf4j
 public class SetParameterValuesResponseCreateStrategy implements ResponseCreateStrategy {
+
     private final Properties properties;
 
     public SetParameterValuesResponseCreateStrategy(Properties properties) {

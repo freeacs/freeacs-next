@@ -1,13 +1,15 @@
 package tr069.base;
 
 import dbi.UnitParameter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class ResetUtil {
+  private static final Logger log = LoggerFactory.getLogger(ResetUtil.class);
+
   public static void resetReboot(SessionDataI sessionData) {
     log.debug("The reboot parameter is reset to 0 and the reboot will be executed");
     dbi.Unittype unittype = sessionData.getUnittype();

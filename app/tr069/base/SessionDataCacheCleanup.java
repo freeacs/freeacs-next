@@ -1,13 +1,15 @@
 package tr069.base;
 
-import com.github.freeacs.common.util.CleanupNotifier;
+import common.util.CleanupNotifier;
 import dbi.util.ProvisioningMessage.ErrorResponsibility;
 import dbi.util.ProvisioningMessage.ProvOutput;
 import dbi.util.ProvisioningMessage.ProvStatus;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class SessionDataCacheCleanup implements CleanupNotifier {
+  private static final Logger log = LoggerFactory.getLogger(SessionDataCacheCleanup.class);
+
   private SessionDataI sessionData;
   private String unitKey;
 

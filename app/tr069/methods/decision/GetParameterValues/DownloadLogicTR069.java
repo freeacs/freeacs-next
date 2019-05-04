@@ -1,16 +1,17 @@
 package tr069.methods.decision.GetParameterValues;
 
 import dbi.JobParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.CPEParameters;
 import tr069.SessionData;
 import tr069.base.ACSParameters;
 import tr069.http.HTTPRequestResponseData;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
-@Slf4j
 public class DownloadLogicTR069 {
+    private static final Logger log = LoggerFactory.getLogger(DownloadLogicTR069.class);
 
     public static final String SPACE_SEPARATOR = "--";
 

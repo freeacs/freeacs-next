@@ -1,6 +1,7 @@
 package tr069.base;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class should be the final decision maker on the next Periodic Inform Interval (PII). The
@@ -32,8 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author morten
  */
-@Slf4j
 public class PIIDecision {
+  private static final Logger log = LoggerFactory.getLogger(PIIDecision.class);
+
   private SessionDataI sessionData;
   private dbi.Job currentJob;
   private String currentJobStatus;

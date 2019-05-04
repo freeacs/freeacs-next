@@ -1,16 +1,18 @@
 package tr069.xml;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class Header {
   private TR069TransactionID id;
   private HoldRequests holdRequests;
   private NoMoreRequests noMoreRequests;
+
+  public Header() {
+  }
+
+  public Header(TR069TransactionID id, HoldRequests holdRequests, NoMoreRequests noMoreRequests) {
+    this.id = id;
+    this.holdRequests = holdRequests;
+    this.noMoreRequests = noMoreRequests;
+  }
 
   public Header getHeader() {
     return this;
@@ -56,5 +58,29 @@ public class Header {
       sb.append("<").append("soapenv").append(":Header/>\n");
     }
     return sb.toString();
+  }
+
+  public TR069TransactionID getId() {
+    return id;
+  }
+
+  public void setId(TR069TransactionID id) {
+    this.id = id;
+  }
+
+  public HoldRequests getHoldRequests() {
+    return holdRequests;
+  }
+
+  public void setHoldRequests(HoldRequests holdRequests) {
+    this.holdRequests = holdRequests;
+  }
+
+  public NoMoreRequests getNoMoreRequests() {
+    return noMoreRequests;
+  }
+
+  public void setNoMoreRequests(NoMoreRequests noMoreRequests) {
+    this.noMoreRequests = noMoreRequests;
   }
 }

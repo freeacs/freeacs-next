@@ -1,17 +1,13 @@
 package tr069;
 
 import tr069.xml.ParameterValueStruct;
-import lombok.Data;
-
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
 public class InformParameters {
-  /** The connection udp-url (for kick, ip-address). */
-  public String UDP_CONNECTION_URL;
+  public final String UDP_CONNECTION_URL;
 
-  public Map<String, ParameterValueStruct> cpeParams = new HashMap<>();
+  private final Map<String, ParameterValueStruct> cpeParams = new HashMap<>();
 
   public InformParameters(String keyRoot) {
     UDP_CONNECTION_URL = keyRoot + "ManagementServer.UDPConnectionRequestAddress";
@@ -25,5 +21,14 @@ public class InformParameters {
     } else {
       return null;
     }
+  }
+
+  /** The connection udp-url (for kick, ip-address). */
+  public String getUDP_CONNECTION_URL() {
+    return UDP_CONNECTION_URL;
+  }
+
+  public Map<String, ParameterValueStruct> getCpeParams() {
+    return cpeParams;
   }
 }

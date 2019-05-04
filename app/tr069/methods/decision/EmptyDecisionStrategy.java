@@ -1,5 +1,7 @@
 package tr069.methods.decision;
 
+import dbi.util.SystemParameters;
+import dbi.util.TimestampWrapper;
 import tr069.InformParameters;
 import tr069.Properties;
 import tr069.SessionData;
@@ -7,7 +9,6 @@ import tr069.base.DBIActions;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,7 +16,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-@Slf4j
 public class EmptyDecisionStrategy implements DecisionStrategy {
     private final dbi.DBI dbi;
     private final Properties properties;
@@ -44,7 +44,7 @@ public class EmptyDecisionStrategy implements DecisionStrategy {
             } else if (sessionData.discoverUnittype()) {
                 writeSystemParameters(
                         reqRes,
-                        Collections.singletonList(new ParameterValueStruct(dbi.util.SystemParameters.DISCOVER, "0")),
+                        Collections.singletonList(new ParameterValueStruct(SystemParameters.DISCOVER, "0")),
                         false);
                 log.info("EM-Decision is GPN since unit has DISCOVER parameter set to 1");
                 reqRes.getResponseData().setMethod(ProvisioningMethod.GetParameterNames.name());
@@ -82,27 +82,26 @@ public class EmptyDecisionStrategy implements DecisionStrategy {
         if (params != null) {
             toDB = new ArrayList<>(params);
         }
-        String timestamp = dbi.util.TimestampWrapper.tmsFormat.format(new Date());
-        toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.LAST_CONNECT_TMS, timestamp));
-        if (sessionData.getAcsParameters().getValue(dbi.util.SystemParameters.FIRST_CONNECT_TMS) == null) {
-            toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.FIRST_CONNECT_TMS, timestamp));
+        String timestamp = TimestampWrapper.tmsFormat.format(new Date());
+        toDB.add(new ParameterValueStruct(SystemParameters.LAST_CONNECT_TMS, timestamp));
+        if (sessionData.getAcsParameters().getValue(SystemParameters.FIRST_CONNECT_TMS) == null) {
+            toDB.add(new ParameterValueStruct(SystemParameters.FIRST_CONNECT_TMS, timestamp));
         }
         String currentIPAddress =
-                sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.IP_ADDRESS);
+                sessionData.getUnit().getParameters().get(SystemParameters.IP_ADDRESS);
         String actualIPAddress = reqRes.getRealIPAddress();
         if (currentIPAddress == null || !currentIPAddress.equals(actualIPAddress)) {
-            toDB.add(new ParameterValueStruct(dbi.util.SystemParameters.IP_ADDRESS, actualIPAddress));
+            toDB.add(new ParameterValueStruct(SystemParameters.IP_ADDRESS, actualIPAddress));
         }
-        String swVersion = sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.SOFTWARE_VERSION);
+        String swVersion = sessionData.getUnit().getParameters().get(SystemParameters.SOFTWARE_VERSION);
         if (swVersion == null || !swVersion.equals(reqRes.getSessionData().getSoftwareVersion())) {
             toDB.add(
-                    new ParameterValueStruct(
-                            dbi.util.SystemParameters.SOFTWARE_VERSION, reqRes.getSessionData().getSoftwareVersion()));
+                    new ParameterValueStruct(SystemParameters.SOFTWARE_VERSION, reqRes.getSessionData().getSoftwareVersion()));
         }
-        String sn = sessionData.getUnit().getParameters().get(dbi.util.SystemParameters.SERIAL_NUMBER);
+        String sn = sessionData.getUnit().getParameters().get(SystemParameters.SERIAL_NUMBER);
         if (sn == null || !sn.equals(sessionData.getSerialNumber())) {
             toDB.add(
-                    new ParameterValueStruct(dbi.util.SystemParameters.SERIAL_NUMBER, sessionData.getSerialNumber()));
+                    new ParameterValueStruct(SystemParameters.SERIAL_NUMBER, sessionData.getSerialNumber()));
         }
         InformParameters ifmp = sessionData.getInformParameters();
         if (ifmp != null

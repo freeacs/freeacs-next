@@ -1,13 +1,16 @@
 package tr069.base;
 
 import dbi.UnitParameter;
+import dbi.Unittype;
 import dbi.UnittypeParameter;
+import dbi.util.SystemParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.SessionData;
 import tr069.exception.TR069DatabaseException;
 import tr069.exception.TR069Exception;
 import tr069.exception.TR069ExceptionShortMessage;
 import tr069.xml.ParameterValueStruct;
-import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -17,8 +20,8 @@ import java.util.*;
  *
  * And some other utility methods.
  */
-@Slf4j
 public abstract class DBIActions {
+    private static final Logger log = LoggerFactory.getLogger(DBIActions.class);
 
     static void startUnitJob(String unitId, Integer jobId, dbi.DBI dbi) throws SQLException {
         String action = "startUnitJob";
@@ -67,7 +70,7 @@ public abstract class DBIActions {
             dbi.Unittype ut = dbi.getAcs().getUnittype(unittypeName);
             if (ut == null) {
                 sessionData.setUnittypeCreated(false);
-                ut = new dbi.Unittype(unittypeName, unittypeName, "Auto-generated", dbi.Unittype.ProvisioningProtocol.TR069);
+                ut = new dbi.Unittype(unittypeName, unittypeName, "Auto-generated", Unittype.ProvisioningProtocol.TR069);
                 dbi.getAcs().getUnittypes().addOrChangeUnittype(ut, dbi.getAcs());
                 log.debug("Have created a unittype with the name " + unittypeName + " in discovery mode");
             } else {
@@ -90,7 +93,7 @@ public abstract class DBIActions {
             unitIds.add(unitId);
             acsUnit.addUnits(unitIds, pr);
             List<UnitParameter> unitParameters = new ArrayList<>();
-            dbi.UnittypeParameter secretUtp = ut.getUnittypeParameters().getByName(dbi.util.SystemParameters.SECRET);
+            dbi.UnittypeParameter secretUtp = ut.getUnittypeParameters().getByName(SystemParameters.SECRET);
             dbi.UnitParameter up = new dbi.UnitParameter(secretUtp, unitId, sessionData.getSecret(), pr);
             unitParameters.add(up);
             acsUnit.addOrChangeUnitParameters(unitParameters, pr);

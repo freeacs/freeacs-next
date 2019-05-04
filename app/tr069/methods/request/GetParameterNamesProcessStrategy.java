@@ -11,12 +11,10 @@ import tr069.methods.ProvisioningMethod;
 import tr069.xml.ParameterInfoStruct;
 import tr069.xml.ParameterList;
 import tr069.xml.Parser;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class GetParameterNamesProcessStrategy implements RequestProcessStrategy {
     private final dbi.DBI dbi;
 

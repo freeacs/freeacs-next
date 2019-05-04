@@ -1,5 +1,7 @@
 package tr069.methods;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tr069.Properties;
 import tr069.base.Log;
 import tr069.http.HTTPRequestResponseData;
@@ -8,15 +10,14 @@ import tr069.methods.request.RequestProcessStrategy;
 import tr069.methods.response.ResponseCreateStrategy;
 import tr069.xml.Response;
 import tr069.xml.XMLFormatterUtils;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 import static tr069.CwmpVersion.extractVersionFrom;
 import static tr069.methods.ProvisioningMethod.extractMethodFrom;
 
-@Slf4j
 public abstract class ProvisioningStrategy {
+    private static final Logger log = LoggerFactory.getLogger(ProvisioningStrategy.class);
 
     public abstract void process(HTTPRequestResponseData reqRes) throws Exception;
 

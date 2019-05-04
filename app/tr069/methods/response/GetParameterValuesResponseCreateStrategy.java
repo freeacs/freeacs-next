@@ -6,13 +6,11 @@ import tr069.SessionData;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.*;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class GetParameterValuesResponseCreateStrategy implements ResponseCreateStrategy {
 
     private final Properties properties;

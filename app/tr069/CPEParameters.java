@@ -1,7 +1,6 @@
 package tr069;
 
 import tr069.xml.ParameterValueStruct;
-import lombok.Data;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,25 +17,15 @@ import java.util.Map;
  *
  * @author Morten
  */
-@Data
 public class CPEParameters {
-  /** All config file information. */
-  public String CONFIG_FILES;
-  /**
-   * Special solution for Ping Communication's NPA and RGW public String CONFIG_VERSION; The
-   * software/firmware version of the CPE.
-   */
-  public String SOFTWARE_VERSION;
-  /** The periodic inform interval on the CPE. */
-  public String PERIODIC_INFORM_INTERVAL;
-  /** The connection url (for kick, ip-address). */
-  public String CONNECTION_URL;
-  /** The connection username (for kick, using authentication). */
-  public String CONNECTION_USERNAME;
-  /** The connection password (for kick, using authentication). */
-  public String CONNECTION_PASSWORD;
+  public final String CONFIG_FILES;
+  public final String SOFTWARE_VERSION;
+  public final String PERIODIC_INFORM_INTERVAL;
+  public final String CONNECTION_URL;
+  public final String CONNECTION_USERNAME;
+  public final String CONNECTION_PASSWORD;
 
-  private Map<String, ParameterValueStruct> cpeParams = new HashMap<>();
+  private final Map<String, ParameterValueStruct> cpeParams = new HashMap<>();
 
   public CPEParameters(String keyRoot) {
     CONFIG_FILES = keyRoot + "DeviceInfo.VendorConfigFile.";
@@ -81,5 +70,9 @@ public class CPEParameters {
       }
     });
     return cMap;
+  }
+
+  public Map<String, ParameterValueStruct> getCpeParams() {
+    return cpeParams;
   }
 }

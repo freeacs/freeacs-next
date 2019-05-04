@@ -3,9 +3,7 @@ package tr069.methods.decision;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import tr069.xml.Fault;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class AutonomousTransferCompleteDecisionStrategy implements DecisionStrategy {
     @SuppressWarnings("Duplicates")
     @Override

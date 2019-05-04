@@ -1,11 +1,9 @@
 package tr069.xml;
 
-import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 public class MethodList {
   private List<String> methods = new ArrayList<>();
 

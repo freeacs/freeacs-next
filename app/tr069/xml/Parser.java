@@ -2,7 +2,6 @@ package tr069.xml;
 
 import tr069.exception.TR069Exception;
 import tr069.exception.TR069ExceptionShortMessage;
-import lombok.Data;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -18,7 +17,6 @@ import java.util.Map;
  * The class is responsible for parsing the SOAP messages from the CPE. The messages could be a
  * TR-069 request or a TR-069 response.
  */
-@Data
 public class Parser extends DefaultHandler {
   private static final String MAX_ENVELOPES_TAG = "MaxEnvelopes";
   private static final String CURRENT_TIME_TAG = "CurrentTime";
@@ -136,5 +134,109 @@ public class Parser extends DefaultHandler {
   public void characters(char[] ch, int start, int length) {
     String content = String.valueOf(ch).substring(start, start + length);
     currTextContent.append(content.trim());
+  }
+
+  public Header getHeader() {
+    return header;
+  }
+
+  public void setHeader(Header header) {
+    this.header = header;
+  }
+
+  public DeviceIdStruct getDeviceIdStruct() {
+    return deviceIdStruct;
+  }
+
+  public void setDeviceIdStruct(DeviceIdStruct deviceIdStruct) {
+    this.deviceIdStruct = deviceIdStruct;
+  }
+
+  public ParameterList getParameterList() {
+    return parameterList;
+  }
+
+  public void setParameterList(ParameterList parameterList) {
+    this.parameterList = parameterList;
+  }
+
+  public MethodList getMethodList() {
+    return methodList;
+  }
+
+  public void setMethodList(MethodList methodList) {
+    this.methodList = methodList;
+  }
+
+  public String getMaxEnvelopes() {
+    return maxEnvelopes;
+  }
+
+  public void setMaxEnvelopes(String maxEnvelopes) {
+    this.maxEnvelopes = maxEnvelopes;
+  }
+
+  public String getCurrentTime() {
+    return currentTime;
+  }
+
+  public void setCurrentTime(String currentTime) {
+    this.currentTime = currentTime;
+  }
+
+  public String getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(String retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public String getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(String startTime) {
+    this.startTime = startTime;
+  }
+
+  public String getCompleteTime() {
+    return completeTime;
+  }
+
+  public void setCompleteTime(String completeTime) {
+    this.completeTime = completeTime;
+  }
+
+  public String getCommandKey() {
+    return commandKey;
+  }
+
+  public void setCommandKey(String commandKey) {
+    this.commandKey = commandKey;
+  }
+
+  public Fault getFault() {
+    return fault;
+  }
+
+  public void setFault(Fault fault) {
+    this.fault = fault;
+  }
+
+  public XMLReader getXmlReader() {
+    return xmlReader;
+  }
+
+  public EventList getEventList() {
+    return eventList;
   }
 }
