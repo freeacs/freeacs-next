@@ -3,7 +3,7 @@
 ## Send an inform
 
 1. Change the digest.secret in application.conf
-2. Make sure that the unit "000000-FakeProductClass-FakeSerialNumber" exists and is configured with a secret.
+2. Make sure that the unit "000000-FakeProductClass-FakeSerialNumber" exists and is configured with a secret "test".
 2. Send an Inform to the acs like with the curl below:
 
 ```
