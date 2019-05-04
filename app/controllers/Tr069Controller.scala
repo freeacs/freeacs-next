@@ -21,25 +21,33 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
                                 baseCache: BaseCache,
                                 config: Config,
                                 dbiHolder: DBIHolder) extends AbstractController(cc) with Logging {
-  private val SESSION_ID = "uuid"
 
   def provision: Action[AnyContent] = Action.async { req =>
-    val authMethodStr = config.getString("auth.method").toLowerCase
-    if (authMethodStr == "digest" && config.getString("digest.secret") == "changeme") {
+    val methodStr = config.getString("auth.method").toLowerCase
+    if (methodStr == "digest" && config.getString("digest.secret") == "changeme") {
       logger.error("Digest secret must be changed from its default value!")
       Future.successful(InternalServerError(""))
     } else {
-      authMethodStr match {
-        case authMethod if "none" != authMethod =>
-          val context = AuthenticationContext(req.method, req.uri, req.headers.toSimpleMap, req.remoteAddress)
+      methodStr match {
+        case method if "none" != method =>
+          val context = AuthenticationContext(
+            req.method,
+            req.uri,
+            req.headers.toSimpleMap,
+            req.remoteAddress
+          )
           for {
-            result <- Authenticator.authenticate(context, (u: String) => Future.successful(u), authMethod)
+            result <- Authenticator.authenticate(
+              context,
+              (u: String) => Future.successful(u),
+              method
+            )
           } yield {
             if (result.success) {
               processRequest(req)
             } else {
               Unauthorized(result.errorMessage.getOrElse(""))
-                .withHeaders(challenge(context, authMethod).toSeq: _*)
+                .withHeaders(challenge(context, method).toSeq: _*)
             }
           }
         case _ => Future.successful(processRequest(req))
@@ -50,7 +58,7 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
   private def processRequest(req: Request[AnyContent]): Result = {
     val session = getSession(req)
     val realIp = req.headers.get("X-Real-IP").orNull
-    val reqRes = new HTTPRequestResponseData(baseCache, req.remoteAddress, realIp, session(SESSION_ID))
+    val reqRes = new HTTPRequestResponseData(baseCache, req.remoteAddress, realIp, session("uuid"))
     reqRes.getRequestData.setContextPath(config.getString("context-path"))
     reqRes.getRequestData.setXml(req.body.asXml.map(_.toString).getOrElse(""))
     ProvisioningStrategy.getStrategy(properties, dbiHolder.dbi, baseCache).process(reqRes)
@@ -60,8 +68,8 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
   }
 
   private def getSession(req: Request[AnyContent]): Session = {
-    req.session.get(SESSION_ID).map(_ => req.session).getOrElse {
-      req.session + (SESSION_ID -> java.util.UUID.randomUUID.toString)
+    req.session.get("uuid").map(_ => req.session).getOrElse {
+      req.session + ("uuid" -> java.util.UUID.randomUUID.toString)
     }
   }
 }
