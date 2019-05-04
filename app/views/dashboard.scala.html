@@ -1,5 +1,7 @@
 @import views.Dashboard
 
+@(numUnits: Int)
+
 @main("Dashboard", Dashboard) {
     <div class="row">
         <div class="col-md-4">
@@ -14,7 +16,7 @@
             <div class="main-box mb-dull">
                 <a href="#">
                     <i class="fa fa-plug fa-5x"></i>
-                    <h5>2500 units</h5>
+                    <h5>@numUnits units</h5>
                 </a>
             </div>
         </div>

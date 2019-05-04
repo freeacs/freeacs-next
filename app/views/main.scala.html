@@ -11,8 +11,8 @@
 @import views.CreateGroup
 @import views.JobOverview
 @import views.CreateJob
-
 @import java.time.LocalDate
+
 @(title: String, currentPage: PageEnumeration)(content: Html)
 
 <!DOCTYPE html>
@@ -35,7 +35,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="index.html">FREEACS TR-069</a>
+                    <a class="navbar-brand" href="@controllers.routes.WebController.index()">FREEACS TR-069</a>
                 </div>
                 <div class="header-right">
                     <a href="message-task.html" class="btn btn-info" title="New Message">
@@ -52,23 +52,23 @@
             <nav class="navbar-default navbar-side" role="navigation">
                 <div class="sidebar-collapse">
                     <ul class="nav" id="main-menu">
-    @MenuItem("Dashboard", List(Dashboard), currentPage, "fa fa-dashboard", displayChildren = false)
-    @MenuItem("UnitType", List(UnitTypeOverview, CreateUnitType), currentPage, "fa fa-gears")
-    @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage, "fa fa-gear")
-    @MenuItem("Units", List(UnitSearch, CreateUnit), currentPage, "fa fa-hdd-o")
-    @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage, "fa fa-group")
-    @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage, "fa fa-calendar")
+                        @MenuItem("Dashboard", List(Dashboard), currentPage, "fa fa-dashboard", displayChildren = false)
+                        @MenuItem("UnitType", List(UnitTypeOverview, CreateUnitType), currentPage, "fa fa-gears")
+                        @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage, "fa fa-gear")
+                        @MenuItem("Units", List(UnitSearch, CreateUnit), currentPage, "fa fa-hdd-o")
+                        @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage, "fa fa-group")
+                        @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage, "fa fa-calendar")
                     </ul>
                 </div>
             </nav>
             <div id="page-wrapper">
                 <div id="page-inner">
-                @content
+                    @content
                 </div>
             </div>
         </div>
         <div id="footer-sec">
-                    &copy; @LocalDate.now().getYear. FreeACS
+            &copy; @LocalDate.now().getYear. FreeACS
         </div>
         <script src="@routes.Assets.versioned("js/jquery-1.10.2.js")"></script>
         <script src="@routes.Assets.versioned("js/bootstrap.js")"></script>
