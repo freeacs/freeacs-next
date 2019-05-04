@@ -14,6 +14,7 @@ import tr069.http.HTTPRequestResponseData
 import tr069.methods.ProvisioningStrategy
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class Tr069Controller @Inject()(implicit ec: ExecutionContext,
@@ -39,15 +40,17 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
         for {
           result <- Authenticator.authenticate(
             context,
-            (u: String) => Future.successful(unitDetails.loadUserByUsername(u).pass),
+            (u: String) => Try(unitDetails.loadUserByUsername(u)).toEither match {
+              case Right(user) => Future.successful(user.pass)
+              case Left(error) => Future.failed(error)
+            },
             method
           )
         } yield {
           if (result.success) {
             processRequest(req)
           } else {
-            Unauthorized(result.errorMessage.getOrElse(""))
-              .withHeaders(challenge(context, method).toSeq: _*)
+            Unauthorized.withHeaders(challenge(context, method).toSeq: _*)
           }
         }
       case _ => Future.successful(processRequest(req))
