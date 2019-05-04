@@ -48,7 +48,7 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
           )
         } yield {
           if (result.success) {
-            processRequest(req)
+            processRequest(req, result.principal)
           } else {
             Unauthorized.withHeaders(challenge(context, method).toSeq: _*)
           }
@@ -57,12 +57,18 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
     }
   }
 
-  private def processRequest(req: Request[AnyContent]): Result = {
+  private def processRequest(req: Request[AnyContent], principal: Option[String] = None): Result = {
     val session = getSession(req)
     val realIp = req.headers.get("X-Real-IP").orNull
     val reqRes = new HTTPRequestResponseData(baseCache, req.remoteAddress, realIp, session("uuid"))
     reqRes.getRequestData.setContextPath(config.getString("context-path"))
     reqRes.getRequestData.setXml(req.body.asXml.map(_.toString).getOrElse(""))
+    if (principal.isDefined && reqRes.getSessionData.getUnit == null) {
+      val username = principal.get
+      val sessionData = reqRes.getSessionData
+      sessionData.setUnitId(username)
+      sessionData.setUnit(dbiHolder.dbi.getACSUnit.getUnitById(username))
+    }
     ProvisioningStrategy.getStrategy(properties, dbiHolder.dbi, baseCache).process(reqRes)
     Ok(reqRes.getResponseData.getXml)
       .withHeaders("SOAPAction" -> "")
