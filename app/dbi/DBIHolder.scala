@@ -9,7 +9,7 @@ import javax.sql.DataSource
 @Singleton
 class DBIHolder @Inject()(config: Config) {
 
-  val dbi = getDBI(getDataSource(config))
+  val dbi: DBI = getDBI(getDataSource(config))
 
   private def getDBI(dataSource: DataSource): DBI = {
     ACS.setStrictOrder(false)
