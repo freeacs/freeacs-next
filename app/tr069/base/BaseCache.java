@@ -2,13 +2,13 @@ package tr069.base;
 
 import common.util.Cache;
 import common.util.CacheValue;
+import play.cache.SyncCacheApi;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class BaseCache {
-  private static Cache cache = new Cache();
-
   /** 2 minutes. */
   private static final int SESSIONDATA_CACHE_TIMEOUT = 3 * 60 * 1000;
 
@@ -19,19 +19,8 @@ public class BaseCache {
 
   private static final String FIRMWAREIMAGE_KEY = "FIRMWARE";
 
-  /** Clears all parts of the cache, except for sessiondata. */
-  public static void clearCache() {
-    List<String> keyRemoveList = new ArrayList<>();
-    for (Object key : cache.getMap().keySet()) {
-      String keyStr = (String) key;
-      if (!keyStr.contains(SESSION_KEY)) {
-        keyRemoveList.add(keyStr);
-      }
-    }
-    for (String key : keyRemoveList) {
-      cache.remove(key);
-    }
-  }
+  @Inject
+  SyncCacheApi cache;
 
   /**
    * Retrieves the current session data from the cache based on a key that identifies the client.
@@ -39,7 +28,7 @@ public class BaseCache {
    * @param unitKey Can be either session id or unit id
    * @return SessionDataI
    */
-  public static SessionDataI getSessionData(String unitKey) {
+  public SessionDataI getSessionData(String unitKey) {
     String key = unitKey + SESSION_KEY;
     CacheValue cv = cache.get(key);
     if (cv != null) {
@@ -55,21 +44,21 @@ public class BaseCache {
    * @param unitKey Can be either session id or unit id
    * @param sessionData The session data to be stored in cache
    */
-  public static void putSessionData(String unitKey, SessionDataI sessionData) {
+  public void putSessionData(String unitKey, SessionDataI sessionData) {
     if (sessionData != null) {
       String key = unitKey + SESSION_KEY;
       CacheValue cv = new CacheValue(sessionData, Cache.SESSION, SESSIONDATA_CACHE_TIMEOUT);
       cv.setCleanupNotifier(new SessionDataCacheCleanup(unitKey, sessionData));
-      cache.put(key, cv);
+      cache.set(key, cv);
     }
   }
 
-  public static void removeSessionData(String unitKey) {
+  public void removeSessionData(String unitKey) {
     String key = unitKey + SESSION_KEY;
     cache.remove(key);
   }
 
-  public static dbi.File getFirmware(String firmwareName, String unittypeName) {
+  public dbi.File getFirmware(String firmwareName, String unittypeName) {
     String key = firmwareName + unittypeName + FIRMWAREIMAGE_KEY;
     CacheValue cv = cache.get(key);
     if (cv != null) {
@@ -79,11 +68,11 @@ public class BaseCache {
     }
   }
 
-  public static void putFirmware(String firmwareName, String unittypeName, dbi.File firmware) {
+  public void putFirmware(String firmwareName, String unittypeName, dbi.File firmware) {
     String key = firmwareName + unittypeName + FIRMWAREIMAGE_KEY;
     if (firmware != null) {
       CacheValue cv = new CacheValue(firmware, Cache.ABSOLUTE, FIRMWAREIMAGE_CACHE_TIMEOUT);
-      cache.put(key, cv);
+      cache.set(key, cv);
     }
   }
 }

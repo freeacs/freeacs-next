@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
@@ -20,6 +21,7 @@ public class Properties {
   private final boolean appendHwVersion;
   private final Config config;
 
+  @Inject()
   public Properties(Config config) {
     this.config = config;
     this.authMethod = config.getString("auth.method");

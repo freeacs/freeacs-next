@@ -79,10 +79,6 @@ public class DBI implements Runnable {
         thread.interrupt();
       } catch (Throwable e) {
       }
-      try {
-        thread.stop();
-      } catch (Throwable e) {
-      }
     }
   }
 

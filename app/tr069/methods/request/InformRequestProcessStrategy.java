@@ -1,5 +1,6 @@
 package tr069.methods.request;
 
+import dbi.DBI;
 import dbi.util.SystemParameters;
 import dbi.util.TimestampWrapper;
 import tr069.*;
@@ -26,11 +27,13 @@ import java.util.TreeSet;
 
 public class InformRequestProcessStrategy implements RequestProcessStrategy {
     private final dbi.DBI dbi;
-    private Properties properties;
+    private final BaseCache baseCache;
+    private final Properties properties;
 
-    InformRequestProcessStrategy(Properties properties, dbi.DBI dbi) {
+    InformRequestProcessStrategy(Properties properties, DBI dbi, BaseCache baseCache) {
         this.properties = properties;
         this.dbi = dbi;
+        this.baseCache = baseCache;
     }
 
     @SuppressWarnings("Duplicates")
@@ -49,7 +52,7 @@ public class InformRequestProcessStrategy implements RequestProcessStrategy {
             if (unitId == null) {
                 unitId = getUnitId(deviceIdStruct);
             }
-            BaseCache.putSessionData(unitId, sessionData);
+            baseCache.putSessionData(unitId, sessionData);
             sessionData.setUnitId(unitId);
             sessionData.setSerialNumber(deviceIdStruct.getSerialNumber());
             parseEvents(parser, sessionData);

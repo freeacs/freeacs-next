@@ -1,8 +1,10 @@
 package tr069.methods;
 
+import dbi.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tr069.Properties;
+import tr069.base.BaseCache;
 import tr069.base.Log;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.decision.DecisionStrategy;
@@ -21,18 +23,20 @@ public abstract class ProvisioningStrategy {
 
     public abstract void process(HTTPRequestResponseData reqRes) throws Exception;
 
-    public static ProvisioningStrategy getStrategy(Properties properties, dbi.DBI dbi) {
-        return new NormalProvisioningStrategy(properties, dbi);
+    public static ProvisioningStrategy getStrategy(Properties properties, DBI dbi, BaseCache baseCache) {
+        return new NormalProvisioningStrategy(properties, dbi, baseCache);
     }
 
     private static class NormalProvisioningStrategy extends ProvisioningStrategy {
 
         private final Properties properties;
-        private final dbi.DBI dbi;
+        private final DBI dbi;
+        private final BaseCache baseCache;
 
-        private NormalProvisioningStrategy(Properties properties, dbi.DBI dbi) {
+        private NormalProvisioningStrategy(Properties properties, DBI dbi, BaseCache baseCache) {
             this.properties = properties;
             this.dbi = dbi;
+            this.baseCache = baseCache;
         }
 
         @Override
@@ -46,7 +50,7 @@ public abstract class ProvisioningStrategy {
 
             // 1. process the request
             logWillProcessRequest(reqRes);
-            RequestProcessStrategy.getStrategy(requestMethod, properties, dbi).process(reqRes);
+            RequestProcessStrategy.getStrategy(requestMethod, properties, dbi, baseCache).process(reqRes);
             if (Log.isConversationLogEnabled()) {
                 logConversationRequest(reqRes);
             }

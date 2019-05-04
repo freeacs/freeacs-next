@@ -26,17 +26,17 @@ public class HTTPRequestResponseData {
 
   private SessionData sessionData;
 
-  public HTTPRequestResponseData(String remoteHost, String realIp, String sessionId) {
+  public HTTPRequestResponseData(BaseCache cache, String remoteHost, String realIp, String sessionId) {
     this.remoteHost = remoteHost;
     this.realIp = realIp;
     this.requestData = new HTTPRequestData();
     this.responseData = new HTTPResponseData();
     try {
-      sessionData = (SessionData) BaseCache.getSessionData(sessionId);
+      sessionData = (SessionData) cache.getSessionData(sessionId);
     } catch (BaseCacheException tr069Ex) {
       log.debug("Sessionid " + sessionId + " did not return a SessionData object from cache, must create a new SessionData object");
       sessionData = new SessionData(sessionId);
-      BaseCache.putSessionData(sessionId, sessionData);
+      cache.putSessionData(sessionId, sessionData);
     }
     if (sessionData.getStartupTmsForSession() == null) {
       sessionData.setStartupTmsForSession(System.currentTimeMillis());

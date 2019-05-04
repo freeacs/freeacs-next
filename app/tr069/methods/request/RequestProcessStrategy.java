@@ -1,6 +1,8 @@
 package tr069.methods.request;
 
+import dbi.DBI;
 import tr069.Properties;
+import tr069.base.BaseCache;
 import tr069.http.HTTPRequestResponseData;
 import tr069.methods.ProvisioningMethod;
 import org.slf4j.Logger;
@@ -12,13 +14,13 @@ public interface RequestProcessStrategy {
 
     void process(HTTPRequestResponseData reqRes) throws Exception;
 
-    static RequestProcessStrategy getStrategy(ProvisioningMethod provisioningMethod, Properties properties, dbi.DBI dbi) {
+    static RequestProcessStrategy getStrategy(ProvisioningMethod provisioningMethod, Properties properties, DBI dbi, BaseCache baseCache) {
         switch (provisioningMethod) {
             case Empty: return doNotProcessStrategy();
             case Download: return downloadStrategy();
             case Fault: return faultStrategy();
             case FactoryReset: return factoryResetStrategy();
-            case Inform: return informStrategy(properties, dbi);
+            case Inform: return informStrategy(properties, dbi, baseCache);
             case GetParameterNames: return getParameterNamesStrategy(properties, dbi);
             case GetParameterValues: return getParameterValuesStrategy();
             case SetParameterValues: return setParameterValuesStrategy(dbi);
@@ -59,8 +61,8 @@ public interface RequestProcessStrategy {
         return reqRes -> {};
     }
 
-    static RequestProcessStrategy informStrategy(Properties properties, dbi.DBI dbi) {
-        return new InformRequestProcessStrategy(properties, dbi);
+    static RequestProcessStrategy informStrategy(Properties properties, DBI dbi, BaseCache baseCache) {
+        return new InformRequestProcessStrategy(properties, dbi, baseCache);
     }
 
     static RequestProcessStrategy getParameterNamesStrategy(Properties properties, dbi.DBI dbi) {
