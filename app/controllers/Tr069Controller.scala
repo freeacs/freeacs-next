@@ -25,35 +25,32 @@ class Tr069Controller @Inject()(implicit ec: ExecutionContext,
                                 unitDetails: UnitDetailsService) extends AbstractController(cc) with Logging {
 
   def provision: Action[AnyContent] = Action.async { req =>
-    val methodStr = config.getString("auth.method").toLowerCase
-    if (methodStr == "digest" && config.getString("digest.secret") == "changeme") {
-      logger.error("Digest secret must be changed from its default value!")
-      Future.successful(InternalServerError(""))
-    } else {
-      methodStr match {
-        case method if "none" != method =>
-          val context = AuthenticationContext(
-            req.method,
-            req.uri,
-            req.headers.toSimpleMap,
-            req.remoteAddress
+    config.getString("auth.method").toLowerCase match {
+      case method if method == "digest" && config.getString("digest.secret") == "changeme" =>
+        logger.error("Digest secret must be changed from its default value!")
+        Future.successful(InternalServerError(""))
+      case method if "none" != method =>
+        val context = AuthenticationContext(
+          req.method,
+          req.uri,
+          req.headers.toSimpleMap,
+          req.remoteAddress
+        )
+        for {
+          result <- Authenticator.authenticate(
+            context,
+            (u: String) => Future.successful(unitDetails.loadUserByUsername(u).pass),
+            method
           )
-          for {
-            result <- Authenticator.authenticate(
-              context,
-              (u: String) => Future.successful(unitDetails.loadUserByUsername(u).pass),
-              method
-            )
-          } yield {
-            if (result.success) {
-              processRequest(req)
-            } else {
-              Unauthorized(result.errorMessage.getOrElse(""))
-                .withHeaders(challenge(context, method).toSeq: _*)
-            }
+        } yield {
+          if (result.success) {
+            processRequest(req)
+          } else {
+            Unauthorized(result.errorMessage.getOrElse(""))
+              .withHeaders(challenge(context, method).toSeq: _*)
           }
-        case _ => Future.successful(processRequest(req))
-      }
+        }
+      case _ => Future.successful(processRequest(req))
     }
   }
 
