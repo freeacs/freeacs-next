@@ -10,7 +10,9 @@ import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
 
-class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with EhCacheComponents {
+class AppComponents(context: Context) extends BuiltInComponentsFromContext(context)
+  with EhCacheComponents
+  with AssetsComponents {
 
   override val httpFilters = Nil
   override val Action = defaultActionBuilder
@@ -33,7 +35,7 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
     case GET(p"/unittype/overview")     =>  unitTypeController.overview
     case POST(p"/tr069")                =>  tr069Controller.provision
     case POST(p"/tr069/prov")           =>  tr069Controller.provision
-    case GET(p"/assets/$file*")         =>  Assets.versioned("/", file)
+    case GET(p"/assets/$file*")         =>  assets.versioned("/public", file)
   }
 }
 

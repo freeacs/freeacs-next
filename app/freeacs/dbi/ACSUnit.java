@@ -26,16 +26,13 @@ public class ACSUnit {
   private Syslog syslog;
   private ACS acs;
 
-  public ACSUnit(DataSource dataSource, ACS acs, Syslog syslog) throws SQLException {
+  public ACSUnit(DataSource dataSource, ACS acs, Syslog syslog) {
     this.dataSource = dataSource;
     this.syslog = syslog;
     if (acs == null) {
       throw new IllegalArgumentException("The ACSUnit constructor requires a non-null ACS object");
     }
     this.acs = acs;
-    if (acs.getUnittypes() == null) {
-      acs.read();
-    }
   }
 
   /**

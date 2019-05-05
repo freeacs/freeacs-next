@@ -17,6 +17,4 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"
 libraryDependencies += "com.github.jarlah" % "AuthenticScala" % "v1.0.3"
 libraryDependencies += "com.adrianhurt" %% "play-bootstrap" % "1.4-P26-B4"
 
-unmanagedResourceDirectories in Compile += baseDirectory.value / "public"
-
 enablePlugins(JavaAppPackaging)

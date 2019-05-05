@@ -4,16 +4,16 @@ import com.github.jarlah.authenticscala.Authenticator._
 import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import com.typesafe.config.Config
 import freeacs.dbi.DBIHolder
-import services.UnitDetailsService
-import play.api.Logging
-import play.api.mvc._
 import freeacs.tr069.Properties
 import freeacs.tr069.base.BaseCache
 import freeacs.tr069.http.HTTPRequestResponseData
 import freeacs.tr069.methods.ProvisioningStrategy
+import play.api.Logging
+import play.api.mvc._
+import services.UnitDetailsService
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success}
 
 class Tr069Controller(cc: ControllerComponents,
                                 properties: Properties,
@@ -37,9 +37,9 @@ class Tr069Controller(cc: ControllerComponents,
         for {
           result <- Authenticator.authenticate(
             context,
-            (u: String) => Try(unitDetails.loadUserByUsername(u)).toEither match {
-              case Right(user) => Future.successful(user.pass)
-              case Left(error) => Future.failed(error)
+            (username: String) => unitDetails.loadByUsername(username) match {
+              case Success(user) => Future.successful(user.pass)
+              case Failure(error) => Future.failed(error)
             },
             method
           )
