@@ -1,0 +1,25 @@
+@import views.CreateUnitType
+
+@import dbi.Unittype.ProvisioningProtocol
+@(form: Form[UnitTypeForm.UnitType])(implicit messagesProvider: MessagesProvider, flash: Flash)
+
+@main("Create UnitType", CreateUnitType) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Unit Type</a>
+        </li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            @b4.vertical.form(routes.UnitTypeController.postCreate()) { implicit vfc =>
+                @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
+                @b4.text(form("vendor"), '_label -> "Vendor", 'placeholder -> "Enter vendor")
+                @b4.textarea(form("description"), '_label -> "Description", 'placeholder -> "Enter description")
+                @b4.select(form("protocol"), options = ProvisioningProtocol.values().map(p => (p.name(), p.name())).toSeq, '_label -> "Select" )
+                @b4.submit('class -> "btn btn-primary"){ Submit }
+            }
+            <p>@flash.get("success").orNull</p>
+        </div>
+    </div>
+}

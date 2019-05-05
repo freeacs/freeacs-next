@@ -1,0 +1,30 @@
+@import views.PageEnumeration
+
+@(
+    title: String,
+    pages: List[PageEnumeration],
+    currentPage: PageEnumeration,
+    fontAwesome: String,
+    displayChildren: Boolean = true
+)
+
+@if(displayChildren) {
+    <li class="nav-item dropdown@{if(pages.contains(currentPage)) " active" else ""}">
+        <a class="nav-link dropdown-toggle" href="#" id="@title-Dropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-fw fa-folder"></i>
+            <span>@title</span>
+        </a>
+        <div class="dropdown-menu" aria-labelledby="@title-Dropdown">
+        @pages.filter(_ => displayChildren).map { page =>
+            <a class="dropdown-item@{if(currentPage == page) " active" else ""}" href="@page.url">@page.name</a>
+        }
+        </div>
+    </li>
+} else {
+    <li class="nav-item@{if(pages.contains(currentPage)) " active" else ""}">
+        <a class="nav-link" href="@pages.head.url">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>@title</span>
+        </a>
+    </li>
+}
