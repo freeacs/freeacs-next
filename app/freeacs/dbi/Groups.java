@@ -220,9 +220,6 @@ public class Groups {
         delStmt.executeUpdate(sql);
       }
       logger.info("Deleted group " + group);
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(group, group.getUnittype());
-      }
     } finally {
       if (s != null) {
         s.close();
@@ -301,9 +298,6 @@ public class Groups {
         }
         s.close();
         logger.info("Inserted group " + group.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(group, group.getUnittype());
-        }
       } else {
         DynamicStatement ds = new DynamicStatement();
         ds.addSqlAndArguments("UPDATE group_ SET group_name = ?, ", group.getName());
@@ -327,9 +321,6 @@ public class Groups {
         ps.executeUpdate();
 
         logger.info("Updated group " + group.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(group, group.getUnittype());
-        }
       }
     } finally {
       if (s != null) {

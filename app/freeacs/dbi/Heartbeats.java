@@ -60,14 +60,8 @@ public class Heartbeats {
           heartbeat.setId(gk.getInt(1));
         }
         logger.info("Inserted heartbeat " + heartbeat.getId());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(heartbeat, heartbeat.getUnittype());
-        }
       } else {
         logger.info("Updated heartbeat " + heartbeat.getId());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(heartbeat, unittype);
-        }
       }
     } finally {
       if (ps != null) {
@@ -99,9 +93,6 @@ public class Heartbeats {
       ps.executeUpdate();
 
       logger.info("Deleted heartbeat " + heartbeat.getId());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(heartbeat, unittype);
-      }
     } finally {
       if (ps != null) {
         ps.close();

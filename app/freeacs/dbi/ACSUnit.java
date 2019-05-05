@@ -12,9 +12,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.db.Database;
 
 /** ACSUnit is a class to help you work with units and unit parameters. */
 public class ACSUnit {
@@ -22,11 +23,11 @@ public class ACSUnit {
   private static long updateCounter;
   private static long insertCounter;
 
-  private DataSource dataSource;
+  private Database dataSource;
   private Syslog syslog;
   private ACS acs;
 
-  public ACSUnit(DataSource dataSource, ACS acs, Syslog syslog) {
+  public ACSUnit(Database dataSource, ACS acs, Syslog syslog) {
     this.dataSource = dataSource;
     this.syslog = syslog;
     if (acs == null) {

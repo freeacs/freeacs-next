@@ -1,5 +1,7 @@
 package freeacs.dbi;
 
+import play.api.db.Database;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import javax.sql.DataSource;
+
 
 public class Permissions {
   /**
@@ -21,13 +23,13 @@ public class Permissions {
     "support", "limited-provisioning", "full-provisioning", "report", "staging", "monitor"
   };
 
-  private DataSource dataSource;
+  private Database dataSource;
   /** Private User user;. */
   private Map<Integer, Permission> idMap = new HashMap<>();
   /** A unittype-id maps to a set of permission-ids. */
   private Map<Integer, Set<Integer>> unittypeIdMap = new TreeMap<>();
 
-  protected Permissions(DataSource dataSource) {
+  protected Permissions(Database dataSource) {
     this.dataSource = dataSource;
   }
 

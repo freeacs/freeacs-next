@@ -18,9 +18,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.db.Database;
 
 /**
  * This class handles all write/read to the syslog-table. Now it also supports the Syslog-server.
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Syslog {
 
-  private DataSource dataSource;
+  private Database dataSource;
 
   private Identity id;
 
@@ -47,7 +48,7 @@ public class Syslog {
    * @param dataSource
    * @param id The {@link Identity} for this syslog instance
    */
-  public Syslog(DataSource dataSource, Identity id) {
+  public Syslog(Database dataSource, Identity id) {
     this.dataSource = dataSource;
     this.id = id;
   }
@@ -472,7 +473,7 @@ public class Syslog {
     this.simulationMode = simulationMode;
   }
 
-  public DataSource getDataSource() {
+  public Database getDataSource() {
     return dataSource;
   }
 }

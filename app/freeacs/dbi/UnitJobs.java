@@ -8,9 +8,10 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.db.Database;
 
 /**
  * The purpose of unit_job table is for each job to:
@@ -63,9 +64,9 @@ import org.slf4j.LoggerFactory;
 public class UnitJobs {
   private static Logger logger = LoggerFactory.getLogger(UnitJobs.class);
 
-  private DataSource connectionProperties;
+  private Database connectionProperties;
 
-  public UnitJobs(DataSource cp) {
+  public UnitJobs(Database cp) {
     this.connectionProperties = cp;
   }
 

@@ -346,9 +346,6 @@ public class Triggers {
       int rowsDeleted = ps.executeUpdate();
       c.commit();
       c.setAutoCommit(true);
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(trigger, trigger.getUnittype());
-      }
       logger.info("Deleted trigger " + trigger.getName());
       return rowsDeleted;
     } finally {
@@ -426,18 +423,12 @@ public class Triggers {
           trigger.setId(gk.getInt(1));
         }
         logger.info("Inserted trigger " + trigger.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(trigger, trigger.getUnittype());
-        }
       } else {
         if (trigger.isSyslogEventChanged()) { // delete all trigger_events for this trigger
           deleteEvents(trigger.getId(), new Date(), acs);
           trigger.setSyslogEventChangeCompleted();
         }
         logger.info("Updated trigger " + trigger.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(trigger, trigger.getUnittype());
-        }
       }
     } finally {
       if (ps != null) {

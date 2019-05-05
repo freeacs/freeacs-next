@@ -227,9 +227,6 @@ public class UnittypeParameters {
       }
       c.commit();
       c.setAutoCommit(true);
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishChange(unittype, unittype);
-      }
     } finally {
       if (s != null) {
         s.close();
@@ -319,9 +316,6 @@ public class UnittypeParameters {
       logger.info("Added/changed " + unittypeParameters.size() + " unittype parameters");
       c.commit();
       c.setAutoCommit(true);
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishChange(unittype, unittype);
-      }
     } finally {
       if (ps != null) {
         ps.close();

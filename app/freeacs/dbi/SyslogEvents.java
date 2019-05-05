@@ -98,14 +98,8 @@ public class SyslogEvents {
           syslogEvent.setId(gk.getInt(1));
         }
         logger.info("Inserted syslog event " + syslogEvent.getEventId());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(syslogEvent, syslogEvent.getUnittype());
-        }
       } else {
         logger.info("Updated syslog event " + syslogEvent.getEventId());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(syslogEvent, unittype);
-        }
       }
     } finally {
       if (ps != null) {
@@ -147,9 +141,6 @@ public class SyslogEvents {
       ps.executeUpdate();
 
       logger.info("Deleted syslog event " + syslogEvent.getEventId());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(syslogEvent, unittype);
-      }
     } finally {
       if (ps != null) {
         ps.close();

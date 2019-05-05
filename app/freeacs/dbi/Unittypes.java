@@ -70,9 +70,6 @@ public class Unittypes {
         int changedSystemParameters = unittype.ensureValidSystemParameters(acs);
         logger.info(
             "Added unittype " + unittype.getName() + ", changed/added " + changedSystemParameters);
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(unittype, unittype);
-        }
       } else {
         int changedSystemParameters = unittype.ensureValidSystemParameters(acs);
         logger.info(
@@ -80,9 +77,6 @@ public class Unittypes {
                 + unittype.getName()
                 + ", changed/added "
                 + changedSystemParameters);
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(unittype, unittype);
-        }
       }
     } finally {
       if (s != null) {
@@ -123,9 +117,6 @@ public class Unittypes {
       int rowsDeleted = s.executeUpdate(sql);
 
       logger.info("Deleted unittype " + unittype.getName());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(unittype, unittype);
-      }
       return rowsDeleted;
     } finally {
       if (s != null) {

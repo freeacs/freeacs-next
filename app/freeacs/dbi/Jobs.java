@@ -147,12 +147,6 @@ public class Jobs {
         }
       }
       connection.commit();
-      if (acs.getDbi() != null && !jobParameters.isEmpty()) {
-        acs.getDbi()
-            .publishChange(
-                jobParameters.get(0).getJob(),
-                jobParameters.get(0).getJob().getGroup().getUnittype());
-      }
     } catch (SQLException sqlex) {
       if (connection != null) {
         connection.rollback();
@@ -187,9 +181,6 @@ public class Jobs {
       j.setDefaultParameters();
 
       logger.info("Deleted all job parameters for job " + job.getId());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishChange(job, job.getGroup().getUnittype());
-      }
     } catch (SQLException sqlex) {
       sqle = sqlex;
       throw sqle;
@@ -252,12 +243,6 @@ public class Jobs {
         }
       }
       connection.commit();
-      if (acs.getDbi() != null && !jobParameters.isEmpty()) {
-        acs.getDbi()
-            .publishChange(
-                jobParameters.get(0).getJob(),
-                jobParameters.get(0).getJob().getGroup().getUnittype());
-      }
       return rowsDeleted;
     } catch (SQLException sqlex) {
       sqle = sqlex;
@@ -302,9 +287,6 @@ public class Jobs {
       removeJobFromDataModel(job);
 
       logger.info("Deleted job " + job.getId());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(job, job.getGroup().getUnittype());
-      }
     } catch (SQLException sqlex) {
       sqle = sqlex;
       throw sqle;
@@ -410,9 +392,6 @@ public class Jobs {
 
       updateMandatoryJobParameters(job, acs);
       logger.info("Inserted job " + job.getId());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishAdd(job, job.getGroup().getUnittype());
-      }
     } finally {
       if (ps != null) {
         ps.close();
@@ -521,9 +500,6 @@ public class Jobs {
               + ")";
 
       logger.info(message);
-      if (!publishMsg.isEmpty() && acs.getDbi() != null) {
-        acs.getDbi().publishJobCounters(job.getId(), publishMsg);
-      }
     } catch (SQLException sqlex) {
       sqle = sqlex;
       throw sqle;
@@ -576,9 +552,6 @@ public class Jobs {
       ps.close();
       if (rowsUpdated > 0) {
         logger.info("Updated job " + job.getId() + " with status = " + job.getStatus());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(job, job.getGroup().getUnittype());
-        }
       } else {
         String msg =
             "The job was not updated, most likely because the status change was not allowed ";
@@ -657,9 +630,6 @@ public class Jobs {
       if (rowsUpdated > 0) {
         updateMandatoryJobParameters(job, acs);
         logger.info("Updated job " + job.getId() + " with type/description/status/rules");
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(job, job.getGroup().getUnittype());
-        }
       } else {
         String msg =
             "The job was not updated, most likely because status was " + JobStatus.COMPLETED;

@@ -63,9 +63,6 @@ public class ProfileParameters {
         s.executeUpdate(sql);
 
         logger.info("Added " + logMsg);
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(profileParameter, profile.getUnittype());
-        }
       } else {
         sql = "UPDATE profile_param SET ";
         sql += "VALUE = '" + profileParameter.getValue() + "' ";
@@ -75,9 +72,6 @@ public class ProfileParameters {
         s.executeUpdate(sql);
 
         logger.info("Updated " + logMsg);
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(profileParameter, profile.getUnittype());
-        }
       }
     } finally {
       if (s != null) {
@@ -114,9 +108,6 @@ public class ProfileParameters {
       s.executeUpdate(sql);
 
       logger.info("Deleted profile parameter " + profileParameter.getUnittypeParameter().getName());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(profileParameter, profile.getUnittype());
-      }
     } finally {
       if (s != null) {
         s.close();

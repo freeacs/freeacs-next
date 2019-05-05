@@ -1,12 +1,14 @@
 package freeacs.dbi;
 
+import play.api.db.Database;
+
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
-import javax.sql.DataSource;
+
 
 public class File {
   private Unittype unittype;
@@ -24,7 +26,7 @@ public class File {
 
   private boolean validateInput = true;
 
-  private DataSource dataSource;
+  private Database dataSource;
 
   /** Code-order: id, unittype, name, type, desc, version, timestamp, targetname, (content) */
   public File() {}
@@ -213,7 +215,7 @@ public class File {
   /* MISC methods */
 
   /** Necessary to retrieve content - we do not cache content as default action. */
-  protected void setConnectionProperties(DataSource dataSource) {
+  protected void setConnectionProperties(Database dataSource) {
     this.dataSource = dataSource;
   }
 

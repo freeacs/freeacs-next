@@ -1,8 +1,9 @@
 package freeacs.dbi;
 
 import freeacs.dbi.util.ACSVersionCheck;
+import play.api.db.Database;
 
-import javax.sql.DataSource;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,13 +35,13 @@ public class Users {
 
   private static String ADMIN_DEFAULT_PASSWORD = "freeacs";
 
-  private final DataSource dataSource;
+  private final Database dataSource;
   private Map<Integer, User> idMap = new HashMap<>();
   private Map<String, User> nameMap = new TreeMap<>();
 
-  public Users(DataSource dataSource) throws SQLException {
-    ACSVersionCheck.versionCheck(dataSource);
-    this.dataSource = dataSource;
+  public Users(Database database) throws SQLException {
+    ACSVersionCheck.versionCheck(database);
+    this.dataSource = database;
     readAllUsers();
   }
 
@@ -365,7 +366,7 @@ public class Users {
     }
   }
 
-  protected DataSource getConnectionProperties() {
+  protected Database getConnectionProperties() {
     return dataSource;
   }
 }

@@ -95,9 +95,6 @@ public class GroupParameters {
           groupParameter.setId(gk.getInt(1));
         }
         logger.info("Added group parameter " + groupParameter.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(groupParameter, group.getUnittype());
-        }
       } else {
         ds.addSql("UPDATE group_param SET ");
         ds.addSql("value = ?, operator = ?, data_type = ? WHERE id = ?");
@@ -112,9 +109,6 @@ public class GroupParameters {
         ps.setQueryTimeout(60);
         ps.executeUpdate();
         logger.info("Updated group parameter " + groupParameter.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(groupParameter, group.getUnittype());
-        }
       }
     } finally {
       if (ps != null) {
@@ -162,9 +156,6 @@ public class GroupParameters {
       s.setQueryTimeout(60);
       s.executeUpdate(sql);
       logger.info("Deleted group parameter " + groupParameter.getName());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(groupParameter, group.getUnittype());
-      }
     } finally {
       if (s != null) {
         s.close();

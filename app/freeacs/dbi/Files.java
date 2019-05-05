@@ -94,9 +94,6 @@ public class Files {
       s.executeUpdate(sql);
 
       logger.info("Deleted file " + file.getName());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(file, unittype);
-      }
     } finally {
       if (s != null) {
         s.close();
@@ -164,9 +161,6 @@ public class Files {
         // }
 
         logger.info("Added file " + file.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(file, unittype);
-        }
       } finally {
         if (s != null) {
           s.close();
@@ -224,9 +218,6 @@ public class Files {
           s.executeUpdate();
         }
         logger.info("Updated file to " + file.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishFile(file, unittype);
-        }
       } finally {
         if (s != null) {
           s.close();

@@ -1,21 +1,20 @@
 package freeacs.dbi
 
 import com.typesafe.config.Config
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import freeacs.dbi.SyslogConstants.FACILITY_TR069
 import javax.inject.{Inject, Singleton}
-import javax.sql.DataSource
+import play.api.db.Database
 
 @Singleton
-class DBIHolder @Inject()(config: Config, dataSource: DataSource) {
+class DBIHolder @Inject()(config: Config, database: Database) {
 
-  val dbi: DBI = getDBI(dataSource)
+  lazy val dbi: DBI = getDBI(database)
 
-  private def getDBI(dataSource: DataSource): DBI = {
+  private def getDBI(database: Database): DBI = {
     ACS.setStrictOrder(false)
-    val users = new Users(dataSource)
+    val users = new Users(database)
     val id = new Identity(FACILITY_TR069, "latest", users.getUnprotected(Users.USER_ADMIN))
-    val syslog = new Syslog(dataSource, id)
-    new DBI(Integer.MAX_VALUE, dataSource, syslog)
+    val syslog = new Syslog(database, id)
+    new DBI(database, syslog)
   }
 }

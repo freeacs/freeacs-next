@@ -11,9 +11,9 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.db.Database;
 
 /**
  * The ACS class is the main interface for the following tables/concepts in the ACS database:
@@ -40,7 +40,7 @@ public class ACS {
   private static Logger logger = LoggerFactory.getLogger(ACS.class);
   private static boolean strictOrder = true;
 
-  private final DataSource dataSource;
+  private final Database dataSource;
 
   private Unittypes unittypes;
 
@@ -50,7 +50,7 @@ public class ACS {
 
   private ScriptExecutions scriptExecutions;
 
-  public ACS(DataSource dataSource, Syslog syslog) throws SQLException {
+  public ACS(Database dataSource, Syslog syslog) throws SQLException {
     long start = System.currentTimeMillis();
     this.dataSource = dataSource;
     this.syslog = syslog;
@@ -1140,11 +1140,11 @@ public class ACS {
     return dbi;
   }
 
-  public DataSource getConnectionProperties() {
+  public Database getConnectionProperties() {
     return getDataSource();
   }
 
-  public DataSource getDataSource() {
+  public Database getDataSource() {
     return dataSource;
   }
 }

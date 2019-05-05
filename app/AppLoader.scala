@@ -23,14 +23,12 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
 
   private[this] val db = dbApi.database("default")
 
-  val dataSource = db.dataSource
-
   override val httpFilters = Nil
   override val Action = defaultActionBuilder
 
   val config = ConfigFactory.load()
   val properties = new Properties(config)
-  val dbiHolder = new DBIHolder(config, dataSource)
+  val dbiHolder = new DBIHolder(config, db)
   val baseCache = new BaseCache(defaultCacheApi.sync)
   val unitDetailsService = new UnitDetailsService(dbiHolder)
   val unitTypeController = new UnitTypeController(controllerComponents, dbiHolder)

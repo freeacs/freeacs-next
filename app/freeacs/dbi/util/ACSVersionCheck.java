@@ -5,9 +5,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.db.Database;
 
 public class ACSVersionCheck {
   private static Logger logger = LoggerFactory.getLogger(ACSVersionCheck.class);
@@ -42,7 +42,7 @@ public class ACSVersionCheck {
     return false;
   }
 
-  public static void versionCheck(DataSource dataSource) throws SQLException {
+  public static void versionCheck(Database dataSource) throws SQLException {
     if (databaseChecked) {
       return;
     }

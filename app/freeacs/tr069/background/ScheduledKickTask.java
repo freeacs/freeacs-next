@@ -2,7 +2,6 @@ package freeacs.tr069.background;
 
 import freeacs.common.scheduler.TaskDefaultImpl;
 import freeacs.dbi.DBI;
-import freeacs.dbi.SyslogConstants;
 import freeacs.dbi.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +81,6 @@ public class ScheduledKickTask extends TaskDefaultImpl {
         freeacs.dbi.Unit unit = uk.getUnit();
         freeacs.dbi.ACSUnit acsUnit = dbi.getACSUnit();
         acsUnit.addOrChangeQueuedUnitParameters(unit);
-        dbi.publishKick(unit, SyslogConstants.FACILITY_STUN);
         uk.setNextTms(now + 30000);
         uk.setKickCount(uk.getKickCount() + 1);
         logger.debug(
@@ -96,15 +94,6 @@ public class ScheduledKickTask extends TaskDefaultImpl {
   @Override
   public Logger getLogger() {
     return logger;
-  }
-
-  // TODO remove?
-  public static void addUnit(freeacs.dbi.Unit u) {
-    removeUnit(u.getId());
-    synchronized (syncMonitor) {
-      kickList.add(new UnitKick(u));
-      logger.debug("Add UnitKick to list (Unitid: " + u.getId() + ")");
-    }
   }
 
   public static void removeUnit(String unitId) {

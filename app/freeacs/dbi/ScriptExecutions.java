@@ -1,6 +1,8 @@
 package freeacs.dbi;
 
 import freeacs.dbi.util.ACSVersionCheck;
+import play.api.db.Database;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,12 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.sql.DataSource;
+
 
 public class ScriptExecutions {
-  private DataSource dataSource;
+  private Database dataSource;
 
-  public ScriptExecutions(DataSource dataSource) {
+  public ScriptExecutions(Database dataSource) {
     this.dataSource = dataSource;
   }
 

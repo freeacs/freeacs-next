@@ -60,9 +60,6 @@ public class Profiles {
       int rowsDeleted = s.executeUpdate(sql);
 
       logger.info("Deleted profile " + profile.getName());
-      if (acs.getDbi() != null) {
-        acs.getDbi().publishDelete(profile, profile.getUnittype());
-      }
       return rowsDeleted;
     } finally {
       if (s != null) {
@@ -113,9 +110,6 @@ public class Profiles {
         }
 
         logger.info("Inserted profile " + profile.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishAdd(profile, profile.getUnittype());
-        }
       } else {
         sql = "UPDATE profile SET ";
         sql += "unit_type_id = " + profile.getUnittype().getId() + ", ";
@@ -125,9 +119,6 @@ public class Profiles {
         s.executeUpdate(sql);
 
         logger.info("Updated profile " + profile.getName());
-        if (acs.getDbi() != null) {
-          acs.getDbi().publishChange(profile, profile.getUnittype());
-        }
       }
     } finally {
       if (s != null) {
