@@ -13,7 +13,11 @@ class DBIHolder @Inject()(config: Config, database: Database) {
   private def getDBI(database: Database): DBI = {
     ACS.setStrictOrder(false)
     val users = new Users(database)
-    val id = new Identity(FACILITY_TR069, "latest", users.getUnprotected(Users.USER_ADMIN))
+    val id = new Identity(
+      FACILITY_TR069,
+      "latest",
+      users.getUnprotected(Users.USER_ADMIN)
+    )
     val syslog = new Syslog(database, id)
     new DBI(database, syslog)
   }
