@@ -1,6 +1,6 @@
 # FreeACS Play
 
-The goal of this project is to combine that which has been previously divided in the FreeACS project. 
+The goal of this project is to combine that which has been previously been developed and deployed individually in the FreeACS project. 
 
 The plan is to
 
