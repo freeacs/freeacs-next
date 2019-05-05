@@ -6,6 +6,7 @@ import play.api.data.{FormError, Forms}
 import play.api.data.format.Formatter
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import views.CreateUnitType
 
 class UnitTypeController(cc: ControllerComponents, dbiHolder: DBIHolder)
     extends AbstractController(cc)
@@ -31,7 +32,7 @@ class UnitTypeController(cc: ControllerComponents, dbiHolder: DBIHolder)
           formData.protocol
         )
         dbiHolder.dbi.getAcs.getUnittypes.addOrChangeUnittype(newUnitType, dbiHolder.dbi.getAcs)
-        Redirect("/unittype/create").flashing(
+        Redirect(CreateUnitType.url).flashing(
           "success" -> s"The Unit Type ${newUnitType.getName} was created"
         )
       }
