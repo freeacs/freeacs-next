@@ -1,0 +1,47 @@
+@import views.UnitTypeOverview
+@import freeacs.dbi.Unittype
+
+@(unitTypes: List[Unittype])
+
+@layouts.default("Unit Type Overview", UnitTypeOverview) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Unit Type</a>
+        </li>
+        <li class="breadcrumb-item active">Overview</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Vendor</th>
+                            <th>Description</th>
+                            <th>Protocol</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Name</th>
+                            <th>Vendor</th>
+                            <th>Description</th>
+                            <th>Protocol</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                    @for(unitType <- unitTypes) {
+                        <tr>
+                            <td>@unitType.getName</td>
+                            <td>@unitType.getVendor</td>
+                            <td>@unitType.getDescription</td>
+                            <td>@unitType.getProtocol</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

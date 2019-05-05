@@ -1,12 +1,12 @@
 package controllers
 
-import dbi.Unittype.ProvisioningProtocol
-import play.api.data.{FormError, Forms}
+import freeacs.dbi.ProvisioningProtocol
 import play.api.data.format.Formatter
+import play.api.data.{FormError, Forms}
 
-object UnitTypeForm {
-  import play.api.data.Forms._
+object  UnitTypeForm {
   import play.api.data.Form
+  import play.api.data.Forms._
 
   case class UnitType(
     id: Option[Long] = None,
@@ -28,8 +28,8 @@ object UnitTypeForm {
   val form = Form(
     mapping(
       "id" -> optional(longNumber),
-      "vendor" -> text,
       "name" -> nonEmptyText,
+      "vendor" -> text,
       "description" -> text,
       "protocol" -> Forms.of[ProvisioningProtocol]
     )(UnitType.apply)(UnitType.unapply)

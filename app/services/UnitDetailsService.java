@@ -1,10 +1,10 @@
 package services;
 
-import dbi.ACSUnit;
-import dbi.DBI;
-import dbi.DBIHolder;
-import dbi.Unit;
-import dbi.util.SystemParameters;
+import freeacs.dbi.ACSUnit;
+import freeacs.dbi.DBI;
+import freeacs.dbi.DBIHolder;
+import freeacs.dbi.Unit;
+import freeacs.dbi.util.SystemParameters;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

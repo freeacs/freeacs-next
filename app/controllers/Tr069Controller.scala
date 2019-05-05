@@ -3,27 +3,26 @@ package controllers
 import com.github.jarlah.authenticscala.Authenticator._
 import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import com.typesafe.config.Config
-import dbi.DBIHolder
+import freeacs.dbi.DBIHolder
+import services.UnitDetailsService
 import javax.inject._
 import play.api.Logging
 import play.api.mvc._
-import services.UnitDetailsService
-import tr069.Properties
-import tr069.base.BaseCache
-import tr069.http.HTTPRequestResponseData
-import tr069.methods.ProvisioningStrategy
+import freeacs.tr069.Properties
+import freeacs.tr069.base.BaseCache
+import freeacs.tr069.http.HTTPRequestResponseData
+import freeacs.tr069.methods.ProvisioningStrategy
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @Singleton
-class Tr069Controller @Inject()(implicit ec: ExecutionContext,
-                                cc: ControllerComponents,
+class Tr069Controller @Inject()(cc: ControllerComponents,
                                 properties: Properties,
                                 baseCache: BaseCache,
                                 config: Config,
                                 dbiHolder: DBIHolder,
-                                unitDetails: UnitDetailsService) extends AbstractController(cc) with Logging {
+                                unitDetails: UnitDetailsService)(implicit ec: ExecutionContext) extends AbstractController(cc) with Logging {
 
   def provision: Action[AnyContent] = Action.async { req =>
     config.getString("auth.method").toLowerCase match {

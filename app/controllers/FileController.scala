@@ -2,19 +2,19 @@ package controllers
 
 import java.util.Objects
 
-import dbi.{DBIHolder, File, FileType}
+import freeacs.dbi.{DBIHolder, File, FileType}
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import tr069.base.BaseCache
-import tr069.methods.decision.GetParameterValues.DownloadLogicTR069
+import play.api.mvc.{AbstractController, ControllerComponents}
+import freeacs.tr069.base.BaseCache
+import freeacs.tr069.methods.decision.GetParameterValues.DownloadLogicTR069
 
 @Singleton
 class FileController @Inject()(cc: ControllerComponents,
                                dbiHolder: DBIHolder,
                                baseCache: BaseCache) extends AbstractController(cc) with Logging {
 
-  def getFile(fileType: String, firmwareVersionStr: String, unitTypeNameStr: String): Action[AnyContent] = Action {
+  def getFile(fileType: String, firmwareVersionStr: String, unitTypeNameStr: String) = Action {
     val firmwareVersion = firmwareVersionStr.replaceAll(DownloadLogicTR069.SPACE_SEPARATOR, " ")
     val unitTypeName = unitTypeNameStr.replaceAll(DownloadLogicTR069.SPACE_SEPARATOR, " ")
     val acs = dbiHolder.dbi.getAcs
