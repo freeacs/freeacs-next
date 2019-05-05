@@ -15,7 +15,7 @@
             <span>@title</span>
         </a>
         <div class="dropdown-menu" aria-labelledby="@title-Dropdown">
-        @pages.filter(_ => displayChildren).map { page =>
+        @for(page <- pages) {
             <a class="dropdown-item@{if(currentPage == page) " active" else ""}" href="@page.url">@page.name</a>
         }
         </div>
