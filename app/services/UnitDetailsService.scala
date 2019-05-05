@@ -5,6 +5,8 @@ import freeacs.dbi.util.SystemParameters
 
 import scala.util.Try
 
+case class UnitDetails(user: String, pass: String)
+
 class UnitDetailsService(val dbiHolder: DBIHolder) {
 
   def loadByUsername(username: String): Try[UnitDetails] = {
