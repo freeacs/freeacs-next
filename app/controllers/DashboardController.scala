@@ -9,8 +9,7 @@ import play.api.mvc._
 class DashboardController @Inject()(cc: ControllerComponents, dbiHolder: DBIHolder) extends AbstractController(cc) {
 
   def index: Action[AnyContent] = Action {
-    val dbi = dbiHolder.dbi
-    val count = dbi.getACSUnit.getUnitCount(dbi.getAcs.getUnittypes.getUnittypes.toList.asJava)
+    val count = dbiHolder.dbi.getACSUnit.getUnitCount(dbiHolder.dbi.getAcs.getUnittypes.getUnittypes.toList.asJava)
     Ok(views.html.dashboard(count))
   }
 
