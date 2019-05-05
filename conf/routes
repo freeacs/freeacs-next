@@ -3,7 +3,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# An example controller showing a sample home page
 GET     /                                               controllers.DashboardController.index
 GET     /ok                                             controllers.HealthController.ok
 GET     /file/:fileType/:firmwareVersion/:unitTypeName  controllers.FileController.getFile(fileType, firmwareVersion, unitTypeName)
