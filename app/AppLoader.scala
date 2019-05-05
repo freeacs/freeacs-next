@@ -22,14 +22,12 @@ class AppComponents(context: Context)
 
   applicationEvolutions
 
-  private[this] val db = dbApi.database("default")
-
   override val httpFilters = Nil
   override val Action      = defaultActionBuilder
 
   val config              = ConfigFactory.load()
   val properties          = new Properties(config)
-  val dbiHolder           = new DBIHolder(config, db)
+  val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
   val baseCache           = new BaseCache(defaultCacheApi.sync)
   val unitDetailsService  = new UnitDetailsService(dbiHolder)
   val unitTypeController  = new UnitTypeController(controllerComponents, dbiHolder)
