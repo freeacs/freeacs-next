@@ -1,10 +1,16 @@
 # FreeACS Play
 
-This project contains legacy code. Because of this there is a huge amount of Java code. The plan is to rewrite it to Scala.
+The goal of this project is to combine that which has been divided before in the FreeACS project. 
+
+The plan is to
+
+1. import all modules from FreeACS (like core, stun, syslog etc) into this project, make it compile and work as it did before.
+2. Remove database polling in DBI so it will just be a holder for the ACS object. Remove the DBI object completely or make it a factory?
+3. Consider clustered hazelcast caching, for the Play Cache api, if necessary?
 
 ## Send an inform
 
-1. Change the digest.secret in application.conf
+1. Change the digest.secret in application.conf before starting the app.
 2. Make sure that the unit "000000-FakeProductClass-FakeSerialNumber" exists and is configured with a secret "test".
 2. Send an Inform to the acs like with the curl below:
 
