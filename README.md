@@ -1,5 +1,7 @@
 # FreeACS Play
 
+This project contains legacy code. Because of this there is a huge amount of Java code. The plan is to rewrite it to Scala.
+
 ## Send an inform
 
 1. Change the digest.secret in application.conf
