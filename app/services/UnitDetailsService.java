@@ -5,17 +5,12 @@ import freeacs.dbi.DBI;
 import freeacs.dbi.DBIHolder;
 import freeacs.dbi.Unit;
 import freeacs.dbi.util.SystemParameters;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.sql.SQLException;
 
-@Singleton
 public class UnitDetailsService {
 
     private final DBI dbi;
 
-    @Inject()
     public UnitDetailsService(DBIHolder dbi) {
         this.dbi = dbi.dbi();
     }

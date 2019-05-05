@@ -5,7 +5,6 @@ import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import com.typesafe.config.Config
 import freeacs.dbi.DBIHolder
 import services.UnitDetailsService
-import javax.inject._
 import play.api.Logging
 import play.api.mvc._
 import freeacs.tr069.Properties
@@ -16,8 +15,7 @@ import freeacs.tr069.methods.ProvisioningStrategy
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-@Singleton
-class Tr069Controller @Inject()(cc: ControllerComponents,
+class Tr069Controller(cc: ControllerComponents,
                                 properties: Properties,
                                 baseCache: BaseCache,
                                 config: Config,

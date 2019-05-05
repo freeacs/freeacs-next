@@ -1,13 +1,11 @@
 package controllers
 
 import freeacs.dbi.{DBIHolder, Unittype}
-import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-@Singleton
-class UnitTypeController @Inject()(cc: ControllerComponents, dbiHolder: DBIHolder) extends AbstractController(cc) with I18nSupport with Logging {
+class UnitTypeController (cc: ControllerComponents, dbiHolder: DBIHolder) extends AbstractController(cc) with I18nSupport with Logging {
   import UnitTypeForm._
 
   def viewCreate: Action[AnyContent] = Action { implicit request =>

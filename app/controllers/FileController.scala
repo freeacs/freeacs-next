@@ -3,14 +3,12 @@ package controllers
 import java.util.Objects
 
 import freeacs.dbi.{DBIHolder, File, FileType}
-import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.mvc.{AbstractController, ControllerComponents}
 import freeacs.tr069.base.BaseCache
 import freeacs.tr069.methods.decision.GetParameterValues.DownloadLogicTR069
 
-@Singleton
-class FileController @Inject()(cc: ControllerComponents,
+class FileController(cc: ControllerComponents,
                                dbiHolder: DBIHolder,
                                baseCache: BaseCache) extends AbstractController(cc) with Logging {
 
