@@ -6,20 +6,31 @@ import freeacs.tr069.base.BaseCache
 import com.typesafe.config.ConfigFactory
 import play.api.ApplicationLoader.Context
 import play.api.cache.ehcache.EhCacheComponents
+import play.api.db.{DBComponents, HikariCPComponents}
 import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
+import play.api.db.evolutions.EvolutionsComponents
 
 class AppComponents(context: Context) extends BuiltInComponentsFromContext(context)
   with EhCacheComponents
-  with AssetsComponents {
+  with AssetsComponents
+  with DBComponents
+  with EvolutionsComponents
+  with HikariCPComponents {
+
+  applicationEvolutions
+
+  private[this] val db = dbApi.database("default")
+
+  val dataSource = db.dataSource
 
   override val httpFilters = Nil
   override val Action = defaultActionBuilder
 
   val config = ConfigFactory.load()
   val properties = new Properties(config)
-  val dbiHolder = new DBIHolder(config)
+  val dbiHolder = new DBIHolder(config, dataSource)
   val baseCache = new BaseCache(defaultCacheApi.sync)
   val unitDetailsService = new UnitDetailsService(dbiHolder)
   val unitTypeController = new UnitTypeController(controllerComponents, dbiHolder)
