@@ -1,8 +1,7 @@
 object Tables extends {
   // or just use object demo.Tables, which is hard-wired to the driver stated during generation
-  val profile = slick.driver.H2Driver
-} with demo.Tables
-
+  val profile = slick.jdbc.MySQLProfile
+} with dao.Tables
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

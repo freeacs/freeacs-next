@@ -26,23 +26,24 @@ libraryDependencies ++= List(
 
 enablePlugins(JavaAppPackaging)
 
-sourceGenerators in Compile += slick.taskValue // Automatic code generation on build
+// sourceGenerators in Compile += slick.taskValue // Automatic code generation on build
 
 lazy val slick = taskKey[Seq[File]]("Generate Tables.scala")
 slick := {
-  val dir = (sourceManaged in Compile) value
-  val outputDir = dir / "slick"
-  val url = "jdbc:h2:mem:test;MODE=MYSQL;INIT=runscript from 'conf/evolutions/default/1.sql'" // connection info
-  val jdbcDriver = "org.h2.Driver"
-  val slickDriver = "slick.jdbc.H2Profile"
-  val pkg = "demo"
-
-  val cp = (dependencyClasspath in Compile) value
-  val s = streams value
+  val dir = (sourceDirectory in Compile).value
+  val outputDir = dir
+  val url = sys.env.getOrElse("PLAY_DB_URL", "jdbc:mysql://127.0.0.1:3306/acs")
+  val username = sys.env.getOrElse("PLAY_DB_USER", "acs")
+  val pwd = sys.env.getOrElse("PLAY_DB_PASSWORD", "acs")
+  val jdbcDriver = "com.mysql.jdbc.Driver"
+  val slickDriver = "slick.jdbc.MySQLProfile"
+  val pkg = "dao"
+  val cp = (dependencyClasspath in Compile).value
+  val s = streams.value
 
   runner.value.run("slick.codegen.SourceCodeGenerator",
     cp.files,
-    Array(slickDriver, jdbcDriver, url, outputDir.getPath, pkg),
+    Array(slickDriver, jdbcDriver, url, outputDir.getPath, pkg, username, pwd),
     s.log).failed foreach (sys error _.getMessage)
 
   val file = outputDir / pkg / "Tables.scala"
