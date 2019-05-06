@@ -1,0 +1,26 @@
+@import freeacs.dbi.Unittype
+@import views.CreateUnit
+@import freeacs.dbi.Profile
+
+@(form: Form[UnitForm.Unit], unitTypes: List[Unittype], profiles: List[Profile])(implicit messagesProvider: MessagesProvider, flash: Flash)
+
+@layouts.default("Create Unit", CreateUnit) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Unit</a>
+        </li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            @b4.vertical.form(Call(method = "POST", url = CreateUnit.url)) { implicit vfc =>
+                @b4.select(form("unitTypeId"), options = List(("", "Select Unit Type")) ++ unitTypes.map(p => (p.getId.toString, p.getName)), '_label -> "Select Unit Type" )
+                @b4.select(form("profileId"), options = List(("", "Select Profile")) ++ unitTypes.map(p => (p.getId.toString, p.getName)), '_label -> "Select Profile" )
+                @b4.text(form("unitId"), '_label -> "UnitId", 'placeholder -> "Enter unitId")
+                @b4.submit('class -> "btn btn-primary"){ Submit }
+            }
+            <p style="color: green">@flash.get("success").orNull</p>
+            <p style="color: red">@flash.get("failure").orNull</p>
+        </div>
+    </div>
+}

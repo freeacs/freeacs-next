@@ -1,0 +1,43 @@
+@import views.UnitOverview
+
+@(units: List[freeacs.dbi.Unit])
+
+@layouts.default("Unit Overview", UnitOverview) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Unit</a>
+        </li>
+        <li class="breadcrumb-item active">Overview</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>UnitId</th>
+                            <th>Profile</th>
+                            <th>Unit Type</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>UnitId</th>
+                            <th>Profile</th>
+                            <th>Unit Type</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                    @for(unit <- units) {
+                        <tr>
+                            <td>@unit.getId</td>
+                            <td>@unit.getProfile.getName</td>
+                            <td>@unit.getUnittype.getName</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

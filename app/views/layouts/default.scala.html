@@ -5,7 +5,7 @@
 @import views.CreateProfile
 @import views.html.fragments.MenuItem
 @import views.Page
-@import views.UnitSearch
+@import views.UnitOverview
 @import views.CreateUnit
 @import views.GroupOverview
 @import views.CreateGroup
@@ -91,7 +91,7 @@
                 @MenuItem("Dashboard", List(Dashboard), currentPage, "fa fa-dashboard", displayChildren = false)
                 @MenuItem("Unit Type", List(UnitTypeOverview, CreateUnitType), currentPage, "fa fa-gears")
                 @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage, "fa fa-gear")
-                @MenuItem("Units", List(UnitSearch, CreateUnit), currentPage, "fa fa-hdd-o")
+                @MenuItem("Units", List(UnitOverview, CreateUnit), currentPage, "fa fa-hdd-o")
                 @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage, "fa fa-group")
                 @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage, "fa fa-calendar")
             </ul>
