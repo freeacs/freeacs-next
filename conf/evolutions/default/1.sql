@@ -2,7 +2,7 @@
 
 -- !Ups
 
-CREATE TABLE  unit_type (
+CREATE TABLE  IF NOT EXISTS unit_type (
   unit_type_id INTEGER NOT NULL AUTO_INCREMENT,
   matcher_id VARCHAR(32) NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE  unit_type (
 
 
 
-CREATE TABLE  unit_type_param (
+CREATE TABLE  IF NOT EXISTS unit_type_param (
   unit_type_param_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE  unit_type_param (
 
 
 
-CREATE TABLE  unit_type_param_value (
+CREATE TABLE  IF NOT EXISTS unit_type_param_value (
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(255)  NOT NULL,
   priority INTEGER NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE  unit_type_param_value (
 );
 
 
-CREATE TABLE  profile (
+CREATE TABLE  IF NOT EXISTS profile (
   profile_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   profile_name VARCHAR(64) NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE  profile (
 
 
 
-CREATE TABLE  profile_param (
+CREATE TABLE  IF NOT EXISTS profile_param (
   profile_id INTEGER NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(255)  NULL,
@@ -74,7 +74,7 @@ CREATE TABLE  profile_param (
 
 
 
-CREATE TABLE  unit (
+CREATE TABLE  IF NOT EXISTS unit (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
   profile_id INTEGER NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE  unit (
 
 
 
-CREATE TABLE  unit_param (
+CREATE TABLE  IF NOT EXISTS unit_param (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(512)  NULL,
@@ -112,7 +112,7 @@ CREATE TABLE  unit_param (
 
 
 
-CREATE TABLE  unit_param_session (
+CREATE TABLE  IF NOT EXISTS unit_param_session (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(512)  NULL,
@@ -129,7 +129,7 @@ CREATE TABLE  unit_param_session (
 
 
 
-CREATE TABLE  group_ (
+CREATE TABLE  IF NOT EXISTS group_ (
   group_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   group_name VARCHAR(64) NOT NULL,
@@ -160,7 +160,7 @@ CREATE TABLE  group_ (
 
 
 
-CREATE TABLE  group_param (
+CREATE TABLE  IF NOT EXISTS group_param (
 	id INTEGER NOT NULL AUTO_INCREMENT,
   group_id INTEGER NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE  group_param (
 
 
 
-CREATE TABLE  user_ (
+CREATE TABLE  IF NOT EXISTS user_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   username VARCHAR(64) NOT NULL,
   secret VARCHAR(64) NOT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE  user_ (
 );
 
 
-CREATE TABLE  permission_ (
+CREATE TABLE  IF NOT EXISTS permission_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   user_id INTEGER NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -210,7 +210,7 @@ CONSTRAINT fk_permission_unit_type_id FOREIGN KEY (unit_type_id)
 );
 
 
-CREATE TABLE  filestore (
+CREATE TABLE  IF NOT EXISTS filestore (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE  filestore (
 );
 
 
-CREATE TABLE  syslog_event (
+CREATE TABLE  IF NOT EXISTS syslog_event (
   id INTEGER NOT NULL AUTO_INCREMENT,
   syslog_event_id INTEGER NOT NULL,
   syslog_event_name VARCHAR(64) NOT NULL,
@@ -263,7 +263,7 @@ CREATE TABLE  syslog_event (
 );
 
 
-CREATE TABLE  job (
+CREATE TABLE  IF NOT EXISTS job (
   job_id INTEGER NOT NULL AUTO_INCREMENT,
   job_name VARCHAR(64) NOT NULL,
   job_type VARCHAR(32) NOT NULL,
@@ -305,7 +305,7 @@ CREATE TABLE  job (
 
 
 
-CREATE TABLE  job_param (
+CREATE TABLE  IF NOT EXISTS job_param (
   job_id INTEGER NOT NULL,
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
@@ -323,7 +323,7 @@ CREATE TABLE  job_param (
 
 
 
-CREATE TABLE  unit_job (
+CREATE TABLE  IF NOT EXISTS unit_job (
   unit_id VARCHAR(64) NOT NULL,
   job_id INTEGER NOT NULL,
   start_timestamp DATETIME NOT NULL,
@@ -347,7 +347,7 @@ CREATE TABLE  unit_job (
 
 
 
-CREATE TABLE  heartbeat (
+CREATE TABLE  IF NOT EXISTS heartbeat (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -367,7 +367,7 @@ CREATE TABLE  heartbeat (
 
 
 
-CREATE TABLE  trigger_ (
+CREATE TABLE  IF NOT EXISTS trigger_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
   description VARCHAR(1024),
@@ -419,7 +419,7 @@ CREATE TABLE  trigger_ (
 
 
 
-CREATE TABLE  trigger_event (
+CREATE TABLE  IF NOT EXISTS trigger_event (
   id INTEGER NOT NULL AUTO_INCREMENT,
   timestamp_ DATETIME NOT NULL,
   trigger_id INTEGER NOT NULL,
@@ -433,7 +433,7 @@ CREATE TABLE  trigger_event (
 
 
 
-CREATE TABLE  trigger_release (
+CREATE TABLE  IF NOT EXISTS trigger_release (
   id INTEGER NOT NULL AUTO_INCREMENT,
   trigger_id INTEGER NOT NULL,
   no_events INTEGER NULL,
@@ -452,7 +452,7 @@ CREATE TABLE  trigger_release (
 
 -- Tables with no or few foreign keys
 
-CREATE TABLE  certificate (
+CREATE TABLE  IF NOT EXISTS certificate (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   certificate VARCHAR(256) NOT NULL,
@@ -460,7 +460,7 @@ CREATE TABLE  certificate (
   UNIQUE INDEX idx_name (name)
 );
 
-CREATE TABLE  message (
+CREATE TABLE  IF NOT EXISTS message (
   id INTEGER NOT NULL AUTO_INCREMENT,
   type VARCHAR(64) NOT NULL,
   sender VARCHAR(64) NOT NULL,
@@ -475,7 +475,7 @@ CREATE TABLE  message (
 --
 -- Table Definition with Constraints
 --
-CREATE TABLE  monitor_event
+CREATE TABLE  IF NOT EXISTS monitor_event
 (
   event_id BIGINT NOT NULL AUTO_INCREMENT,
   module_name VARCHAR(32) NOT NULL,
@@ -491,7 +491,7 @@ CREATE TABLE  monitor_event
 );
 
 
-CREATE TABLE  script_execution (
+CREATE TABLE  IF NOT EXISTS script_execution (
   id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL, -- SET BY REQUEST-CLIENT
   filestore_id INTEGER NOT NULL, -- SET BY REQUEST-CLIENT
@@ -507,7 +507,7 @@ CREATE TABLE  script_execution (
 
 
 
-CREATE TABLE  syslog (
+CREATE TABLE  IF NOT EXISTS syslog (
   syslog_id BIGINT NOT NULL AUTO_INCREMENT,
   collector_timestamp DATETIME NOT NULL,
   syslog_event_id INTEGER NOT NULL,
@@ -531,7 +531,7 @@ CREATE TABLE  syslog (
 
 
 
-CREATE TABLE  report_unit (
+CREATE TABLE  IF NOT EXISTS report_unit (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -543,7 +543,7 @@ CREATE TABLE  report_unit (
 );
 
 
-CREATE TABLE  report_group (
+CREATE TABLE  IF NOT EXISTS report_group (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -553,7 +553,7 @@ CREATE TABLE  report_group (
 );
 
 
-CREATE TABLE  report_job (
+CREATE TABLE  IF NOT EXISTS report_job (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -567,7 +567,7 @@ CREATE TABLE  report_job (
 );
 
 
-CREATE TABLE  report_syslog (
+CREATE TABLE  IF NOT EXISTS report_syslog (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -580,7 +580,7 @@ CREATE TABLE  report_syslog (
 );
 
 
-CREATE TABLE  report_prov (
+CREATE TABLE  IF NOT EXISTS report_prov (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -597,7 +597,7 @@ CREATE TABLE  report_prov (
 
 
 
-CREATE TABLE  report_voip (
+CREATE TABLE  IF NOT EXISTS report_voip (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -619,7 +619,7 @@ CREATE TABLE  report_voip (
 );
 
 
-CREATE TABLE  report_voip_tr (
+CREATE TABLE  IF NOT EXISTS report_voip_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -641,7 +641,7 @@ CREATE TABLE  report_voip_tr (
 );
 
 
-CREATE TABLE  report_hw (
+CREATE TABLE  IF NOT EXISTS report_hw (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -674,7 +674,7 @@ CREATE TABLE  report_hw (
 );
 
 
-CREATE TABLE  report_hw_tr (
+CREATE TABLE  IF NOT EXISTS report_hw_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -691,7 +691,7 @@ CREATE TABLE  report_hw_tr (
 );
 
 
-CREATE TABLE  report_gateway_tr (
+CREATE TABLE  IF NOT EXISTS report_gateway_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
