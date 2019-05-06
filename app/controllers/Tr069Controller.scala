@@ -10,10 +10,9 @@ import freeacs.tr069.http.HTTPRequestResponseData
 import freeacs.tr069.methods.ProvisioningStrategy
 import play.api.Logging
 import play.api.mvc._
-import services.UnitDetailsService
+import services.UnitService
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 class Tr069Controller(
     cc: ControllerComponents,
@@ -21,7 +20,7 @@ class Tr069Controller(
     baseCache: BaseCache,
     config: Config,
     dbiHolder: DBIHolder,
-    unitDetails: UnitDetailsService
+    unitDetails: UnitService
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc)
     with Logging {
@@ -41,11 +40,7 @@ class Tr069Controller(
         for {
           result <- Authenticator.authenticate(
                      context,
-                     (username: String) =>
-                       unitDetails.loadByUsername(username) match {
-                         case Success(user)  => Future.successful(user.pass)
-                         case Failure(error) => Future.failed(error)
-                     },
+                     (unitId: String) => unitDetails.getSecret(unitId).map(_.orNull),
                      method
                    )
         } yield {

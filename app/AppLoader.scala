@@ -1,5 +1,5 @@
 import controllers._
-import services.{UnitDetailsService, UnitTypeService}
+import services.{ProfileService, UnitService, UnitTypeService}
 import freeacs.dbi.DBIHolder
 import freeacs.tr069.Properties
 import freeacs.tr069.base.BaseCache
@@ -35,7 +35,8 @@ class AppComponents(context: Context)
   val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
   val baseCache           = new BaseCache(defaultCacheApi.sync)
   val unitTypeService     = new UnitTypeService(dbConf)
-  val unitDetailsService  = new UnitDetailsService(dbiHolder)
+  val profileService      = new ProfileService(dbConf)
+  val unitDetailsService  = new UnitService(dbConf)
   val unitTypeController  = new UnitTypeController(controllerComponents, unitTypeService)
   val dashboardController = new DashboardController(controllerComponents, dbiHolder)
   val healthController    = new HealthController(controllerComponents, dbiHolder)

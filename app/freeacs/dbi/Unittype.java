@@ -53,6 +53,14 @@ public class Unittype implements Comparable<Unittype> {
     setProtocol(protocol);
   }
 
+  public Unittype(Integer id, String name, String vendor, String desc, ProvisioningProtocol protocol) {
+    this.id = id;
+    this.name = name;
+    this.vendor = vendor;
+    this.description = desc;
+    this.protocol = protocol;
+  }
+
   /**
    * Only to be used internally (to shape ACS object according to permissions).
    *

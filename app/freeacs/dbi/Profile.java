@@ -19,6 +19,12 @@ public class Profile {
     this.unittype = unittype;
   }
 
+  public Profile(Integer id, String name, Unittype unittype) {
+    this.id = id;
+    this.name = name;
+    this.unittype = unittype;
+  }
+
   public Integer getId() {
     return id;
   }

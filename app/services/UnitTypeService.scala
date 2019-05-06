@@ -12,23 +12,21 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: Execut
   import daos.Tables._
 
   def create(unitType: Unittype): Future[_] = {
-    for {
-      numsInserted <- db.run(
-                       UnitType += UnitTypeRow(
-                         unitType.getId,
-                         None,
-                         unitType.getName,
-                         Option(unitType.getVendor),
-                         Option(unitType.getDescription),
-                         unitType.getProtocol.name()
-                       )
+    db.run(for {
+      numsInserted <- UnitType += UnitTypeRow(
+                       unitType.getId,
+                       None,
+                       unitType.getName,
+                       Option(unitType.getVendor),
+                       Option(unitType.getDescription),
+                       unitType.getProtocol.name()
                      )
-    } yield Future.successful(numsInserted)
+    } yield Future.successful(numsInserted))
   }
 
   def list: Future[Seq[Unittype]] = {
-    for {
-      unitTypeRows <- db.run(UnitType.result)
+    db.run(for {
+      unitTypeRows <- UnitType.result
       unitTypes = unitTypeRows.map(row => {
         val unitType = new Unittype(
           row.unitTypeName,
@@ -39,7 +37,7 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: Execut
         unitType.setId(row.unitTypeId)
         unitType
       })
-    } yield unitTypes
+    } yield unitTypes)
   }
 
 }
