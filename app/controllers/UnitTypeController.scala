@@ -32,7 +32,7 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
           .create(
             new Unittype(
               formData.name,
-              "",
+              formData.vendor,
               formData.description,
               formData.protocol
             )
