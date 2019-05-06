@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object SlickExample extends App {
   // connection info for a pre-populated throw-away, in-memory db for this demo, which is freshly initialized on every run
-  val url = "jdbc:h2:mem:test;MODE=MYSQL;INIT=runscript from 'conf/evolutions/default/1.sql'"
+  val url = "jdbc:h2:mem:acs;MODE=MYSQL;INIT=runscript from 'conf/evolutions/default/1.sql'"
   val db = Database.forURL(url, driver = "org.h2.Driver")
 
   // Using generated code. Our Build.sbt makes sure they are generated before compilation.

@@ -1,8 +1,10 @@
 -- All
 
 -- !Ups
+CREATE SCHEMA IF NOT EXISTS acs;
 
-CREATE TABLE  IF NOT EXISTS unit_type (
+
+CREATE TABLE  IF NOT EXISTS acs.unit_type (
   unit_type_id INTEGER NOT NULL AUTO_INCREMENT,
   matcher_id VARCHAR(32) NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -15,7 +17,7 @@ CREATE TABLE  IF NOT EXISTS unit_type (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit_type_param (
+CREATE TABLE  IF NOT EXISTS acs.unit_type_param (
   unit_type_param_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -30,7 +32,7 @@ CREATE TABLE  IF NOT EXISTS unit_type_param (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit_type_param_value (
+CREATE TABLE  IF NOT EXISTS acs.unit_type_param_value (
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(255)  NOT NULL,
   priority INTEGER NOT NULL,
@@ -43,7 +45,7 @@ CREATE TABLE  IF NOT EXISTS unit_type_param_value (
 );
 
 
-CREATE TABLE  IF NOT EXISTS profile (
+CREATE TABLE  IF NOT EXISTS acs.profile (
   profile_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   profile_name VARCHAR(64) NOT NULL,
@@ -57,7 +59,7 @@ CREATE TABLE  IF NOT EXISTS profile (
 
 
 
-CREATE TABLE  IF NOT EXISTS profile_param (
+CREATE TABLE  IF NOT EXISTS acs.profile_param (
   profile_id INTEGER NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(255)  NULL,
@@ -74,7 +76,7 @@ CREATE TABLE  IF NOT EXISTS profile_param (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit (
+CREATE TABLE  IF NOT EXISTS acs.unit (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
   profile_id INTEGER NOT NULL,
@@ -93,7 +95,7 @@ CREATE TABLE  IF NOT EXISTS unit (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit_param (
+CREATE TABLE  IF NOT EXISTS acs.unit_param (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(512)  NULL,
@@ -112,7 +114,7 @@ CREATE TABLE  IF NOT EXISTS unit_param (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit_param_session (
+CREATE TABLE  IF NOT EXISTS acs.unit_param_session (
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
   value VARCHAR(512)  NULL,
@@ -129,7 +131,7 @@ CREATE TABLE  IF NOT EXISTS unit_param_session (
 
 
 
-CREATE TABLE  IF NOT EXISTS group_ (
+CREATE TABLE  IF NOT EXISTS acs.group_ (
   group_id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL,
   group_name VARCHAR(64) NOT NULL,
@@ -160,7 +162,7 @@ CREATE TABLE  IF NOT EXISTS group_ (
 
 
 
-CREATE TABLE  IF NOT EXISTS group_param (
+CREATE TABLE  IF NOT EXISTS acs.group_param (
 	id INTEGER NOT NULL AUTO_INCREMENT,
   group_id INTEGER NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
@@ -180,7 +182,7 @@ CREATE TABLE  IF NOT EXISTS group_param (
 
 
 
-CREATE TABLE  IF NOT EXISTS user_ (
+CREATE TABLE  IF NOT EXISTS acs.user_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   username VARCHAR(64) NOT NULL,
   secret VARCHAR(64) NOT NULL,
@@ -192,7 +194,7 @@ CREATE TABLE  IF NOT EXISTS user_ (
 );
 
 
-CREATE TABLE  IF NOT EXISTS permission_ (
+CREATE TABLE  IF NOT EXISTS acs.permission_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   user_id INTEGER NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -210,7 +212,7 @@ CONSTRAINT fk_permission_unit_type_id FOREIGN KEY (unit_type_id)
 );
 
 
-CREATE TABLE  IF NOT EXISTS filestore (
+CREATE TABLE  IF NOT EXISTS acs.filestore (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -235,7 +237,7 @@ CREATE TABLE  IF NOT EXISTS filestore (
 );
 
 
-CREATE TABLE  IF NOT EXISTS syslog_event (
+CREATE TABLE  IF NOT EXISTS acs.syslog_event (
   id INTEGER NOT NULL AUTO_INCREMENT,
   syslog_event_id INTEGER NOT NULL,
   syslog_event_name VARCHAR(64) NOT NULL,
@@ -263,7 +265,7 @@ CREATE TABLE  IF NOT EXISTS syslog_event (
 );
 
 
-CREATE TABLE  IF NOT EXISTS job (
+CREATE TABLE  IF NOT EXISTS acs.job (
   job_id INTEGER NOT NULL AUTO_INCREMENT,
   job_name VARCHAR(64) NOT NULL,
   job_type VARCHAR(32) NOT NULL,
@@ -305,7 +307,7 @@ CREATE TABLE  IF NOT EXISTS job (
 
 
 
-CREATE TABLE  IF NOT EXISTS job_param (
+CREATE TABLE  IF NOT EXISTS acs.job_param (
   job_id INTEGER NOT NULL,
   unit_id VARCHAR(64) NOT NULL,
   unit_type_param_id INTEGER NOT NULL,
@@ -323,7 +325,7 @@ CREATE TABLE  IF NOT EXISTS job_param (
 
 
 
-CREATE TABLE  IF NOT EXISTS unit_job (
+CREATE TABLE  IF NOT EXISTS acs.unit_job (
   unit_id VARCHAR(64) NOT NULL,
   job_id INTEGER NOT NULL,
   start_timestamp DATETIME NOT NULL,
@@ -347,7 +349,7 @@ CREATE TABLE  IF NOT EXISTS unit_job (
 
 
 
-CREATE TABLE  IF NOT EXISTS heartbeat (
+CREATE TABLE  IF NOT EXISTS acs.heartbeat (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   unit_type_id INTEGER NOT NULL,
@@ -367,7 +369,7 @@ CREATE TABLE  IF NOT EXISTS heartbeat (
 
 
 
-CREATE TABLE  IF NOT EXISTS trigger_ (
+CREATE TABLE  IF NOT EXISTS acs.trigger_ (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
   description VARCHAR(1024),
@@ -419,7 +421,7 @@ CREATE TABLE  IF NOT EXISTS trigger_ (
 
 
 
-CREATE TABLE  IF NOT EXISTS trigger_event (
+CREATE TABLE  IF NOT EXISTS acs.trigger_event (
   id INTEGER NOT NULL AUTO_INCREMENT,
   timestamp_ DATETIME NOT NULL,
   trigger_id INTEGER NOT NULL,
@@ -433,7 +435,7 @@ CREATE TABLE  IF NOT EXISTS trigger_event (
 
 
 
-CREATE TABLE  IF NOT EXISTS trigger_release (
+CREATE TABLE  IF NOT EXISTS acs.trigger_release (
   id INTEGER NOT NULL AUTO_INCREMENT,
   trigger_id INTEGER NOT NULL,
   no_events INTEGER NULL,
@@ -452,7 +454,7 @@ CREATE TABLE  IF NOT EXISTS trigger_release (
 
 -- Tables with no or few foreign keys
 
-CREATE TABLE  IF NOT EXISTS certificate (
+CREATE TABLE  IF NOT EXISTS acs.certificate (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(64) NOT NULL,
   certificate VARCHAR(256) NOT NULL,
@@ -460,7 +462,7 @@ CREATE TABLE  IF NOT EXISTS certificate (
   UNIQUE INDEX idx_name (name)
 );
 
-CREATE TABLE  IF NOT EXISTS message (
+CREATE TABLE  IF NOT EXISTS acs.message (
   id INTEGER NOT NULL AUTO_INCREMENT,
   type VARCHAR(64) NOT NULL,
   sender VARCHAR(64) NOT NULL,
@@ -475,7 +477,7 @@ CREATE TABLE  IF NOT EXISTS message (
 --
 -- Table Definition with Constraints
 --
-CREATE TABLE  IF NOT EXISTS monitor_event
+CREATE TABLE  IF NOT EXISTS acs.monitor_event
 (
   event_id BIGINT NOT NULL AUTO_INCREMENT,
   module_name VARCHAR(32) NOT NULL,
@@ -491,7 +493,7 @@ CREATE TABLE  IF NOT EXISTS monitor_event
 );
 
 
-CREATE TABLE  IF NOT EXISTS script_execution (
+CREATE TABLE  IF NOT EXISTS acs.script_execution (
   id INTEGER NOT NULL AUTO_INCREMENT,
   unit_type_id INTEGER NOT NULL, -- SET BY REQUEST-CLIENT
   filestore_id INTEGER NOT NULL, -- SET BY REQUEST-CLIENT
@@ -507,7 +509,7 @@ CREATE TABLE  IF NOT EXISTS script_execution (
 
 
 
-CREATE TABLE  IF NOT EXISTS syslog (
+CREATE TABLE  IF NOT EXISTS acs.syslog (
   syslog_id BIGINT NOT NULL AUTO_INCREMENT,
   collector_timestamp DATETIME NOT NULL,
   syslog_event_id INTEGER NOT NULL,
@@ -531,7 +533,7 @@ CREATE TABLE  IF NOT EXISTS syslog (
 
 
 
-CREATE TABLE  IF NOT EXISTS report_unit (
+CREATE TABLE  IF NOT EXISTS acs.report_unit (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -543,7 +545,7 @@ CREATE TABLE  IF NOT EXISTS report_unit (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_group (
+CREATE TABLE  IF NOT EXISTS acs.report_group (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -553,7 +555,7 @@ CREATE TABLE  IF NOT EXISTS report_group (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_job (
+CREATE TABLE  IF NOT EXISTS acs.report_job (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -567,7 +569,7 @@ CREATE TABLE  IF NOT EXISTS report_job (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_syslog (
+CREATE TABLE  IF NOT EXISTS acs.report_syslog (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -580,7 +582,7 @@ CREATE TABLE  IF NOT EXISTS report_syslog (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_prov (
+CREATE TABLE  IF NOT EXISTS acs.report_prov (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -597,7 +599,7 @@ CREATE TABLE  IF NOT EXISTS report_prov (
 
 
 
-CREATE TABLE  IF NOT EXISTS report_voip (
+CREATE TABLE  IF NOT EXISTS acs.report_voip (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -619,7 +621,7 @@ CREATE TABLE  IF NOT EXISTS report_voip (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_voip_tr (
+CREATE TABLE  IF NOT EXISTS acs.report_voip_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -641,7 +643,7 @@ CREATE TABLE  IF NOT EXISTS report_voip_tr (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_hw (
+CREATE TABLE  IF NOT EXISTS acs.report_hw (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -674,7 +676,7 @@ CREATE TABLE  IF NOT EXISTS report_hw (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_hw_tr (
+CREATE TABLE  IF NOT EXISTS acs.report_hw_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
@@ -691,7 +693,7 @@ CREATE TABLE  IF NOT EXISTS report_hw_tr (
 );
 
 
-CREATE TABLE  IF NOT EXISTS report_gateway_tr (
+CREATE TABLE  IF NOT EXISTS acs.report_gateway_tr (
   timestamp_ DATETIME NOT NULL,
   period_type INTEGER NOT NULL,
   unit_type_name VARCHAR(64) NOT NULL,
