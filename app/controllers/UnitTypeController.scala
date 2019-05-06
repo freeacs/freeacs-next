@@ -1,6 +1,6 @@
 package controllers
 
-import freeacs.dbi.{DBIHolder, ProvisioningProtocol, Unittype}
+import freeacs.dbi.{ProvisioningProtocol, Unittype}
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
@@ -9,12 +9,11 @@ import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponent
 import services.UnitTypeService
 import views.CreateUnitType
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeController(cc: ControllerComponents,
-                         dbiHolder: DBIHolder,
-                         unitTypeService: UnitTypeService)(implicit ec: ExecutionContext)
-    extends AbstractController(cc)
+class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeService)(
+    implicit ec: ExecutionContext
+) extends AbstractController(cc)
     with I18nSupport
     with Logging {
   import UnitTypeForm._
@@ -23,34 +22,45 @@ class UnitTypeController(cc: ControllerComponents,
     Ok(views.html.templates.unitTypeCreate(form))
   }
 
-  def postCreate: Action[AnyContent] = Action { implicit request =>
+  def postCreate: Action[AnyContent] = Action.async { implicit request =>
     form.bindFromRequest.fold(
       formWithErrors => {
-        BadRequest(views.html.templates.unitTypeCreate(formWithErrors))
+        Future.successful(BadRequest(views.html.templates.unitTypeCreate(formWithErrors)))
       },
       formData => {
-        logger.info(formData.toString)
-        val newUnitType = new Unittype(
-          formData.name,
-          "",
-          formData.description,
-          formData.protocol
-        )
-        dbiHolder.dbi.getAcs.getUnittypes.addOrChangeUnittype(newUnitType, dbiHolder.dbi.getAcs)
-        Redirect(CreateUnitType.url).flashing(
-          "success" -> s"The Unit Type ${newUnitType.getName} was created"
-        )
+        unitTypeService
+          .create(
+            new Unittype(
+              formData.name,
+              "",
+              formData.description,
+              formData.protocol
+            )
+          )
+          .map(
+            _ =>
+              Redirect(CreateUnitType.url).flashing(
+                "success" -> s"The Unit Type ${formData.name} was created"
+            )
+          )
+          .recover {
+            case e =>
+              logger.error("Failed to create Unit Type", e)
+              InternalServerError(views.html.templates.unitTypeCreate(form)).flashing(
+                "failure" -> s"Failed to create Unit Type ${formData.name}: ${e.getMessage}"
+              )
+          }
       }
     )
   }
 
   def overview: Action[AnyContent] = Action.async {
     unitTypeService.list
-        .map(unitTypeList => {
-          Ok(
-            views.html.templates.unitTypeOverview(unitTypeList.toList)
-          )
-        })
+      .map(unitTypeList => {
+        Ok(
+          views.html.templates.unitTypeOverview(unitTypeList.toList)
+        )
+      })
       .recover {
         case exception: Exception =>
           InternalServerError(exception.getMessage)

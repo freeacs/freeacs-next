@@ -36,7 +36,7 @@ class AppComponents(context: Context)
   val baseCache           = new BaseCache(defaultCacheApi.sync)
   val unitTypeService     = new UnitTypeService(dbConf, controllerComponents)
   val unitDetailsService  = new UnitDetailsService(dbiHolder)
-  val unitTypeController  = new UnitTypeController(controllerComponents, dbiHolder, unitTypeService)
+  val unitTypeController  = new UnitTypeController(controllerComponents, unitTypeService)
   val dashboardController = new DashboardController(controllerComponents, dbiHolder)
   val healthController    = new HealthController(controllerComponents, dbiHolder)
   val tr069Controller =

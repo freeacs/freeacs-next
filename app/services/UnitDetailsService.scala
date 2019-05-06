@@ -9,6 +9,7 @@ case class UnitDetails(user: String, pass: String)
 
 class UnitDetailsService(val dbiHolder: DBIHolder) {
 
+  // This method is used by legacy java code and cannot return Future.
   def loadByUsername(username: String): Try[UnitDetails] = {
     Try(dbiHolder.dbi.getACSUnit.getUnitById(username))
       .filter(_ != null)

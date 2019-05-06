@@ -1,3 +1,4 @@
+// format: off
 package dao
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
@@ -21,6 +22,7 @@ trait Tables {
   def ddl = schema
 
   /** Entity class storing rows of table Certificate
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param name Database column name SqlType(VARCHAR), Length(64,true)
    *  @param certificate Database column certificate SqlType(VARCHAR), Length(256,true) */
@@ -50,6 +52,7 @@ trait Tables {
   lazy val Certificate = new TableQuery(tag => new Certificate(tag))
 
   /** Entity class storing rows of table Filestore
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param name Database column name SqlType(VARCHAR), Length(64,true)
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
@@ -109,6 +112,7 @@ trait Tables {
   lazy val Filestore = new TableQuery(tag => new Filestore(tag))
 
   /** Entity class storing rows of table Group
+   *
    *  @param groupId Database column group_id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param groupName Database column group_name SqlType(VARCHAR), Length(64,true)
@@ -162,6 +166,7 @@ trait Tables {
   lazy val Group = new TableQuery(tag => new Group(tag))
 
   /** Entity class storing rows of table GroupParam
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param groupId Database column group_id SqlType(INT)
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
@@ -202,6 +207,7 @@ trait Tables {
   lazy val GroupParam = new TableQuery(tag => new GroupParam(tag))
 
   /** Entity class storing rows of table Heartbeat
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param name Database column name SqlType(VARCHAR), Length(64,true)
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
@@ -242,6 +248,7 @@ trait Tables {
   lazy val Heartbeat = new TableQuery(tag => new Heartbeat(tag))
 
   /** Entity class storing rows of table Job
+   *
    *  @param jobId Database column job_id SqlType(INT), AutoInc, PrimaryKey
    *  @param jobName Database column job_name SqlType(VARCHAR), Length(64,true)
    *  @param jobType Database column job_type SqlType(VARCHAR), Length(32,true)
@@ -325,6 +332,7 @@ trait Tables {
   lazy val Job = new TableQuery(tag => new Job(tag))
 
   /** Entity class storing rows of table JobParam
+   *
    *  @param jobId Database column job_id SqlType(INT)
    *  @param unitId Database column unit_id SqlType(VARCHAR), Length(64,true)
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
@@ -362,6 +370,7 @@ trait Tables {
   lazy val JobParam = new TableQuery(tag => new JobParam(tag))
 
   /** Entity class storing rows of table Message
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param `type` Database column type SqlType(VARCHAR), Length(64,true)
    *  @param sender Database column sender SqlType(VARCHAR), Length(64,true)
@@ -405,6 +414,7 @@ trait Tables {
   lazy val Message = new TableQuery(tag => new Message(tag))
 
   /** Entity class storing rows of table MonitorEvent
+   *
    *  @param eventId Database column event_id SqlType(BIGINT), AutoInc, PrimaryKey
    *  @param moduleName Database column module_name SqlType(VARCHAR), Length(32,true)
    *  @param moduleKey Database column module_key SqlType(VARCHAR), Length(32,true)
@@ -452,6 +462,7 @@ trait Tables {
   lazy val MonitorEvent = new TableQuery(tag => new MonitorEvent(tag))
 
   /** Entity class storing rows of table Permission
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param userId Database column user_id SqlType(INT)
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
@@ -489,6 +500,7 @@ trait Tables {
   lazy val Permission = new TableQuery(tag => new Permission(tag))
 
   /** Entity class storing rows of table Profile
+   *
    *  @param profileId Database column profile_id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param profileName Database column profile_name SqlType(VARCHAR), Length(64,true) */
@@ -521,6 +533,7 @@ trait Tables {
   lazy val Profile = new TableQuery(tag => new Profile(tag))
 
   /** Entity class storing rows of table ProfileParam
+   *
    *  @param profileId Database column profile_id SqlType(INT)
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
    *  @param value Database column value SqlType(VARCHAR), Length(255,true), Default(None) */
@@ -555,6 +568,7 @@ trait Tables {
   lazy val ProfileParam = new TableQuery(tag => new ProfileParam(tag))
 
   /** Entity class storing rows of table ReportGatewayTr
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -608,6 +622,7 @@ trait Tables {
   lazy val ReportGatewayTr = new TableQuery(tag => new ReportGatewayTr(tag))
 
   /** Entity class storing rows of table ReportGroup
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -643,6 +658,7 @@ trait Tables {
   lazy val ReportGroup = new TableQuery(tag => new ReportGroup(tag))
 
   /** Entity class storing rows of table ReportHw
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -747,6 +763,7 @@ trait Tables {
   lazy val ReportHw = new TableQuery(tag => new ReportHw(tag))
 
   /** Entity class storing rows of table ReportHwTr
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -803,6 +820,7 @@ trait Tables {
   lazy val ReportHwTr = new TableQuery(tag => new ReportHwTr(tag))
 
   /** Entity class storing rows of table ReportJob
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -850,6 +868,7 @@ trait Tables {
   lazy val ReportJob = new TableQuery(tag => new ReportJob(tag))
 
   /** Entity class storing rows of table ReportProv
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -903,6 +922,7 @@ trait Tables {
   lazy val ReportProv = new TableQuery(tag => new ReportProv(tag))
 
   /** Entity class storing rows of table ReportSyslog
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -947,6 +967,7 @@ trait Tables {
   lazy val ReportSyslog = new TableQuery(tag => new ReportSyslog(tag))
 
   /** Entity class storing rows of table ReportUnit
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -988,6 +1009,7 @@ trait Tables {
   lazy val ReportUnit = new TableQuery(tag => new ReportUnit(tag))
 
   /** Entity class storing rows of table ReportVoip
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -1059,6 +1081,7 @@ trait Tables {
   lazy val ReportVoip = new TableQuery(tag => new ReportVoip(tag))
 
   /** Entity class storing rows of table ReportVoipTr
+   *
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param periodType Database column period_type SqlType(INT)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -1130,6 +1153,7 @@ trait Tables {
   lazy val ReportVoipTr = new TableQuery(tag => new ReportVoipTr(tag))
 
   /** Entity class storing rows of table ScriptExecution
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param filestoreId Database column filestore_id SqlType(INT)
@@ -1177,6 +1201,7 @@ trait Tables {
   lazy val ScriptExecution = new TableQuery(tag => new ScriptExecution(tag))
 
   /** Entity class storing rows of table Syslog
+   *
    *  @param syslogId Database column syslog_id SqlType(BIGINT), AutoInc, PrimaryKey
    *  @param collectorTimestamp Database column collector_timestamp SqlType(DATETIME)
    *  @param syslogEventId Database column syslog_event_id SqlType(INT)
@@ -1247,6 +1272,7 @@ trait Tables {
   lazy val Syslog = new TableQuery(tag => new Syslog(tag))
 
   /** Entity class storing rows of table SyslogEvent
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param syslogEventId Database column syslog_event_id SqlType(INT)
    *  @param syslogEventName Database column syslog_event_name SqlType(VARCHAR), Length(64,true)
@@ -1304,6 +1330,7 @@ trait Tables {
   lazy val SyslogEvent = new TableQuery(tag => new SyslogEvent(tag))
 
   /** Entity class storing rows of table TestCase
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param method Database column method SqlType(VARCHAR), Length(16,true)
@@ -1339,6 +1366,7 @@ trait Tables {
   lazy val TestCase = new TableQuery(tag => new TestCase(tag))
 
   /** Entity class storing rows of table TestCaseFiles
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param caseId Database column case_id SqlType(INT)
    *  @param inputFileId Database column input_file_id SqlType(INT)
@@ -1375,6 +1403,7 @@ trait Tables {
   lazy val TestCaseFiles = new TableQuery(tag => new TestCaseFiles(tag))
 
   /** Entity class storing rows of table TestCaseParam
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param `type` Database column type SqlType(VARCHAR), Length(16,true)
    *  @param caseId Database column case_id SqlType(INT)
@@ -1417,6 +1446,7 @@ trait Tables {
   lazy val TestCaseParam = new TableQuery(tag => new TestCaseParam(tag))
 
   /** Entity class storing rows of table TestHistory
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param unitId Database column unit_id SqlType(VARCHAR), Length(64,true)
@@ -1461,6 +1491,7 @@ trait Tables {
   lazy val TestHistory = new TableQuery(tag => new TestHistory(tag))
 
   /** Entity class storing rows of table Trigger
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param name Database column name SqlType(VARCHAR), Length(255,true)
    *  @param description Database column description SqlType(VARCHAR), Length(1024,true), Default(None)
@@ -1543,6 +1574,7 @@ trait Tables {
   lazy val Trigger = new TableQuery(tag => new Trigger(tag))
 
   /** Entity class storing rows of table TriggerEvent
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param timestamp Database column timestamp_ SqlType(DATETIME)
    *  @param triggerId Database column trigger_id SqlType(INT)
@@ -1575,6 +1607,7 @@ trait Tables {
   lazy val TriggerEvent = new TableQuery(tag => new TriggerEvent(tag))
 
   /** Entity class storing rows of table TriggerRelease
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param triggerId Database column trigger_id SqlType(INT)
    *  @param noEvents Database column no_events SqlType(INT), Default(None)
@@ -1619,6 +1652,7 @@ trait Tables {
   lazy val TriggerRelease = new TableQuery(tag => new TriggerRelease(tag))
 
   /** Entity class storing rows of table Unit
+   *
    *  @param unitId Database column unit_id SqlType(VARCHAR), PrimaryKey, Length(64,true)
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param profileId Database column profile_id SqlType(INT) */
@@ -1655,6 +1689,7 @@ trait Tables {
   lazy val Unit = new TableQuery(tag => new Unit(tag))
 
   /** Entity class storing rows of table UnitJob
+   *
    *  @param unitId Database column unit_id SqlType(VARCHAR), Length(64,true)
    *  @param jobId Database column job_id SqlType(INT)
    *  @param startTimestamp Database column start_timestamp SqlType(DATETIME)
@@ -1709,6 +1744,7 @@ trait Tables {
   lazy val UnitJob = new TableQuery(tag => new UnitJob(tag))
 
   /** Entity class storing rows of table UnitParam
+   *
    *  @param unitId Database column unit_id SqlType(VARCHAR), Length(64,true)
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
    *  @param value Database column value SqlType(VARCHAR), Length(512,true), Default(None) */
@@ -1748,6 +1784,7 @@ trait Tables {
   lazy val UnitParam = new TableQuery(tag => new UnitParam(tag))
 
   /** Entity class storing rows of table UnitParamSession
+   *
    *  @param unitId Database column unit_id SqlType(VARCHAR), Length(64,true)
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
    *  @param value Database column value SqlType(VARCHAR), Length(512,true), Default(None) */
@@ -1782,6 +1819,7 @@ trait Tables {
   lazy val UnitParamSession = new TableQuery(tag => new UnitParamSession(tag))
 
   /** Entity class storing rows of table UnitType
+   *
    *  @param unitTypeId Database column unit_type_id SqlType(INT), AutoInc, PrimaryKey
    *  @param matcherId Database column matcher_id SqlType(VARCHAR), Length(32,true), Default(None)
    *  @param unitTypeName Database column unit_type_name SqlType(VARCHAR), Length(64,true)
@@ -1820,6 +1858,7 @@ trait Tables {
   lazy val UnitType = new TableQuery(tag => new UnitType(tag))
 
   /** Entity class storing rows of table UnitTypeParam
+   *
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT), AutoInc, PrimaryKey
    *  @param unitTypeId Database column unit_type_id SqlType(INT)
    *  @param name Database column name SqlType(VARCHAR), Length(255,true)
@@ -1855,6 +1894,7 @@ trait Tables {
   lazy val UnitTypeParam = new TableQuery(tag => new UnitTypeParam(tag))
 
   /** Entity class storing rows of table UnitTypeParamValue
+   *
    *  @param unitTypeParamId Database column unit_type_param_id SqlType(INT)
    *  @param value Database column value SqlType(VARCHAR), Length(255,true)
    *  @param priority Database column priority SqlType(INT)
@@ -1892,6 +1932,7 @@ trait Tables {
   lazy val UnitTypeParamValue = new TableQuery(tag => new UnitTypeParamValue(tag))
 
   /** Entity class storing rows of table User
+   *
    *  @param id Database column id SqlType(INT), AutoInc, PrimaryKey
    *  @param username Database column username SqlType(VARCHAR), Length(64,true)
    *  @param secret Database column secret SqlType(VARCHAR), Length(64,true)
@@ -1929,3 +1970,4 @@ trait Tables {
   /** Collection-like TableQuery object for table User */
   lazy val User = new TableQuery(tag => new User(tag))
 }
+// format: on
