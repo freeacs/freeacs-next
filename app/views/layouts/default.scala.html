@@ -13,7 +13,7 @@
 @import views.CreateJob
 @import java.time.LocalDate
 
-@(title: String, currentPage: Page)(content: Html)
+@(currentPage: Page)(content: Html)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +23,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <meta name="description" content="">
         <meta name="author" content="">
-        <title>FreeACS | @title</title>
+        <title>FreeACS | @currentPage.name</title>
         <link href="/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
         <link href="/assets/vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet">
         <link href="/assets/css/sb-admin.css" rel="stylesheet">
