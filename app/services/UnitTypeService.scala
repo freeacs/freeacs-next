@@ -1,14 +1,11 @@
 package services
 import freeacs.dbi.{ProvisioningProtocol, Unittype}
-import play.api.mvc.{AbstractController, ControllerComponents}
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeService(protected val dbConfig: DatabaseConfig[JdbcProfile], cc: ControllerComponents)(
-    implicit ec: ExecutionContext
-) extends AbstractController(cc) {
+class UnitTypeService(protected val dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
 
   import dbConfig.profile.api._
   import dbConfig._
