@@ -7,13 +7,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
 
-  import dbConfig.profile.api._
+  import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow}
   import dbConfig._
-  import daos.Tables._
+  import dbConfig.profile.api._
 
   def create(unitType: Unittype): Future[_] = {
     db.run(for {
-      numsInserted <- UnitType += UnitTypeRow(
+      numsInserted <- UnitTypeDao += UnitTypeRow(
                        unitType.getId,
                        None,
                        unitType.getName,
@@ -26,7 +26,7 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: Execut
 
   def list: Future[Seq[Unittype]] = {
     db.run(for {
-      unitTypeRows <- UnitType.result
+      unitTypeRows <- UnitTypeDao.result
       unitTypes = unitTypeRows.map(row => {
         val unitType = new Unittype(
           row.unitTypeName,
