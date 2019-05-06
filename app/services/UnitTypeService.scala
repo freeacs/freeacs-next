@@ -5,7 +5,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeService(protected val dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
+class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
 
   import dbConfig.profile.api._
   import dbConfig._
