@@ -38,6 +38,7 @@ class AppComponents(context: Context)
   val profileService      = new ProfileService(dbConf)
   val unitDetailsService  = new UnitService(dbConf)
   val unitTypeController  = new UnitTypeController(controllerComponents, unitTypeService)
+  val profileController   = new ProfileController(controllerComponents, profileService, unitTypeService)
   val dashboardController = new DashboardController(controllerComponents, dbiHolder)
   val healthController    = new HealthController(controllerComponents, dbiHolder)
   val tr069Controller =
@@ -49,6 +50,9 @@ class AppComponents(context: Context)
     case GET(p"/unittype/create")   => unitTypeController.viewCreate
     case POST(p"/unittype/create")  => unitTypeController.postCreate
     case GET(p"/unittype/overview") => unitTypeController.overview
+    case GET(p"/profile/create")    => profileController.viewCreate
+    case POST(p"/profile/create")   => profileController.postCreate
+    case GET(p"/profile/overview")  => profileController.overview
     case POST(p"/tr069")            => tr069Controller.provision
     case POST(p"/tr069/prov")       => tr069Controller.provision
     case GET(p"/assets/$file*")     => assets.versioned("/public", file)

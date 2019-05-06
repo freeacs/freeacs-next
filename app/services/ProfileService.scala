@@ -14,13 +14,13 @@ class ProfileService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: Executi
   import dbConfig.profile.api._
 
   def create(profile: Profile): Future[Int] = {
-    db.run(for {
-      numsInserted <- ProfileDao += ProfileRow(
-                       profile.getId,
-                       profile.getUnittype.getId,
-                       profile.getName
-                     )
-    } yield numsInserted)
+    db.run(
+      ProfileDao += ProfileRow(
+        profile.getId,
+        profile.getUnittype.getId,
+        profile.getName
+      )
+    )
   }
 
   def list: Future[Seq[Profile]] = {

@@ -1,0 +1,25 @@
+@import freeacs.dbi.ProvisioningProtocol
+@import freeacs.dbi.Unittype
+@import views.CreateProfile
+
+@(form: Form[ProfileForm.Profile], unitTypes: List[Unittype])(implicit messagesProvider: MessagesProvider, flash: Flash)
+
+@layouts.default("Create Profile", CreateProfile) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Profile</a>
+        </li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            @b4.vertical.form(Call(method = "POST", url = CreateProfile.url)) { implicit vfc =>
+                @b4.select(form("unitTypeId"), options = List(("", "Select Unit Type")) ++ unitTypes.map(p => (p.getId.toString, p.getName)), '_label -> "Select Unit Type" )
+                @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
+                @b4.submit('class -> "btn btn-primary"){ Submit }
+            }
+            <p style="color: green">@flash.get("success").orNull</p>
+            <p style="color: red">@flash.get("failure").orNull</p>
+        </div>
+    </div>
+}

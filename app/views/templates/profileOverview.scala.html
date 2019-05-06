@@ -1,0 +1,41 @@
+@import views.ProfileOverview
+@import freeacs.dbi.Profile
+
+@(profiles: List[Profile])
+
+@layouts.default("Profile Overview", ProfileOverview) {
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">Profile</a>
+        </li>
+        <li class="breadcrumb-item active">Overview</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Unit Type</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Name</th>
+                            <th>Unit Type</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                    @for(profile <- profiles) {
+                        <tr>
+                            <td>@profile.getName</td>
+                            <td>@profile.getUnittype.getName</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

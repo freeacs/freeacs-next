@@ -18,11 +18,11 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     with Logging {
   import UnitTypeForm._
 
-  def viewCreate: Action[AnyContent] = Action { implicit request =>
+  def viewCreate = Action { implicit request =>
     Ok(views.html.templates.unitTypeCreate(form))
   }
 
-  def postCreate: Action[AnyContent] = Action.async { implicit request =>
+  def postCreate = Action.async { implicit request =>
     form.bindFromRequest.fold(
       formWithErrors => {
         Future.successful(BadRequest(views.html.templates.unitTypeCreate(formWithErrors)))
@@ -54,7 +54,7 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     )
   }
 
-  def overview: Action[AnyContent] = Action.async {
+  def overview = Action.async {
     unitTypeService.list
       .map(unitTypeList => {
         Ok(

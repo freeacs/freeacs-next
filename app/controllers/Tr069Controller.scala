@@ -25,7 +25,7 @@ class Tr069Controller(
     extends AbstractController(cc)
     with Logging {
 
-  def provision: Action[AnyContent] = Action.async { req =>
+  def provision = Action.async { req =>
     config.getString("auth.method").toLowerCase match {
       case method if method == "digest" && config.getString("digest.secret") == "changeme" =>
         logger.error("Digest secret must be changed from its default value!")
