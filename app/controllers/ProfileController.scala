@@ -21,9 +21,9 @@ class ProfileController(
   import ProfileForm._
 
   def viewCreate = Action.async { implicit request =>
-    for {
-      unitTypeList <- unitTypeService.list
-    } yield Ok(views.html.templates.profileCreate(form, unitTypeList.toList))
+    unitTypeService.list.map(
+      unitTypeList => Ok(views.html.templates.profileCreate(form, unitTypeList.toList))
+    )
   }
 
   def postCreate = Action.async { implicit request =>
