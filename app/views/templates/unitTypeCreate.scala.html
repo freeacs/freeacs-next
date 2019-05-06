@@ -21,7 +21,7 @@
                 @b4.submit('class -> "btn btn-primary"){ Submit }
             }
             <p style="color: green">@flash.get("success").orNull</p>
-            <p style="color: red">@flash.get("success").orNull</p>
+            <p style="color: red">@flash.get("failure").orNull</p>
         </div>
     </div>
 }
