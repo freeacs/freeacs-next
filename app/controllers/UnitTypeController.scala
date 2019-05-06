@@ -2,13 +2,18 @@ package controllers
 
 import freeacs.dbi.{DBIHolder, ProvisioningProtocol, Unittype}
 import play.api.Logging
-import play.api.data.{FormError, Forms}
 import play.api.data.format.Formatter
+import play.api.data.{FormError, Forms}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import services.UnitTypeService
 import views.CreateUnitType
 
-class UnitTypeController(cc: ControllerComponents, dbiHolder: DBIHolder)
+import scala.concurrent.ExecutionContext
+
+class UnitTypeController(cc: ControllerComponents,
+                         dbiHolder: DBIHolder,
+                         unitTypeService: UnitTypeService)(implicit ec: ExecutionContext)
     extends AbstractController(cc)
     with I18nSupport
     with Logging {
@@ -39,10 +44,17 @@ class UnitTypeController(cc: ControllerComponents, dbiHolder: DBIHolder)
     )
   }
 
-  def overview: Action[AnyContent] = Action {
-    Ok(
-      views.html.templates.unitTypeOverview(dbiHolder.dbi.getAcs.getUnittypes.getUnittypes.toList)
-    )
+  def overview: Action[AnyContent] = Action.async {
+    unitTypeService.list
+        .map(unitTypeList => {
+          Ok(
+            views.html.templates.unitTypeOverview(unitTypeList.toList)
+          )
+        })
+      .recover {
+        case exception: Exception =>
+          InternalServerError(exception.getMessage)
+      }
   }
 }
 

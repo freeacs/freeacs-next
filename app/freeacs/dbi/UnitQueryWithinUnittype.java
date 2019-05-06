@@ -328,7 +328,7 @@ public class UnitQueryWithinUnittype {
       }
       ds.trim(2); // remove last ", ".
     }
-    ds.addSql(" FROM unit u, ");
+    ds.addSql(" FROM acs.unit u, ");
     if (parameters.size() == 1) {
       ds.addSql("unit_param up1 ");
     } else if (parameters.size() > 1) {
@@ -414,7 +414,7 @@ public class UnitQueryWithinUnittype {
       }
       ds.trim(2); // remove last ", ".
     }
-    ds.addSql(" FROM unit u ");
+    ds.addSql(" FROM acs.unit u ");
 
     // 2.
     for (int i = 0; i < parameters.size(); i++) {

@@ -1,5 +1,5 @@
 import controllers._
-import services.UnitDetailsService
+import services.{UnitDetailsService, UnitTypeService}
 import freeacs.dbi.DBIHolder
 import freeacs.tr069.Properties
 import freeacs.tr069.base.BaseCache
@@ -12,6 +12,7 @@ import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
 import play.api.db.evolutions.EvolutionsComponents
 import play.api.db.slick.{DbName, SlickComponents}
+import slick.jdbc.JdbcProfile
 
 class AppComponents(context: Context)
     extends BuiltInComponentsFromContext(context)
@@ -27,12 +28,15 @@ class AppComponents(context: Context)
   override val httpFilters = Nil
   override val Action      = defaultActionBuilder
 
+  lazy val dbConf = slickApi.dbConfig[JdbcProfile](DbName("default"))
+
   val config              = ConfigFactory.load()
   val properties          = new Properties(config)
   val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
   val baseCache           = new BaseCache(defaultCacheApi.sync)
+  val unitTypeService     = new UnitTypeService(dbConf, controllerComponents)
   val unitDetailsService  = new UnitDetailsService(dbiHolder)
-  val unitTypeController  = new UnitTypeController(controllerComponents, dbiHolder)
+  val unitTypeController  = new UnitTypeController(controllerComponents, dbiHolder, unitTypeService)
   val dashboardController = new DashboardController(controllerComponents, dbiHolder)
   val healthController    = new HealthController(controllerComponents, dbiHolder)
   val tr069Controller =
