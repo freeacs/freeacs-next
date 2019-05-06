@@ -19,6 +19,7 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"
 libraryDependencies += "com.github.jarlah" % "AuthenticScala" % "v1.0.3"
 libraryDependencies += "com.adrianhurt" %% "play-bootstrap" % "1.4-P26-B4"
 libraryDependencies += "com.h2database" % "h2" % "1.4.199"
+libraryDependencies += "com.typesafe.play" %% "play-slick" % "3.0.0"
 libraryDependencies ++= List(
   "com.typesafe.slick" %% "slick" % slickVersion,
   "com.typesafe.slick" %% "slick-codegen" % slickVersion

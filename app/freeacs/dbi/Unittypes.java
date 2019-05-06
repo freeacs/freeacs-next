@@ -55,7 +55,7 @@ public class Unittypes {
     PreparedStatement s = null;
     try {
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("unit_type", new Field("unit_type_id", unittype.getId()));
+          new InsertOrUpdateStatement("acs.unit_type", new Field("unit_type_id", unittype.getId()));
       ious.addField(new Field("unit_type_name", unittype.getName()));
       ious.addField(new Field("description", unittype.getDescription()));
       ious.addField(new Field("protocol", unittype.getProtocol().toString()));

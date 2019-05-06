@@ -36,7 +36,7 @@ public class ScriptExecutions {
     try {
       connection = dataSource.getConnection();
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("script_execution", new Field("id", (Integer) null));
+          new InsertOrUpdateStatement("acs.script_execution", new Field("id", (Integer) null));
       ious.addField(new Field("unit_type_id", scriptFile.getUnittype().getId()));
       ious.addField(new Field("filestore_id", scriptFile.getId()));
       ious.addField(new Field("arguments", scriptArgs));
@@ -68,7 +68,7 @@ public class ScriptExecutions {
     try {
       connection = dataSource.getConnection();
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("script_execution", new Field("id", se.getId()));
+          new InsertOrUpdateStatement("acs.script_execution", new Field("id", se.getId()));
       ious.addField(new Field("start_timestamp", se.getStartTms()));
       ious.addField(new Field("end_timestamp", se.getEndTms()));
       ious.addField(new Field("error_message", se.getErrorMessage()));

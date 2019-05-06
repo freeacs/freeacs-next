@@ -398,7 +398,7 @@ class UnitQueryCrossUnittype {
 
   protected Unit addSessionParameters(Unit unit) throws SQLException {
     DynamicStatement ds = new DynamicStatement();
-    ds.addSqlAndArguments("SELECT * FROM unit_param_session WHERE unit_id = ?", unit.getId());
+    ds.addSqlAndArguments("SELECT * FROM acs.unit_param_session WHERE unit_id = ?", unit.getId());
     ResultSet rs = null;
     PreparedStatement pp = null;
     Unittype ut = unit.getUnittype();

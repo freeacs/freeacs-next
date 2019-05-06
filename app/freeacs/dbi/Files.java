@@ -88,7 +88,7 @@ public class Files {
     Connection c = acs.getDataSource().getConnection();
     try {
       s = c.createStatement();
-      sql = "DELETE FROM filestore WHERE ";
+      sql = "DELETE FROM acs.filestore WHERE ";
       sql += "id = '" + file.getId() + "'";
       s.setQueryTimeout(60);
       s.executeUpdate(sql);
@@ -243,7 +243,7 @@ public class Files {
       DynamicStatement ds = new DynamicStatement();
       ds.addSql(
           "SELECT id, name, type, unit_type_id, description, version, length(content) as length, timestamp_ ");
-      ds.addSqlAndArguments("FROM filestore WHERE id = ?", fileId);
+      ds.addSqlAndArguments("FROM acs.filestore WHERE id = ?", fileId);
       ps = ds.makePreparedStatement(c);
       rs = ps.executeQuery();
       if (rs.next()) {

@@ -63,7 +63,7 @@ public class SyslogEvents {
     PreparedStatement ps = null;
     try {
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("syslog_event", new Field("id", syslogEvent.getId()));
+          new InsertOrUpdateStatement("acs.syslog_event", new Field("id", syslogEvent.getId()));
       ious.addField(new Field("syslog_event_id", syslogEvent.getEventId()));
       ious.addField(new Field("syslog_event_name", syslogEvent.getName()));
       ious.addField(new Field("description", syslogEvent.getDescription()));

@@ -117,7 +117,7 @@ public class Triggers {
       ds.addSql(
           "SELECT tr.id, tr.trigger_id, tr.no_events, tr.no_events_pr_unit, tr.no_units, tr.first_event_timestamp, tr.release_timestamp, tr.sent_timestamp ");
       ds.addSqlAndArguments(
-          "FROM trigger_release tr, trigger_ t WHERE tr.release_timestamp >= ? AND tr.release_timestamp < ? ",
+          "FROM acs.trigger_release tr, acs.trigger_ t WHERE tr.release_timestamp >= ? AND tr.release_timestamp < ? ",
           from,
           to);
       if (trigger != null) {
@@ -220,11 +220,11 @@ public class Triggers {
       DynamicStatement ds = new DynamicStatement();
       if (triggerId != null) {
         ds.addSqlAndArguments(
-            "DELETE FROM trigger_event WHERE trigger_id = ? and timestamp_ < ?",
+            "DELETE FROM acs.trigger_event WHERE trigger_id = ? and timestamp_ < ?",
             triggerId,
             upUntil);
       } else {
-        ds.addSqlAndArguments("DELETE FROM trigger_event WHERE timestamp_ < ?", upUntil);
+        ds.addSqlAndArguments("DELETE FROM acs.trigger_event WHERE timestamp_ < ?", upUntil);
       }
       ps = ds.makePreparedStatement(c);
       ps.setQueryTimeout(60);
@@ -257,7 +257,7 @@ public class Triggers {
     try {
       DynamicStatement ds = new DynamicStatement();
       ds.addSqlAndArguments(
-          "SELECT unit_id, COUNT(*) FROM trigger_event WHERE trigger_id = ? AND timestamp_ >= ? AND timestamp_ < ? GROUP BY unit_id",
+          "SELECT unit_id, COUNT(*) FROM acs.trigger_event WHERE trigger_id = ? AND timestamp_ >= ? AND timestamp_ < ? GROUP BY unit_id",
           triggerId,
           from,
           to);
@@ -288,7 +288,7 @@ public class Triggers {
     try {
       DynamicStatement ds = new DynamicStatement();
       ds.addSqlAndArguments(
-          "SELECT timestamp_ FROM trigger_event WHERE trigger_id = ? AND timestamp_ >= ? AND timestamp_ < ? ORDER BY timestamp_ ASC LIMIT 1",
+          "SELECT timestamp_ FROM acs.trigger_event WHERE trigger_id = ? AND timestamp_ >= ? AND timestamp_ < ? ORDER BY timestamp_ ASC LIMIT 1",
           triggerId,
           from,
           to);
@@ -330,17 +330,17 @@ public class Triggers {
     c.setAutoCommit(false);
     try {
       DynamicStatement ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM trigger_event WHERE trigger_id = ?", trigger.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.trigger_event WHERE trigger_id = ?", trigger.getId());
       ps = ds.makePreparedStatement(c);
       ps.setQueryTimeout(60);
       ps.executeUpdate();
       ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM trigger_release WHERE trigger_id = ?", trigger.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.trigger_release WHERE trigger_id = ?", trigger.getId());
       ps = ds.makePreparedStatement(c);
       ps.setQueryTimeout(60);
       ps.executeUpdate();
       ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM trigger_ WHERE id = ?", trigger.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.trigger_ WHERE id = ?", trigger.getId());
       ps = ds.makePreparedStatement(c);
       ps.setQueryTimeout(60);
       int rowsDeleted = ps.executeUpdate();
@@ -384,7 +384,7 @@ public class Triggers {
     Connection c = acs.getDataSource().getConnection();
     try {
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("trigger_", new Field("id", trigger.getId()));
+          new InsertOrUpdateStatement("acs.trigger_", new Field("id", trigger.getId()));
       ious.addField(new Field("name", trigger.getName()));
       ious.addField(new Field("description", trigger.getDescription()));
       ious.addField(new Field("trigger_type", trigger.getTriggerType()));

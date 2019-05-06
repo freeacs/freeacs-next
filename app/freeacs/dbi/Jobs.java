@@ -110,7 +110,7 @@ public class Jobs {
         String action = "Inserted";
         try {
           sql =
-              "INSERT INTO job_param (job_id, unit_id, unit_type_param_id, value) VALUES (?, ?, ?, ?)";
+              "INSERT INTO acs.job_param (job_id, unit_id, unit_type_param_id, value) VALUES (?, ?, ?, ?)";
           pp = connection.prepareStatement(sql);
           pp.setInt(1, jobParameter.getJob().getId());
           pp.setString(2, unitId);
@@ -123,7 +123,7 @@ public class Jobs {
           pp.close();
           action = "Updated";
           sql =
-              "UPDATE job_param SET value = ? WHERE job_id = ? AND unit_id = ? AND unit_type_param_id = ?";
+              "UPDATE acs.job_param SET value = ? WHERE job_id = ? AND unit_id = ? AND unit_type_param_id = ?";
           pp = connection.prepareStatement(sql);
           pp.setString(1, parameter.getValue());
           pp.setInt(2, jobParameter.getJob().getId());
@@ -174,7 +174,7 @@ public class Jobs {
     try {
       connection = acs.getDataSource().getConnection();
       s = connection.createStatement();
-      sql = "DELETE FROM job_param WHERE job_id = " + job.getId();
+      sql = "DELETE FROM acs.job_param WHERE job_id = " + job.getId();
       s.setQueryTimeout(60);
       s.executeUpdate(sql);
       Job j = getById(job.getId());
@@ -215,7 +215,7 @@ public class Jobs {
         Integer utpId = parameter.getUnittypeParameter().getId();
         String unitId = jobParameter.getUnitId();
         sql =
-            "DELETE FROM job_param WHERE job_id = '"
+            "DELETE FROM acs.job_param WHERE job_id = '"
                 + jobParameter.getJob().getId()
                 + "' AND unit_id = '"
                 + unitId
@@ -279,7 +279,7 @@ public class Jobs {
     SQLException sqle;
     try {
       c = acs.getDataSource().getConnection();
-      String sql = "DELETE FROM job WHERE job_id = ?";
+      String sql = "DELETE FROM acs.job WHERE job_id = ?";
       pp = c.prepareStatement(sql);
       pp.setInt(1, job.getId());
       pp.setQueryTimeout(60);
@@ -349,7 +349,7 @@ public class Jobs {
       }
       c = acs.getDataSource().getConnection();
       DynamicStatement ds = new DynamicStatement();
-      ds.setSql("INSERT INTO job (");
+      ds.setSql("INSERT INTO acs.job (");
       ds.addSqlAndArguments("job_name, ", job.getName());
       ds.addSqlAndArguments("job_type, ", job.getFlags().toString());
       ds.addSqlAndArguments("description, ", job.getDescription());
@@ -468,7 +468,7 @@ public class Jobs {
     try {
       c = acs.getDataSource().getConnection();
       DynamicStatement ds = new DynamicStatement();
-      ds.addSql("UPDATE job SET ");
+      ds.addSql("UPDATE acs.job SET ");
       ds.addSqlAndArguments("completed_had_failure = ?, ", job.getCompletedHadFailures());
       ds.addSqlAndArguments("completed_no_failure = ?, ", job.getCompletedNoFailures());
       ds.addSqlAndArguments("confirmed_failed = ?, ", job.getConfirmedFailed());
@@ -521,7 +521,7 @@ public class Jobs {
     try {
       c = acs.getDataSource().getConnection();
       DynamicStatement ds = new DynamicStatement();
-      ds.addSql("UPDATE job SET ");
+      ds.addSql("UPDATE acs.job SET ");
       if (job.getStatus() == JobStatus.STARTED && job.getStartTimestamp() == null) {
         long startTms = System.currentTimeMillis();
         job.setStartTimestamp(new Date(startTms));
@@ -588,7 +588,7 @@ public class Jobs {
                 + " since that creates a loop");
       }
       DynamicStatement ds = new DynamicStatement();
-      ds.addSql("UPDATE job SET ");
+      ds.addSql("UPDATE acs.job SET ");
       ds.addSqlAndArguments("description = ?, ", job.getDescription());
       ds.addSqlAndArguments("stop_rules = ?, ", job.getStopRulesSerialized());
       if (job.getDependency() != null) {
@@ -654,7 +654,7 @@ public class Jobs {
       s.setQueryTimeout(60);
       rs =
           s.executeQuery(
-              "SELECT * FROM job j, group_ g, unit_type u WHERE j.group_id = g.group_id AND g.unit_type_id = u.unit_type_id AND j.job_id = "
+              "SELECT * FROM acs.job j, acs.group_ g, acs.unit_type u WHERE j.group_id = g.group_id AND g.unit_type_id = u.unit_type_id AND j.job_id = "
                   + jobId);
       Unittype unittype = null;
       Job newJob = null;
@@ -715,7 +715,7 @@ public class Jobs {
       s.setQueryTimeout(60);
       rs =
           s.executeQuery(
-              "SELECT * FROM job_param WHERE job_id = "
+              "SELECT * FROM acs.job_param WHERE job_id = "
                   + jobId
                   + " AND unit_id = '"
                   + Job.ANY_UNIT_IN_GROUP

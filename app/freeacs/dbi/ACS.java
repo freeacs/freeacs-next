@@ -156,7 +156,7 @@ public class ACS {
       sql += "gp.group_id, gp.unit_type_param_id, ";
       sql += "gp.operator, gp.data_type, ";
       sql += "gp.value ";
-      sql += " FROM group_param gp, unit_type_param utp, unit_type ut ";
+      sql += " FROM acs.group_param gp, acs.unit_type_param utp, acs.unit_type ut ";
       sql +=
           " WHERE gp.unit_type_param_id = utp.unit_type_param_id AND utp.unit_type_id = ut.unit_type_id ORDER BY ut.unit_type_name ASC";
       connection = getDataSource().getConnection();
@@ -211,7 +211,7 @@ public class ACS {
       Map<Integer, ProfileParameter> idMap = null;
       Profile lastProfile = null;
       sql =
-          "SELECT utp.unit_type_id, pm.profile_id, pm.unit_type_param_id, pm.value FROM profile_param pm, unit_type_param utp WHERE pm.unit_type_param_id = utp.unit_type_param_id ORDER BY utp.unit_type_id ASC, pm.profile_id ASC";
+          "SELECT utp.unit_type_id, pm.profile_id, pm.unit_type_param_id, pm.value FROM acs.profile_param pm, acs.unit_type_param utp WHERE pm.unit_type_param_id = utp.unit_type_param_id ORDER BY utp.unit_type_id ASC, pm.profile_id ASC";
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -265,7 +265,7 @@ public class ACS {
     Connection connection = null;
     try {
       sql = "SELECT utp.unit_type_id, utpv.unit_type_param_id, value, priority, type ";
-      sql += "FROM unit_type_param_value utpv, unit_type_param utp ";
+      sql += "FROM acs.unit_type_param_value utpv, acs.unit_type_param utp ";
       sql += "WHERE utpv.unit_type_param_id = utp.unit_type_param_id ";
       sql += "ORDER BY utp.unit_type_id ASC, utpv.unit_type_param_id, utpv.priority ASC";
       connection = getDataSource().getConnection();
@@ -324,7 +324,7 @@ public class ACS {
       Map<String, UnittypeParameter> nameMap = null;
       Unittype lastUnittype = null;
       sql =
-          "SELECT unit_type_id, unit_type_param_id, name, flags FROM unit_type_param ORDER BY unit_type_id ASC";
+          "SELECT unit_type_id, unit_type_param_id, name, flags FROM acs.unit_type_param ORDER BY unit_type_id ASC";
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -386,9 +386,9 @@ public class ACS {
       TreeMap<Integer, SyslogEvent> syslogIdMap = null;
       Unittype lastUnittype = null;
       if (ACSVersionCheck.syslogEventReworkSupported) {
-        sql = "SELECT * FROM syslog_event ORDER BY unit_type_id ASC";
+        sql = "SELECT * FROM acs.syslog_event ORDER BY unit_type_id ASC";
       } else {
-        sql = "SELECT * FROM syslog_event ORDER BY unit_type_name ASC";
+        sql = "SELECT * FROM acs.syslog_event ORDER BY unit_type_name ASC";
       }
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
@@ -483,7 +483,7 @@ public class ACS {
       Map<String, Heartbeat> nameMap = null;
       Map<Integer, Heartbeat> idMap = null;
       Unittype lastUnittype = null;
-      ds.addSqlAndArguments("SELECT * FROM heartbeat ORDER BY unit_type_id ASC");
+      ds.addSqlAndArguments("SELECT * FROM acs.heartbeat ORDER BY unit_type_id ASC");
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -539,7 +539,7 @@ public class ACS {
       Map<String, Trigger> nameMap = null;
       Map<Integer, Trigger> idMap = null;
       Unittype lastUnittype = null;
-      ds.addSqlAndArguments("SELECT * FROM trigger_ ORDER BY unit_type_id ASC");
+      ds.addSqlAndArguments("SELECT * FROM acs.trigger_ ORDER BY unit_type_id ASC");
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -643,7 +643,7 @@ public class ACS {
       Map<String, Group> nameMap = null;
       Map<Integer, Group> idMap = null;
       Unittype lastUnittype = null;
-      sql = "SELECT * FROM group_ ORDER BY unit_type_id ASC";
+      sql = "SELECT * FROM acs.group_ ORDER BY unit_type_id ASC";
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -730,7 +730,7 @@ public class ACS {
       Map<String, Profile> nameMap = null;
       Map<Integer, Profile> idMap = null;
       Unittype lastUnittype = null;
-      sql = "SELECT unit_type_id, profile_id, profile_name FROM profile ORDER BY unit_type_id ASC";
+      sql = "SELECT unit_type_id, profile_id, profile_name FROM acs.profile ORDER BY unit_type_id ASC";
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -796,7 +796,7 @@ public class ACS {
       if (ACSVersionCheck.fileReworkSupported) {
         sql += ", target_name, owner ";
       }
-      sql += " FROM filestore ORDER BY unit_type_id ASC";
+      sql += " FROM acs.filestore ORDER BY unit_type_id ASC";
       rs = s.executeQuery(sql);
       int counter = 0;
       while (rs.next()) {
@@ -881,7 +881,7 @@ public class ACS {
       MapWrapper<Unittype> mw = new MapWrapper<>(isStrictOrder());
       Map<String, Unittype> unittypeMap = mw.getMap();
       Map<Integer, Unittype> idMap = new HashMap<>();
-      sql = "SELECT * FROM unit_type";
+      sql = "SELECT * FROM acs.unit_type";
       connection = getDataSource().getConnection();
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
@@ -935,7 +935,7 @@ public class ACS {
       s.setQueryTimeout(60);
       rs =
           s.executeQuery(
-              "SELECT * FROM job j, group_ g WHERE j.group_id = g.group_id ORDER BY g.unit_type_id ASC, j.job_id_dependency ASC"); // will list non-dependent jobs first
+              "SELECT * FROM acs.job j, acs.group_ g WHERE j.group_id = g.group_id ORDER BY g.unit_type_id ASC, j.job_id_dependency ASC"); // will list non-dependent jobs first
       int jobCounter = 0;
       while (rs.next()) {
         jobCounter++;
@@ -1018,7 +1018,7 @@ public class ACS {
       s.setQueryTimeout(60);
       rs =
           s.executeQuery(
-              "SELECT utp.unit_type_id, jp.job_id, jp.unit_type_param_id, jp.value FROM job_param jp, unit_type_param utp WHERE jp.unit_type_param_id = utp.unit_type_param_id AND unit_id = '"
+              "SELECT utp.unit_type_id, jp.job_id, jp.unit_type_param_id, jp.value FROM acs.job_param jp, acs.unit_type_param utp WHERE jp.unit_type_param_id = utp.unit_type_param_id AND unit_id = '"
                   + Job.ANY_UNIT_IN_GROUP
                   + "'");
       int paramsCounter = 0;

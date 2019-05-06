@@ -105,7 +105,7 @@ public class File {
         c = dataSource.getConnection();
         s = c.createStatement();
         s.setQueryTimeout(60);
-        rs = s.executeQuery("SELECT content FROM filestore WHERE id = '" + id + "'");
+        rs = s.executeQuery("SELECT content FROM acs.filestore WHERE id = '" + id + "'");
         if (rs.next()) {
           Blob blob = rs.getBlob("content");
           content = blob.getBytes(1, (int) blob.length());

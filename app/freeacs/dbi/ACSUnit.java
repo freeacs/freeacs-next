@@ -245,7 +245,7 @@ public class ACSUnit {
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
       DynamicStatement ds = new DynamicStatement();
-      ds.addSql("SELECT unit_id FROM unit_param_session");
+      ds.addSql("SELECT unit_id FROM acs.unit_param_session");
       ps = ds.makePreparedStatement(connection);
       ps.setQueryTimeout(60);
       rs = ps.executeQuery();
@@ -421,21 +421,21 @@ public class ACSUnit {
       wasAutoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
       DynamicStatement ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM unit_param WHERE unit_id = ?", unit.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.unit_param WHERE unit_id = ?", unit.getId());
       ps = ds.makePreparedStatement(connection);
       ps.setQueryTimeout(60);
       int paramsDeleted = ps.executeUpdate();
       ps.close();
 
       ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM unit_job WHERE unit_id = ?", unit.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.unit_job WHERE unit_id = ?", unit.getId());
       ps = ds.makePreparedStatement(connection);
       ps.setQueryTimeout(60);
       int unitJobsDeleted = ps.executeUpdate();
       ps.close();
 
       ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM unit WHERE unit_id = ?", unit.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.unit WHERE unit_id = ?", unit.getId());
       ps = ds.makePreparedStatement(connection);
       ps.setQueryTimeout(60);
       int rowsDeleted = ps.executeUpdate();
@@ -493,7 +493,7 @@ public class ACSUnit {
       int counter = 0;
       int upDeleted = 0;
       for (String unitId : unitMap.keySet()) {
-        sql = "DELETE FROM unit_param WHERE unit_id = '" + unitId + "'";
+        sql = "DELETE FROM acs.unit_param WHERE unit_id = '" + unitId + "'";
         upDeleted += s.executeUpdate(sql);
         if (counter > 0 && counter % 100 == 0) {
           connection.commit();
@@ -507,7 +507,7 @@ public class ACSUnit {
               + "("
               + upDeleted
               + " parameters deleted)");
-      sql = "DELETE FROM unit WHERE profile_id = " + profile.getId();
+      sql = "DELETE FROM acs.unit WHERE profile_id = " + profile.getId();
       int rowsDeleted = s.executeUpdate(sql);
       logger.info(
           "Deleted all units in for profile "
@@ -554,7 +554,7 @@ public class ACSUnit {
         Integer utpId = unitParameter.getParameter().getUnittypeParameter().getId();
         String unitId = unitParameter.getUnitId();
         sql =
-            "DELETE FROM unit_param WHERE unit_id = '"
+            "DELETE FROM acs.unit_param WHERE unit_id = '"
                 + unitId
                 + "' AND unit_type_param_id = "
                 + utpId;
@@ -600,7 +600,7 @@ public class ACSUnit {
       connection.setAutoCommit(false);
       s = connection.createStatement();
       int rowsDeleted = 0;
-      sql = "DELETE FROM unit_param_session WHERE unit_id = '" + unit.getId() + "'";
+      sql = "DELETE FROM acs.unit_param_session WHERE unit_id = '" + unit.getId() + "'";
       s.setQueryTimeout(60);
       rowsDeleted += s.executeUpdate(sql);
       if (rowsDeleted > 0) {
@@ -635,7 +635,7 @@ public class ACSUnit {
       s = connection.createStatement();
       int rowsDeleted = 0;
       for (int i = 0; i < unitIds.size(); i++) {
-        sql = "DELETE FROM unit_param WHERE unit_id = '" + unitIds.get(i) + "'";
+        sql = "DELETE FROM acs.unit_param WHERE unit_id = '" + unitIds.get(i) + "'";
         s.setQueryTimeout(60);
         int upDeleted = s.executeUpdate(sql);
         logger.info(
@@ -644,7 +644,7 @@ public class ACSUnit {
                 + "("
                 + upDeleted
                 + " parameters deleted)");
-        sql = "DELETE FROM unit WHERE unit_id = '" + unitIds.get(i) + "'";
+        sql = "DELETE FROM acs.unit WHERE unit_id = '" + unitIds.get(i) + "'";
         s.setQueryTimeout(60);
         rowsDeleted += s.executeUpdate(sql);
         SyslogClient.info(unitIds.get(i), "Deleted unit", syslog);

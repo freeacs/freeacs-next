@@ -78,7 +78,7 @@ public class Permissions {
     try {
       c = dataSource.getConnection();
       DynamicStatement ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM permission_ WHERE id = ?", permission.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.permission_ WHERE id = ?", permission.getId());
       ps = ds.makePreparedStatement(c);
       ps.executeUpdate();
     } catch (SQLException sqlex) {

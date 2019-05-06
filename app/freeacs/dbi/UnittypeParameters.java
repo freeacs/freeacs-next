@@ -283,7 +283,7 @@ public class UnittypeParameters {
         }
 
         if (unittypeParameter.getId() == null) {
-          ds.addSql("INSERT INTO unit_type_param (unit_type_id, name, flags) VALUES (?,?,?)");
+          ds.addSql("INSERT INTO acs.unit_type_param (unit_type_id, name, flags) VALUES (?,?,?)");
           ds.addArguments(
               unittype.getId(), unittypeParameter.getName(), unittypeParameter.getFlag().getFlag());
           ps = ds.makePreparedStatement(c, "unit_type_param_id");
@@ -337,7 +337,7 @@ public class UnittypeParameters {
     }
     UnittypeParameterValues values = unittypeParameter.getValues();
     if (values.getType().equals(UnittypeParameterValues.REGEXP) && values.getPattern() != null) {
-      sql = "INSERT INTO unit_type_param_value ";
+      sql = "INSERT INTO acs.unit_type_param_value ";
       sql += "(unit_type_param_id, value, priority, type) VALUES (";
       sql += unittypeParameter.getId() + ", '";
       String pattern = values.getPattern().toString().replaceAll("\\\\", "\\\\\\\\");
@@ -347,7 +347,7 @@ public class UnittypeParameters {
     } else if (values.getType().equals(UnittypeParameterValues.ENUM)
         && !values.getValues().isEmpty()) {
       for (int i = 0; i < values.getValues().size(); i++) {
-        sql = "INSERT INTO unit_type_param_value ";
+        sql = "INSERT INTO acs.unit_type_param_value ";
         sql += "(unit_type_param_id, value, priority, type) VALUES (";
         sql += unittypeParameter.getId() + ", '";
         sql += values.getValues().get(i) + "', " + i + ", '" + UnittypeParameterValues.ENUM + "')";

@@ -101,7 +101,7 @@ public class ProfileParameters {
     Connection c = acs.getDataSource().getConnection();
     try {
       s = c.createStatement();
-      sql = "DELETE FROM profile_param WHERE ";
+      sql = "DELETE FROM acs.profile_param WHERE ";
       sql += "profile_id = " + profileParameter.getProfile().getId() + " AND ";
       sql += "unit_type_param_id = " + profileParameter.getUnittypeParameter().getId();
       s.setQueryTimeout(60);

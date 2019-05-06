@@ -45,7 +45,7 @@ public class Heartbeats {
     PreparedStatement ps = null;
     try {
       InsertOrUpdateStatement ious =
-          new InsertOrUpdateStatement("heartbeat", new Field("id", heartbeat.getId()));
+          new InsertOrUpdateStatement("acs.heartbeat", new Field("id", heartbeat.getId()));
       ious.addField(new Field("name", heartbeat.getName()));
       ious.addField(new Field("unit_type_id", heartbeat.getUnittype().getId()));
       ious.addField(new Field("heartbeat_expression", heartbeat.getExpression()));

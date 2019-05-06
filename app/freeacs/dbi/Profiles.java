@@ -54,7 +54,7 @@ public class Profiles {
     Connection c = acs.getDataSource().getConnection();
     try {
       s = c.createStatement();
-      sql = "DELETE FROM profile WHERE ";
+      sql = "DELETE FROM acs.profile WHERE ";
       sql += "profile_id = " + profile.getId();
       s.setQueryTimeout(60);
       int rowsDeleted = s.executeUpdate(sql);
@@ -99,7 +99,7 @@ public class Profiles {
     try {
       s = c.createStatement();
       if (profile.getId() == null) {
-        sql = "INSERT INTO profile (unit_type_id, profile_name) VALUES (";
+        sql = "INSERT INTO acs.profile (unit_type_id, profile_name) VALUES (";
         sql += profile.getUnittype().getId() + ", ";
         sql += "'" + profile.getName() + "')";
         s.setQueryTimeout(60);

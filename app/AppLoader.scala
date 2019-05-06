@@ -11,6 +11,7 @@ import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
 import play.api.db.evolutions.EvolutionsComponents
+import play.api.db.slick.{DbName, SlickComponents}
 
 class AppComponents(context: Context)
     extends BuiltInComponentsFromContext(context)
@@ -18,7 +19,8 @@ class AppComponents(context: Context)
     with AssetsComponents
     with DBComponents
     with EvolutionsComponents
-    with HikariCPComponents {
+    with HikariCPComponents
+    with SlickComponents {
 
   applicationEvolutions
 

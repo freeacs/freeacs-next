@@ -53,7 +53,7 @@ public class ACSVersionCheck {
       try {
         s = c.createStatement();
         s.setQueryTimeout(60);
-        rs = s.executeQuery("SELECT * FROM trigger_ WHERE id = -1");
+        rs = s.executeQuery("SELECT * FROM acs.trigger_ WHERE id = -1");
         triggerSupported = true;
         rs.close();
       } catch (Throwable t) {
@@ -63,14 +63,14 @@ public class ACSVersionCheck {
       /* implies both an operator column and a parameter type column (and removal of is_equal column) */
       s = c.createStatement();
       s.setQueryTimeout(10);
-      rs = s.executeQuery("SELECT * FROM user_ WHERE id = -1");
+      rs = s.executeQuery("SELECT * FROM acs.user_ WHERE id = -1");
       adminSupported = existsColum(rs.getMetaData(), "is_admin");
       rs.close();
 
       try {
         s = c.createStatement();
         s.setQueryTimeout(60);
-        rs = s.executeQuery("SELECT * FROM script_execution WHERE id = -1");
+        rs = s.executeQuery("SELECT * FROM acs.script_execution WHERE id = -1");
         scriptExecutionSupported = true;
         rs.close();
       } catch (Throwable t) {
@@ -80,7 +80,7 @@ public class ACSVersionCheck {
       try {
         s = c.createStatement();
         s.setQueryTimeout(60);
-        rs = s.executeQuery("SELECT * FROM unit_param_session WHERE unit_id = -1");
+        rs = s.executeQuery("SELECT * FROM acs.unit_param_session WHERE unit_id = -1");
         unitParamSessionSupported = true;
         rs.close();
       } catch (Throwable t) {
@@ -91,7 +91,7 @@ public class ACSVersionCheck {
         /* implies both an operator column and a parameter type column (and removal of is_equal column) */
         s = c.createStatement();
         s.setQueryTimeout(10);
-        rs = s.executeQuery("SELECT * FROM heartbeat WHERE id = -1");
+        rs = s.executeQuery("SELECT * FROM acs.heartbeat WHERE id = -1");
         heartbeatSupported = true;
         rs.close();
       } catch (Throwable t) {
@@ -100,13 +100,13 @@ public class ACSVersionCheck {
 
       s = c.createStatement();
       s.setQueryTimeout(10);
-      rs = s.executeQuery("SELECT * FROM syslog_event WHERE id = -1");
+      rs = s.executeQuery("SELECT * FROM acs.syslog_event WHERE id = -1");
       syslogEventReworkSupported = existsColum(rs.getMetaData(), "filestore_id");
       rs.close();
 
       s = c.createStatement();
       s.setQueryTimeout(10);
-      rs = s.executeQuery("SELECT * FROM filestore WHERE id = -1");
+      rs = s.executeQuery("SELECT * FROM acs.filestore WHERE id = -1");
       fileReworkSupported = existsColum(rs.getMetaData(), "owner");
       rs.close();
 

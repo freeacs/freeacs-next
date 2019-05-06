@@ -117,7 +117,7 @@ public class Users {
     try {
       c = dataSource.getConnection();
       DynamicStatement ds = new DynamicStatement();
-      ds.addSqlAndArguments("DELETE FROM user_ WHERE id = ?", delete.getId());
+      ds.addSqlAndArguments("DELETE FROM acs.user_ WHERE id = ?", delete.getId());
       ps = ds.makePreparedStatement(c);
       ps.executeUpdate();
       nameMap.remove(delete.getUsername());
@@ -171,7 +171,7 @@ public class Users {
       c = dataSource.getConnection();
       DynamicStatement ds = new DynamicStatement();
       if (addOrChange.getId() == null) {
-        ds.addSql("INSERT INTO user_ (username, secret, fullname, accesslist");
+        ds.addSql("INSERT INTO acs.user_ (username, secret, fullname, accesslist");
         ds.addArguments(
             addOrChange.getUsername(),
             addOrChange.getSecret(),
@@ -207,7 +207,7 @@ public class Users {
         idMap.put(addOrChange.getId(), addOrChange);
       } else if (allowAccessTo(addOrChange, requestedBy)) {
         ds.addSqlAndArguments(
-            "UPDATE user_ SET username = ?, secret = ?, ",
+            "UPDATE acs.user_ SET username = ?, secret = ?, ",
             addOrChange.getUsername(),
             addOrChange.getSecret());
         ds.addSqlAndArguments(
@@ -307,7 +307,7 @@ public class Users {
     try {
       c = dataSource.getConnection();
       s = c.createStatement();
-      ResultSet rs = s.executeQuery("SELECT * FROM user_");
+      ResultSet rs = s.executeQuery("SELECT * FROM acs.user_");
       Map<Integer, User> tmpIdMap = new HashMap<>();
       Map<String, User> tmpNameMap = new TreeMap<>();
       while (rs.next()) {
@@ -328,7 +328,7 @@ public class Users {
         tmpIdMap.put(id, user);
         tmpNameMap.put(username, user);
       }
-      rs = s.executeQuery("SELECT * FROM permission_");
+      rs = s.executeQuery("SELECT * FROM acs.permission_");
       while (rs.next()) {
         Integer id = rs.getInt("id");
         Integer userId = rs.getInt("user_id");

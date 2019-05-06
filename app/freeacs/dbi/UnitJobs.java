@@ -362,7 +362,7 @@ public class UnitJobs {
     List<UnitJob> unitJobs = new ArrayList<>();
     try {
       s = c.createStatement();
-      String sql = "SELECT * FROM unit_job ";
+      String sql = "SELECT * FROM acs.unit_job ";
       if (processed) {
         sql += "WHERE processed = 1 ";
         if (job != null) {
