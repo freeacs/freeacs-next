@@ -39,7 +39,7 @@ slick := {
   val pwd = sys.env.getOrElse("PLAY_DB_PASSWORD", "acs")
   val jdbcDriver = "com.mysql.jdbc.Driver"
   val slickDriver = "slick.jdbc.MySQLProfile"
-  val pkg = "dao"
+  val pkg = "daos"
   val cp = (dependencyClasspath in Compile).value
   val s = streams.value
 

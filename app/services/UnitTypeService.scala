@@ -12,7 +12,7 @@ class UnitTypeService(protected val dbConfig: DatabaseConfig[JdbcProfile], cc: C
 
   import dbConfig.profile.api._
   import dbConfig._
-  import dao.Tables._
+  import daos.Tables._
 
   def create(unitType: Unittype): Future[_] = {
     for {
