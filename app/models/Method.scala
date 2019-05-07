@@ -6,7 +6,6 @@ sealed abstract class Method(val name: String) { self =>
 }
 
 object Method {
-  case object EM   extends Method("")
   case object IN   extends Method("Inform")
   case object INr  extends Method("InformResponse")
   case object ATC  extends Method("AutonomousTransferComplete")
@@ -26,7 +25,7 @@ object Method {
   case object DO   extends Method("Download")
   case object DOr  extends Method("DownloadResponse")
 
-  val values = Seq(EM, IN, INr, ATC, TC, GPV, GPVr, GPN, GPNr, SPV, SPVr, RE, REr, FR, FRr, GM, GMr, DO, DOr)
+  val values = Seq(IN, INr, ATC, TC, GPV, GPVr, GPN, GPNr, SPV, SPVr, RE, REr, FR, FRr, GM, GMr, DO, DOr)
 
   def fromName(name: String): Option[Method] =
     values.find(_.name == name)

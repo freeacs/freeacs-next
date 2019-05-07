@@ -12,6 +12,8 @@ scalaVersion := "2.12.2"
 
 val slickVersion = "3.3.0"
 
+scalacOptions += "-Xfatal-warnings"
+
 libraryDependencies ++= Seq( evolutions, jdbc , ehcache , ws , specs2 % Test , guice )
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.9"
 libraryDependencies += "org.jfree" % "jfreechart" % "1.5.0"
