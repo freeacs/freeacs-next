@@ -16,7 +16,6 @@ class AppComponents(context: Context)
     with AppControllersConfig {
 
   override val httpFilters = Nil
-  override val Action      = defaultActionBuilder
 
   override val router: Router = Router.from {
     case GET(p"/")                  => dashboardController.index
