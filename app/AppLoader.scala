@@ -25,25 +25,23 @@ class AppComponents(context: Context)
 
   applicationEvolutions
 
-  override val httpFilters = Nil
-  override val Action      = defaultActionBuilder
-
-  lazy val dbConf = slickApi.dbConfig[JdbcProfile](DbName("default"))
-
-  val config              = ConfigFactory.load()
-  val properties          = new Properties(config)
-  val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
-  val baseCache           = new BaseCache(defaultCacheApi.sync)
-  val unitTypeService     = new UnitTypeService(dbConf)
-  val profileService      = new ProfileService(dbConf)
-  val unitService         = new UnitService(dbConf)
-  val unitController      = new UnitController(controllerComponents, unitService, profileService, unitTypeService)
-  val unitTypeController  = new UnitTypeController(controllerComponents, unitTypeService)
-  val profileController   = new ProfileController(controllerComponents, profileService, unitTypeService)
-  val dashboardController = new DashboardController(controllerComponents, dbiHolder)
-  val healthController    = new HealthController(controllerComponents, dbiHolder)
-  val tr069Controller =
-    new Tr069Controller(controllerComponents, properties, baseCache, config, dbiHolder, unitService)
+  override val httpFilters     = Nil
+  override val Action          = defaultActionBuilder
+  lazy val config              = ConfigFactory.load()
+  lazy val dbConf              = slickApi.dbConfig[JdbcProfile](DbName("default"))
+  lazy val cc                  = controllerComponents
+  lazy val baseCache           = new BaseCache(defaultCacheApi.sync)
+  lazy val unitTypeService     = new UnitTypeService(dbConf)
+  lazy val profileService      = new ProfileService(dbConf)
+  lazy val unitService         = new UnitService(dbConf)
+  lazy val unitController      = new UnitController(cc, unitService, profileService, unitTypeService)
+  lazy val unitTypeController  = new UnitTypeController(cc, unitTypeService)
+  lazy val profileController   = new ProfileController(cc, profileService, unitTypeService)
+  lazy val dashboardController = new DashboardController(cc, unitService)
+  lazy val healthController    = new HealthController(cc)
+  lazy val properties          = new Properties(config)
+  lazy val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
+  lazy val tr069Controller     = new Tr069Controller(cc, properties, baseCache, config, dbiHolder, unitService)
 
   override val router: Router = Router.from {
     case GET(p"/")                  => dashboardController.index

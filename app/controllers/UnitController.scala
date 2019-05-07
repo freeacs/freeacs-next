@@ -6,7 +6,7 @@ import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class UnitController(
     cc: ControllerComponents,
@@ -29,20 +29,18 @@ class UnitController(
   }
 
   def postCreate = Action.async { implicit request =>
-    form.bindFromRequest.fold(
-      formWithErrors => {
-        for {
-          unitTypeList <- unitTypeService.list
-          profileList  <- profileService.list
-        } yield
-          BadRequest(views.html.templates.unitCreate(formWithErrors, unitTypeList.toList, profileList.toList))
-      },
-      formData => {
-        (for {
-          unitTypeList <- unitTypeService.list
-          profileList  <- profileService.list
-        } yield (unitTypeList, profileList)).flatMap {
-          case (unitTypeList, profileList) =>
+    // Should use for yield here, but two flatMaps will have to suffice for now
+    unitTypeService.list.flatMap(unitTypeList => {
+      profileService.list.flatMap(profileList => {
+        form.bindFromRequest.fold(
+          formWithErrors => {
+            Future.successful(
+              BadRequest(
+                views.html.templates.unitCreate(formWithErrors, unitTypeList.toList, profileList.toList)
+              )
+            )
+          },
+          formData => {
             unitService
               .create(formData.unitId, formData.unitTypeId.toInt, formData.profileId.toInt)
               .map(
@@ -60,9 +58,10 @@ class UnitController(
                     "failure" -> s"Failed to create Unit ${formData.unitId}: ${e.getMessage}"
                   )
               }
-        }
-      }
-    )
+          }
+        )
+      })
+    })
   }
 
   def overview = Action.async {

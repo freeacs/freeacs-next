@@ -1,17 +1,15 @@
 package controllers
 
-import freeacs.dbi.DBIHolder
 import play.api.mvc._
+import services.UnitService
 
-import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
 
-class DashboardController(cc: ControllerComponents, dbiHolder: DBIHolder) extends AbstractController(cc) {
+class DashboardController(cc: ControllerComponents, unitService: UnitService)(implicit ec: ExecutionContext)
+    extends AbstractController(cc) {
 
-  def index = Action {
-    val dbi          = dbiHolder.dbi
-    val unitTypeList = dbi.getAcs.getUnittypes.getUnittypes.toList.asJava
-    val unitCount    = dbi.getACSUnit.getUnitCount(unitTypeList)
-    Ok(views.html.templates.dashboard(unitCount))
+  def index = Action.async {
+    unitService.count.map(unitCount => Ok(views.html.templates.dashboard(unitCount)))
   }
 
 }

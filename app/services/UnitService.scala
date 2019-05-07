@@ -20,6 +20,9 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionC
   import dbConfig._
   import dbConfig.profile.api._
 
+  def count: Future[Int] =
+    db.run(UnitDao.length.result)
+
   def create(unitId: String, unitTypeId: Int, profileId: Int): Future[Int] =
     db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId))
 
@@ -37,24 +40,26 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionC
           t =>
             new freeacs.dbi.Unit(
               t._1._1.unitId,
-              unitTypeRowToUnittype(t._2),
+              new Unittype(
+                t._2.unitTypeId,
+                t._2.unitTypeName,
+                t._2.vendorName.orNull,
+                t._2.description.orNull,
+                ProvisioningProtocol.valueOf(t._2.protocol)
+              ),
               new Profile(
                 t._1._2.profileId,
                 t._1._2.profileName,
-                unitTypeRowToUnittype(t._2)
+                new Unittype(
+                  t._2.unitTypeId,
+                  t._2.unitTypeName,
+                  t._2.vendorName.orNull,
+                  t._2.description.orNull,
+                  ProvisioningProtocol.valueOf(t._2.protocol)
+                )
               )
           )
         )
-    )
-  }
-
-  private def unitTypeRowToUnittype(unitTypeRow: _root_.daos.Tables.UnitTypeRow) = {
-    new Unittype(
-      unitTypeRow.unitTypeId,
-      unitTypeRow.unitTypeName,
-      unitTypeRow.vendorName.orNull,
-      unitTypeRow.description.orNull,
-      ProvisioningProtocol.valueOf(unitTypeRow.protocol)
     )
   }
 
