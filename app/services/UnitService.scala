@@ -7,7 +7,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
+class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
   import daos.Tables.{
     Unit => UnitDao,
@@ -17,16 +17,17 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionC
     UnitParam => UnitParamDao,
     UnitTypeParam => UnitTypeParamDao
   }
+
   import dbConfig._
   import dbConfig.profile.api._
 
-  def count: Future[Int] =
+  def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)
 
-  def create(unitId: String, unitTypeId: Int, profileId: Int): Future[Int] =
+  def create(unitId: String, unitTypeId: Int, profileId: Int)(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId))
 
-  def list: Future[Seq[freeacs.dbi.Unit]] = {
+  def list(implicit ec: ExecutionContext): Future[Seq[freeacs.dbi.Unit]] = {
     db.run(
       for {
         result <- UnitDao
@@ -63,7 +64,7 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionC
     )
   }
 
-  def getSecret(unitId: String): Future[Option[String]] = {
+  def getSecret(unitId: String)(implicit ec: ExecutionContext): Future[Option[String]] = {
     db.run(for {
       result <- UnitParamDao
                  .join(UnitTypeParamDao)

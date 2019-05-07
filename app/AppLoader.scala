@@ -1,48 +1,22 @@
+import config._
 import controllers._
-import services.{ProfileService, UnitService, UnitTypeService}
-import freeacs.dbi.DBIHolder
-import freeacs.tr069.Properties
-import freeacs.tr069.base.BaseCache
-import com.typesafe.config.ConfigFactory
 import play.api.ApplicationLoader.Context
-import play.api.cache.ehcache.EhCacheComponents
-import play.api.db.{DBComponents, HikariCPComponents}
 import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
-import play.api.db.evolutions.EvolutionsComponents
-import play.api.db.slick.{DbName, SlickComponents}
-import slick.jdbc.JdbcProfile
+import views.Dashboard
 
 class AppComponents(context: Context)
     extends BuiltInComponentsFromContext(context)
-    with EhCacheComponents
     with AssetsComponents
-    with DBComponents
-    with EvolutionsComponents
-    with HikariCPComponents
-    with SlickComponents {
+    with AppCacheConfig
+    with AppConfig
+    with AppDatabaseConfig
+    with AppServicesConfig
+    with AppControllersConfig {
 
-  applicationEvolutions
-
-  override val httpFilters     = Nil
-  override val Action          = defaultActionBuilder
-  lazy val config              = ConfigFactory.load()
-  lazy val dbConf              = slickApi.dbConfig[JdbcProfile](DbName("default"))
-  lazy val cc                  = controllerComponents
-  lazy val baseCache           = new BaseCache(defaultCacheApi.sync)
-  lazy val unitTypeService     = new UnitTypeService(dbConf)
-  lazy val profileService      = new ProfileService(dbConf)
-  lazy val unitService         = new UnitService(dbConf)
-  lazy val unitController      = new UnitController(cc, unitService, profileService, unitTypeService)
-  lazy val tr069Controller     = new Tr069Controller(cc, unitService, profileService, unitTypeService)
-  lazy val unitTypeController  = new UnitTypeController(cc, unitTypeService)
-  lazy val profileController   = new ProfileController(cc, profileService, unitTypeService)
-  lazy val dashboardController = new DashboardController(cc, unitService)
-  lazy val healthController    = new HealthController(cc)
-  lazy val properties          = new Properties(config)
-  lazy val dbiHolder           = new DBIHolder(config, dbApi.database("default"))
-  lazy val oldTr069Ctrl        = new OldTr069Controller(cc, properties, baseCache, config, dbiHolder, unitService)
+  override val httpFilters = Nil
+  override val Action      = defaultActionBuilder
 
   override val router: Router = Router.from {
     case GET(p"/")                  => dashboardController.index
@@ -60,6 +34,7 @@ class AppComponents(context: Context)
     case POST(p"/tr069/prov")       => oldTr069Ctrl.provision
     case POST(p"/test")             => tr069Controller.provision
     case GET(p"/assets/$file*")     => assets.versioned("/public", file)
+    case GET(p"/$path<.*>")         => redirectController.index(path, Dashboard)
   }
 }
 

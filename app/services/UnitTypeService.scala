@@ -5,13 +5,13 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) {
+class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
   import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow}
   import dbConfig._
   import dbConfig.profile.api._
 
-  def create(unitType: Unittype): Future[Int] = {
+  def create(unitType: Unittype)(implicit ec: ExecutionContext): Future[Int] = {
     db.run(
       UnitTypeDao += UnitTypeRow(
         unitType.getId,
@@ -24,7 +24,7 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile])(implicit ec: Execut
     )
   }
 
-  def list: Future[Seq[Unittype]] = {
+  def list(implicit ec: ExecutionContext): Future[Seq[Unittype]] = {
     db.run(for {
       unitTypeRows <- UnitTypeDao.result
       unitTypes = unitTypeRows.map(
