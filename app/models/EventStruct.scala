@@ -1,7 +1,7 @@
 package models
 import scala.xml.Node
 
-case class EventStruct(eventCode: String, commandKey: String) {
+case class EventStruct(eventCode: String, commandKey: Option[String]) {
   lazy val factoryReset               = eventCode.startsWith("0")
   lazy val booted                     = eventCode.startsWith("1")
   lazy val periodic                   = eventCode.startsWith("2")
@@ -16,7 +16,7 @@ object EventStruct {
   def fromNode(node: Seq[Node]): Seq[EventStruct] =
     (node \\ "EventStruct").flatMap { event =>
       (event \\ "EventCode").headOption.map { code =>
-        EventStruct(code.text, (event \\ "CommandKey").headOption.map(_.text).getOrElse(""))
+        EventStruct(code.text, (event \\ "CommandKey").headOption.map(_.text).filter(text => !text.isEmpty))
       }
     }
 }
