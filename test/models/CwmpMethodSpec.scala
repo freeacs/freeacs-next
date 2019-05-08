@@ -1,8 +1,8 @@
 package models
 import org.scalatestplus.play._
 
-class MethodSpec extends PlaySpec {
-  import Method._
+class CwmpMethodSpec extends PlaySpec {
+  import CwmpMethod._
 
   "A method" should {
     "be possible to abbreviate" in {

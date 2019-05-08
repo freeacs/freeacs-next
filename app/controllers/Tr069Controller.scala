@@ -1,8 +1,8 @@
 package controllers
-import models.{EventStruct, Method, ParameterValueStruct}
+import models.{CwmpMethod, EventStruct, HeaderStruct, ParameterValueStruct}
 import play.api.Logging
 import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents, Request}
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,12 +21,14 @@ class Tr069Controller(
   def provision = Action.async { implicit request =>
     (for {
       payload <- request.body.asXml.flatMap(_.headOption)
-      method  <- Method.fromNode(payload)
+      method  <- CwmpMethod.fromNode(payload)
+      header  <- HeaderStruct.fromNode(payload)
     } yield {
       method match {
-        case Method.IN =>
+        case CwmpMethod.IN =>
           val events = EventStruct.fromNode(payload)
           val params = ParameterValueStruct.fromNode(payload)
+          logger.warn(s"Got the following Inform:\n$header\n$events\n$params")
           Future.successful(
             Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
