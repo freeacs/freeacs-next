@@ -10,8 +10,9 @@ case class DeviceIdStruct(
 ) {
   lazy val unitId =
     if (!productClass.underlying.isEmpty)
-      s"${oui.underlying}-${productClass.underlying}-${serialNumber.underlying}"
-    else s"${oui.underlying}-${serialNumber.underlying}"
+      s"$oui-$productClass-$serialNumber"
+    else
+      s"$oui-$serialNumber"
 }
 
 object DeviceIdStruct {
@@ -31,24 +32,32 @@ object DeviceIdStruct {
         SerialNumber(serialNumber.text)
       )).headOption
 
-  class Manufacturer(val underlying: String) extends AnyVal
+  class Manufacturer(val underlying: String) extends AnyVal {
+    override def toString: String = underlying
+  }
   object Manufacturer {
     def apply(v: String): Manufacturer = new Manufacturer(v)
   }
 
-  class OUI(val underlying: String) extends AnyVal
+  class OUI(val underlying: String) extends AnyVal {
+    override def toString: String = underlying
+  }
   object OUI {
     def apply(v: String): OUI = new OUI(v)
   }
 
-  class ProductClass(val underlying: String) extends AnyVal
+  class ProductClass(val underlying: String) extends AnyVal {
+    override def toString: String = underlying
+  }
   object ProductClass {
     import util.UnsafeCharFilter._
     def apply(productClass: String): ProductClass =
       new ProductClass(filterUnsafeChars(productClass))
   }
 
-  class SerialNumber(val underlying: String) extends AnyVal
+  class SerialNumber(val underlying: String) extends AnyVal {
+    override def toString: String = underlying
+  }
   object SerialNumber {
     def apply(v: String): SerialNumber = new SerialNumber(v)
   }

@@ -17,7 +17,7 @@ trait AppControllersConfig {
     new UnitController(controllerComponents, unitService, profileService, unitTypeService)
 
   lazy val tr069Controller =
-    new Tr069Controller(controllerComponents, unitService, profileService, unitTypeService)
+    new Tr069Controller(controllerComponents, unitService, profileService, unitTypeService, cache)
 
   lazy val unitTypeController =
     new UnitTypeController(controllerComponents, unitTypeService)
