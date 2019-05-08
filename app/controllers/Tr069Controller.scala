@@ -21,16 +21,19 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
+  import Tr069Controller._
+
   def provision = Action.async { implicit request =>
     (for {
       payload  <- request.body.asXml.flatMap(_.headOption)
       method   <- CwmpMethod.fromNode(payload)
       header   <- HeaderStruct.fromNode(payload)
       deviceId <- DeviceIdStruct.fromNode(payload)
-      session = request.session.get("uuid").map(_ => request.session).getOrElse {
-        request.session + ("uuid" -> java.util.UUID.randomUUID.toString)
-      }
-      sessionId <- session.get("uuid")
+      rSession <- request.session
+                   .get(SESSION_KEY)
+                   .map(_ => request.session)
+                   .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
+      sessionId <- rSession.get(SESSION_KEY)
     } yield {
       getSessionData(sessionId, header, deviceId, payload).flatMap { sessionData =>
         val result = processRequest(method, sessionData)
@@ -38,7 +41,7 @@ class Tr069Controller(
           cache.set(s"$sessionId-data", result._1).map(_ => result._2)
         else
           Future.successful(result._2)
-      }.map(_.withSession(session))
+      }.map(_.withSession(rSession))
     }).getOrElse {
       logger.warn("Got no payload and no method, assuming empty")
       Future.successful(Ok)
@@ -86,4 +89,8 @@ class Tr069Controller(
           )
         )
     }
+}
+
+object Tr069Controller {
+  val SESSION_KEY = "uuid"
 }
