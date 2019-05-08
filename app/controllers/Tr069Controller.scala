@@ -97,7 +97,7 @@ class Tr069Controller(
     if (sessionData != updateSessionData)
       cache.set(sessionDataKey(sessionId), updateSessionData)
     else
-      Future.successful(Done())
+      Future.successful(Done)
 }
 
 object Tr069Controller {
