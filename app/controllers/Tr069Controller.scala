@@ -23,7 +23,7 @@ class Tr069Controller(
       payload <- request.body.asXml.flatMap(_.headOption)
       method  <- CwmpMethod.fromNode(payload)
       header  <- HeaderStruct.fromNode(payload)
-    } yield {
+    } yield
       method match {
         case CwmpMethod.IN =>
           val events = EventStruct.fromNode(payload)
@@ -42,8 +42,7 @@ class Tr069Controller(
           )
         case _ =>
           Future.successful(NotImplemented)
-      }
-    }).getOrElse {
+      }).getOrElse {
       logger.warn("Got no payload and no method, assuming empty")
       Future.successful(Ok)
     }
