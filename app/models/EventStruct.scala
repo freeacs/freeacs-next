@@ -1,4 +1,5 @@
 package models
+import scala.xml.Node
 
 case class EventStruct(eventCode: String, commandKey: String) {
   lazy val factoryReset               = eventCode.startsWith("0")
@@ -9,4 +10,13 @@ case class EventStruct(eventCode: String, commandKey: String) {
   lazy val transferComplete           = eventCode.startsWith("7")
   lazy val diagnosticsComplete        = eventCode.startsWith("8")
   lazy val autonomousTransferComplete = eventCode.startsWith("10")
+}
+
+object EventStruct {
+  def fromNode(node: Seq[Node]): Seq[EventStruct] =
+    (node \\ "EventStruct").flatMap { event =>
+      (event \\ "EventCode").headOption.map { code =>
+        EventStruct(code.text, (event \\ "CommandKey").headOption.map(_.text).getOrElse(""))
+      }
+    }
 }
