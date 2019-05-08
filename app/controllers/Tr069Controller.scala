@@ -1,4 +1,5 @@
 package controllers
+import akka.Done
 import models._
 import play.api.Logging
 import play.api.cache.AsyncCacheApi
@@ -35,20 +36,18 @@ class Tr069Controller(
                    .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
       sessionId <- rSession.get(SESSION_KEY)
     } yield {
-      getSessionData(sessionId, header, deviceId, payload).flatMap { sessionData =>
-        val result = processRequest(method, sessionData)
-        if (sessionData != result._1)
-          cache.set(sessionDataKey(sessionId), result._1).map(_ => result._2)
-        else
-          Future.successful(result._2)
-      }.map(_.withSession(rSession))
+      for {
+        sessionData                  <- getSessionData(sessionId, header, deviceId, payload)
+        (updatedSessionData, result) <- processRequest(sessionData, method)
+        _                            <- updateSessionData(sessionId, sessionData, updatedSessionData)
+      } yield result.withSession(rSession)
     }).getOrElse {
       logger.warn("Got no payload and no method, assuming empty")
       Future.successful(Ok)
     }
   }
 
-  private def processRequest(method: CwmpMethod, sessionData: SessionData): (SessionData, Result) = {
+  private def processRequest(sessionData: SessionData, method: CwmpMethod): Future[(SessionData, Result)] = {
     method match {
       case CwmpMethod.IN =>
         val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
@@ -62,9 +61,9 @@ class Tr069Controller(
             </soapenv:Body>
           </soapenv:Envelope>
         ).withHeaders("SOAPAction" -> "")
-        (sessionData, response)
+        Future.successful((sessionData, response))
       case _ =>
-        (sessionData, NotImplemented)
+        Future.successful((sessionData, NotImplemented))
     }
   }
 
@@ -89,6 +88,16 @@ class Tr069Controller(
           )
         )
     }
+
+  private def updateSessionData(
+      sessionId: String,
+      sessionData: SessionData,
+      updateSessionData: SessionData
+  ): Future[Done] =
+    if (sessionData != updateSessionData)
+      cache.set(sessionDataKey(sessionId), updateSessionData)
+    else
+      Future.successful(Done())
 }
 
 object Tr069Controller {
