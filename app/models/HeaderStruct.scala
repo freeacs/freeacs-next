@@ -4,17 +4,13 @@ import scala.xml.Node
 case class HeaderStruct(id: String, holdRequests: Boolean, noMoreRequests: Boolean)
 
 object HeaderStruct {
+  import util.XmlHelper._
+
   def fromNode(node: Node): Option[HeaderStruct] =
     (for {
-      headerNode <- node \\ "Header"
-      id         <- (headerNode \\ "ID").map(_.text)
-      holdRequests <- (headerNode \\ "HoldRequests").map(_.text).headOption.orElse(Some("0")).map {
-                       case "1" => true
-                       case "0" => false
-                     }
-      noMoreRequests <- (headerNode \\ "NoMoreRequests").map(_.text).headOption.orElse(Some("0")).map {
-                         case "1" => true
-                         case "0" => false
-                       }
+      headerNode     <- node \\ "Header"
+      id             <- (headerNode \\ "ID").map(_.text)
+      holdRequests   <- getBoolean(headerNode, "HoldRequests")
+      noMoreRequests <- getBoolean(headerNode, "NoMoreRequests")
     } yield HeaderStruct(id, holdRequests, noMoreRequests)).headOption
 }

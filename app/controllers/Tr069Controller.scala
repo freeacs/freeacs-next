@@ -30,10 +30,10 @@ class Tr069Controller(
         request.session + ("uuid" -> java.util.UUID.randomUUID.toString)
       }
       sessionId <- session.get("uuid")
-    } yield
-      method match {
-        case CwmpMethod.IN =>
-          getSessionData(sessionId, header, deviceId, payload).map { sessionData =>
+    } yield {
+      getSessionData(sessionId, header, deviceId, payload).map { sessionData =>
+        method match {
+          case CwmpMethod.IN =>
             val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
             logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
             Ok(
@@ -45,10 +45,11 @@ class Tr069Controller(
                 </soapenv:Body>
               </soapenv:Envelope>
             ).withHeaders("SOAPAction" -> "").withSession(session)
-          }
-        case _ =>
-          Future.successful(NotImplemented)
-      }).getOrElse {
+          case _ =>
+            NotImplemented
+        }
+      }
+    }).getOrElse {
       logger.warn("Got no payload and no method, assuming empty")
       Future.successful(Ok)
     }
@@ -69,9 +70,9 @@ class Tr069Controller(
               sessionId,
               unit,
               header,
+              deviceId,
               EventStruct.fromNode(payload),
-              ParameterValueStruct.fromNode(payload),
-              deviceId
+              ParameterValueStruct.fromNode(payload)
           )
         )
     }
