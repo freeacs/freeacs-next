@@ -1,5 +1,5 @@
 package controllers
-import models.{CwmpMethod, EventStruct, HeaderStruct, ParameterValueStruct}
+import models._
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents}
@@ -20,24 +20,26 @@ class Tr069Controller(
 
   def provision = Action.async { implicit request =>
     (for {
-      payload <- request.body.asXml.flatMap(_.headOption)
-      method  <- CwmpMethod.fromNode(payload)
-      header  <- HeaderStruct.fromNode(payload)
+      payload  <- request.body.asXml.flatMap(_.headOption)
+      method   <- CwmpMethod.fromNode(payload)
+      header   <- HeaderStruct.fromNode(payload)
+      deviceId <- DeviceIdStruct.fromNode(payload)
     } yield
       method match {
         case CwmpMethod.IN =>
           val events = EventStruct.fromNode(payload)
           val params = ParameterValueStruct.fromNode(payload)
-          logger.warn(s"Got the following Inform:\n$header\n$events\n$params")
+          val unitId = deviceId.getUnitId
+          logger.warn(s"Got the following Inform from unit $unitId:\n$header\n$events\n$params")
           Future.successful(
             Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-                <soapenv:Body>
-                  <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-                    <MaxEnvelopes>1</MaxEnvelopes>
-                  </cwmp:InformResponse>
-                </soapenv:Body>
-              </soapenv:Envelope>
+                  <soapenv:Body>
+                    <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+                      <MaxEnvelopes>1</MaxEnvelopes>
+                    </cwmp:InformResponse>
+                  </soapenv:Body>
+                </soapenv:Envelope>
             ).withHeaders("SOAPAction" -> "")
           )
         case _ =>

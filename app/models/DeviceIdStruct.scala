@@ -1,7 +1,9 @@
 package models
 import scala.xml.Node
 
-case class DeviceIdStruct(manufacturer: String, oui: String, productClass: String, serialNumber: String)
+case class DeviceIdStruct(manufacturer: String, oui: String, productClass: String, serialNumber: String) {
+  def getUnitId = if (productClass.isEmpty) s"$oui-$serialNumber" else s"$manufacturer-$oui-$serialNumber"
+}
 
 object DeviceIdStruct {
   import util.UnsafeCharFilter._
