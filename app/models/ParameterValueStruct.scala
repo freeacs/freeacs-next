@@ -7,15 +7,13 @@ case class ParameterValueStruct(name: String, value: Option[String], `type`: Str
 
 object ParameterValueStruct {
   def fromNode(node: Seq[Node]): Seq[ParameterValueStruct] =
-    (node \\ "ParameterValueStruct").flatMap { pvs =>
-      (pvs \\ "Name").headOption.map(
-        name => {
-          ParameterValueStruct(
-            name.text,
-            (pvs \\ "Value").headOption.map(_.text).filter(text => !text.isEmpty),
-            (pvs \\ "Value").headOption.map(_.attributes.asAttrMap("xsi:type")).getOrElse("")
-          )
-        }
+    for {
+      paramNode <- node \\ "ParameterValueStruct"
+      name      <- (paramNode \\ "Name").map(_.text)
+    } yield
+      ParameterValueStruct(
+        name,
+        (paramNode \\ "Value").map(_.text).headOption,
+        (paramNode \\ "Value").map(_.attributes.asAttrMap("xsi:type")).headOption.getOrElse("")
       )
-    }
 }

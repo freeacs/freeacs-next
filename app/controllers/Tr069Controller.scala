@@ -1,5 +1,5 @@
 package controllers
-import models.Method
+import models.{EventStruct, Method, ParameterValueStruct}
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents, Request}
@@ -25,7 +25,8 @@ class Tr069Controller(
     } yield {
       method match {
         case Method.IN =>
-          // TODO implement logic here
+          val events = EventStruct.fromNode(payload)
+          val params = ParameterValueStruct.fromNode(payload)
           Future.successful(
             Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">

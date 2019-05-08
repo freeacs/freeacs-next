@@ -17,9 +17,9 @@ class EventStructSpec extends PlaySpec {
       events(1).commandKey mustBe None
       events(1).booted mustBe true
 
-      events(2).eventCode mustBe "4 VALUE CHANGE"
-      events(2).commandKey mustBe None
-      events(2).valueChange mustBe true
+      events.last.eventCode mustBe "4 VALUE CHANGE"
+      events.last.commandKey mustBe None
+      events.last.valueChange mustBe true
     }
   }
 }

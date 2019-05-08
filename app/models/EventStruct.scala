@@ -14,9 +14,12 @@ case class EventStruct(eventCode: String, commandKey: Option[String]) {
 
 object EventStruct {
   def fromNode(node: Seq[Node]): Seq[EventStruct] =
-    (node \\ "EventStruct").flatMap { event =>
-      (event \\ "EventCode").headOption.map { code =>
-        EventStruct(code.text, (event \\ "CommandKey").headOption.map(_.text).filter(text => !text.isEmpty))
-      }
-    }
+    for {
+      eventNode <- node \\ "EventStruct"
+      eventCode <- eventNode \\ "EventCode"
+    } yield
+      EventStruct(
+        eventCode = eventCode.text,
+        commandKey = (eventNode \\ "CommandKey").headOption.map(_.text).filter(text => !text.isEmpty)
+      )
 }

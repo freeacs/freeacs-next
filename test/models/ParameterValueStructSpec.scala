@@ -28,10 +28,10 @@ class ParameterValueStructSpec extends PlaySpec {
       params(2).`type` mustBe "xsd:string"
       params(2).string mustBe true
 
-      params(3).name mustBe "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
-      params(3).value mustBe Some("V5.2.10P4T26")
-      params(3).`type` mustBe "xsd:string"
-      params(3).string mustBe true
+      params.last.name mustBe "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+      params.last.value mustBe Some("V5.2.10P4T26")
+      params.last.`type` mustBe "xsd:string"
+      params.last.string mustBe true
     }
   }
 }
