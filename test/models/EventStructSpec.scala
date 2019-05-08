@@ -3,9 +3,9 @@ import org.scalatestplus.play.PlaySpec
 
 class EventStructSpec extends PlaySpec {
 
-  "A EventStruct" should {
+  "An EventStruct" should {
     "be able to parse events" in new CwmpContext() {
-      val xml    = mkInform()
+      val xml    = mkIN()
       val events = EventStruct.fromNode(xml)
       events.length mustBe 3
 

@@ -9,7 +9,7 @@ class MethodSpec extends PlaySpec {
       IN.abbr mustBe "IN"
     }
     "be parsed from a valid cwmp message" in new CwmpContext() {
-      val xml = mkInform()
+      val xml = mkIN()
       fromNode(xml) mustBe Some(IN)
     }
   }

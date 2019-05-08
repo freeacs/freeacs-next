@@ -6,8 +6,8 @@ import scala.xml.Node
 class ParameterValueStructSpec extends PlaySpec {
 
   "A ParameterValueStruct" should {
-    "be able to parse parameters" in new CwmpContext() {
-      val inform = mkInform()
+    "be able to parse value parameters" in new CwmpContext() {
+      val inform = mkIN()
       val params = ParameterValueStruct.fromNode(inform)
       params.length mustBe 4
 
