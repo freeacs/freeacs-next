@@ -38,7 +38,7 @@ class Tr069Controller(
       getSessionData(sessionId, header, deviceId, payload).flatMap { sessionData =>
         val result = processRequest(method, sessionData)
         if (sessionData != result._1)
-          cache.set(s"$sessionId-data", result._1).map(_ => result._2)
+          cache.set(sessionDataKey(sessionId), result._1).map(_ => result._2)
         else
           Future.successful(result._2)
       }.map(_.withSession(rSession))
@@ -74,7 +74,7 @@ class Tr069Controller(
       deviceId: DeviceIdStruct,
       payload: Node
   ): Future[SessionData] =
-    cache.getOrElseUpdate[SessionData](s"$sessionId-data") {
+    cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
       unitService
         .find(deviceId.unitId)
         .map(
@@ -93,4 +93,6 @@ class Tr069Controller(
 
 object Tr069Controller {
   val SESSION_KEY = "uuid"
+
+  def sessionDataKey(sessionId: String) = s"$sessionId-data"
 }
