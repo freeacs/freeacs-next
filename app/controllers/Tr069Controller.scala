@@ -29,7 +29,7 @@ class Tr069Controller(
         case CwmpMethod.IN =>
           val events = EventStruct.fromNode(payload)
           val params = ParameterValueStruct.fromNode(payload)
-          val unitId = deviceId.getUnitId
+          val unitId = deviceId.unitId
           logger.warn(s"Got the following Inform from unit $unitId:\n$header\n$events\n$params")
           Future.successful(
             Ok(
