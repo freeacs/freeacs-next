@@ -35,7 +35,7 @@ class Tr069Controller(
     } yield (payload, method, session, sessionId)) match {
       case Some((payload, method, session, sessionId)) =>
         for {
-          header      <- Future.successful(HeaderStruct.fromNode(payload)) ?| BadRequest("Missing header in payload")
+          header      <- getHeader(payload) ?| BadRequest("Missing header in payload")
           sessionData <- getSessionData(sessionId, header, payload) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
           _           <- updateSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
@@ -44,11 +44,14 @@ class Tr069Controller(
     }
   }
 
-  private def getSession(request: Request[AnyContent]) =
+  private def getSession(request: Request[AnyContent]): Option[Session] =
     request.session
       .get(SESSION_KEY)
       .map(_ => request.session)
       .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
+
+  private def getHeader(payload: Node): Future[Option[HeaderStruct]] =
+    Future.successful(HeaderStruct.fromNode(payload))
 
   private def processRequest(
       sessionData: SessionData,
@@ -68,12 +71,12 @@ class Tr069Controller(
             logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
             val result = Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-              <soapenv:Body>
-                <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-                  <MaxEnvelopes>1</MaxEnvelopes>
-                </cwmp:InformResponse>
-              </soapenv:Body>
-            </soapenv:Envelope>
+                <soapenv:Body>
+                  <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+                    <MaxEnvelopes>1</MaxEnvelopes>
+                  </cwmp:InformResponse>
+                </soapenv:Body>
+              </soapenv:Envelope>
             ).withHeaders("SOAPAction" -> "")
             (sessionData, result)
           }
@@ -101,11 +104,7 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(
-      sessionId: String,
-      header: HeaderStruct,
-      payload: Node
-  ): Future[SessionData] =
+  private def getSessionData(sessionId: String, header: HeaderStruct, payload: Node): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
       Future.successful(
         SessionData(
@@ -119,11 +118,7 @@ class Tr069Controller(
       )
     }
 
-  private def updateSessionData(
-      sessionId: String,
-      sessionData: SessionData,
-      updateSessionData: SessionData
-  ): Future[Done] =
+  private def updateSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
     if (sessionData != updateSessionData)
       cache.set(sessionDataKey(sessionId), updateSessionData)
     else
