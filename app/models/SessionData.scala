@@ -2,9 +2,9 @@ package models
 
 case class SessionData(
     sessionId: String,
-    unit: Option[freeacs.dbi.Unit],
     header: HeaderStruct,
-    deviceId: Option[DeviceIdStruct],
-    events: Seq[EventStruct],
-    params: Seq[ParameterValueStruct]
+    unit: Option[freeacs.dbi.Unit] = None,
+    deviceId: Option[DeviceIdStruct] = None,
+    events: Seq[EventStruct] = Seq.empty,
+    params: Seq[ParameterValueStruct] = Seq.empty
 )

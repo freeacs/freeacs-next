@@ -35,8 +35,8 @@ class Tr069Controller(
     } yield (payload, method, session, sessionId)) match {
       case Some((payload, method, session, sessionId)) =>
         for {
-          header      <- getHeader(payload) ?| BadRequest("Missing header in payload")
-          sessionData <- getSessionData(sessionId, header, payload) ?| InternalServerError("Failed to get session")
+          header      <- getHeader(payload) ?| (error => BadRequest(error))
+          sessionData <- getSessionData(sessionId, header) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
           _           <- updateSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
         } yield result._2.withSession(session)
@@ -49,9 +49,6 @@ class Tr069Controller(
       .get(SESSION_KEY)
       .map(_ => request.session)
       .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
-
-  private def getHeader(payload: Node): Future[Option[HeaderStruct]] =
-    Future.successful(HeaderStruct.fromNode(payload))
 
   private def processRequest(
       sessionData: SessionData,
@@ -86,6 +83,12 @@ class Tr069Controller(
     }
   }
 
+  private def getHeader(payload: Node): Either[String, HeaderStruct] =
+    HeaderStruct.fromNode(payload) match {
+      case Some(header) => Right(header)
+      case None         => Left("Missing header in payload")
+    }
+
   private def getEvents(sessionData: SessionData, payload: Node): Either[String, SessionData] =
     EventStruct.fromNode(payload) match {
       case seq: Seq[EventStruct] if seq.nonEmpty => Right(sessionData.copy(events = seq))
@@ -104,18 +107,9 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(sessionId: String, header: HeaderStruct, payload: Node): Future[SessionData] =
+  private def getSessionData(sessionId: String, header: HeaderStruct): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
-      Future.successful(
-        SessionData(
-          sessionId,
-          None,
-          header,
-          None,
-          EventStruct.fromNode(payload),
-          ParameterValueStruct.fromNode(payload)
-        )
-      )
+      Future.successful(SessionData(sessionId, header))
     }
 
   private def updateSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
