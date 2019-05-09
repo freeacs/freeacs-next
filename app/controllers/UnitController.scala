@@ -1,10 +1,9 @@
 package controllers
 
-import freeacs.dbi.{Profile, Unittype}
 import io.kanaka.monadic.dsl._
 import play.api.Logging
-import play.api.i18n.{I18nSupport, MessagesProvider}
-import play.api.mvc.{AbstractController, ControllerComponents, Flash}
+import play.api.i18n.I18nSupport
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
 import views.html.templates.{unitCreate, unitOverview}
@@ -33,17 +32,15 @@ class UnitController(
 
   def postCreate = Action.async { implicit request =>
     for {
-      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-      profileList  <- profileService.list ?| (e => InternalServerError(e))
-      form         <- form.bindFromRequest() ?| (form => BadRequest(unitCreate(form, unitTypeList, profileList)))
-      _            <- unitService.create(form.unitId, form.unitTypeId, form.profileId) ?| (e => failed(form, unitTypeList, profileList, e))
-    } yield Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${form.unitId} was created")
+      unitTypeList <- unitTypeService.list ?| (error => InternalServerError(error))
+      profileList  <- profileService.list ?| (error => InternalServerError(error))
+      data         <- form.bindFromRequest() ?| (form => BadRequest(unitCreate(form, unitTypeList, profileList)))
+      _            <- createUnit(data) ?| (error => InternalServerError(unitCreate(form.fill(data), unitTypeList, profileList, Some(error))))
+    } yield Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${data.unitId} was created")
   }
 
-  private def failed(formData: UnitForm.Unit, unitTypeList: Seq[Unittype], profileList: Seq[Profile], error: String)(
-      implicit messagesProvider: MessagesProvider,
-      flash: Flash
-  ) = InternalServerError(unitCreate(form.fill(formData), unitTypeList, profileList, Some(error)))
+  private def createUnit(data: Unit) =
+    unitService.create(data.unitId, data.unitTypeId, data.profileId)
 
   def overview = Action.async {
     for {

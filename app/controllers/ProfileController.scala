@@ -1,10 +1,9 @@
 package controllers
 
-import freeacs.dbi.Unittype
 import io.kanaka.monadic.dsl._
 import play.api.Logging
-import play.api.i18n.{I18nSupport, MessagesProvider}
-import play.api.mvc.{AbstractController, ControllerComponents, Flash}
+import play.api.i18n.I18nSupport
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitTypeService}
 import views.CreateProfile
 import views.html.templates.{profileCreate, profileOverview}
@@ -31,16 +30,14 @@ class ProfileController(
 
   def postCreate = Action.async { implicit request =>
     for {
-      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-      form         <- form.bindFromRequest() ?| (form => BadRequest(profileCreate(form, unitTypeList.toList)))
-      _            <- profileService.create(form.name, form.unitTypeId) ?| (e => failed(form, unitTypeList, e))
-    } yield Redirect(CreateProfile.url).flashing("success" -> s"The Profile ${form.name} was created")
+      unitTypeList <- unitTypeService.list ?| (error => InternalServerError(error))
+      data         <- form.bindFromRequest() ?| (form => BadRequest(profileCreate(form, unitTypeList.toList)))
+      _            <- createProfile(data) ?| (error => InternalServerError(profileCreate(form.fill(data), unitTypeList, Some(error))))
+    } yield Redirect(CreateProfile.url).flashing("success" -> s"The Profile ${data.name} was created")
   }
 
-  private def failed(formData: ProfileForm.Profile, unitTypeList: Seq[Unittype], error: String)(
-      implicit messagesProvider: MessagesProvider,
-      flash: Flash
-  ) = InternalServerError(profileCreate(form.fill(formData), unitTypeList, Some(error)))
+  private def createProfile(data: ProfileForm.Profile) =
+    profileService.create(data.name, data.unitTypeId)
 
   def overview = Action.async {
     for {

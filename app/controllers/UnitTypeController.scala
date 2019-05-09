@@ -5,8 +5,8 @@ import io.kanaka.monadic.dsl._
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
-import play.api.i18n.{I18nSupport, MessagesProvider}
-import play.api.mvc.{AbstractController, ControllerComponents, Flash}
+import play.api.i18n.I18nSupport
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.UnitTypeService
 import views.CreateUnitType
 import views.html.templates.{unitTypeCreate, unitTypeOverview}
@@ -26,13 +26,13 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
 
   def postCreate = Action.async { implicit request =>
     for {
-      form <- form.bindFromRequest() ?| (form => BadRequest(unitTypeCreate(form)))
-      _    <- unitTypeService.create(form.name, form.vendor, form.description, form.protocol) ?| (e => failed(form, e))
-    } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${form.name} was created")
+      data <- form.bindFromRequest() ?| (form => BadRequest(unitTypeCreate(form)))
+      _    <- createUnitType(data) ?| (error => InternalServerError(unitTypeCreate(form.fill(data), Some(error))))
+    } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${data.name} was created")
   }
 
-  private def failed(formData: UnitTypeForm.UnitType, error: String)(implicit messagesProvider: MessagesProvider, flash: Flash) =
-    InternalServerError(unitTypeCreate(form.fill(formData), Some(error)))
+  private def createUnitType(data: UnitType) =
+    unitTypeService.create(data.name, data.vendor, data.description, data.protocol)
 
   def overview = Action.async {
     for {
