@@ -9,7 +9,7 @@ import play.api.i18n.{I18nSupport, MessagesProvider}
 import play.api.mvc.{AbstractController, ControllerComponents, Flash}
 import services.UnitTypeService
 import views.CreateUnitType
-import views.html.templates.unitTypeCreate
+import views.html.templates.{unitTypeCreate, unitTypeOverview}
 
 import scala.concurrent.ExecutionContext
 
@@ -31,21 +31,13 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${form.name} was created")
   }
 
-  private def failed(formData: UnitTypeForm.UnitType, e: Throwable)(implicit messagesProvider: MessagesProvider, flash: Flash) =
-    InternalServerError(unitTypeCreate(form.fill(formData)))
-      .flashing("failure" -> s"Failed to create Unit Type ${formData.name}: ${e.getMessage}")
+  private def failed(formData: UnitTypeForm.UnitType, error: String)(implicit messagesProvider: MessagesProvider, flash: Flash) =
+    InternalServerError(unitTypeCreate(form.fill(formData))).flashing("failure" -> error)
 
   def overview = Action.async {
-    unitTypeService.list
-      .map(unitTypeList => {
-        Ok(
-          views.html.templates.unitTypeOverview(unitTypeList.toList)
-        )
-      })
-      .recover {
-        case exception: Exception =>
-          InternalServerError(exception.getMessage)
-      }
+    for {
+      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
+    } yield Ok(unitTypeOverview(unitTypeList.toList))
   }
 }
 

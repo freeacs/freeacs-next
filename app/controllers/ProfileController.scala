@@ -25,28 +25,26 @@ class ProfileController(
 
   def viewCreate = Action.async { implicit request =>
     for {
-      unitTypeList <- unitTypeService.list
+      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
     } yield Ok(profileCreate(form, unitTypeList.toList))
   }
 
   def postCreate = Action.async { implicit request =>
     for {
-      unitTypeList <- unitTypeService.list
+      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
       form         <- form.bindFromRequest() ?| (form => BadRequest(profileCreate(form, unitTypeList.toList)))
       _            <- profileService.create(form.name, form.unitTypeId) ?| (e => failed(form, unitTypeList, e))
     } yield Redirect(CreateProfile.url).flashing("success" -> s"The Profile ${form.name} was created")
   }
 
-  private def failed(formData: ProfileForm.Profile, unitTypeList: Seq[Unittype], e: Throwable)(
+  private def failed(formData: ProfileForm.Profile, unitTypeList: Seq[Unittype], error: String)(
       implicit messagesProvider: MessagesProvider,
       flash: Flash
-  ) =
-    InternalServerError(profileCreate(form.fill(formData), unitTypeList))
-      .flashing("failure" -> s"Failed to create profile ${formData.name}: ${e.getMessage}")
+  ) = InternalServerError(profileCreate(form.fill(formData), unitTypeList)).flashing("failure" -> error)
 
   def overview = Action.async {
     for {
-      profileList <- profileService.list
+      profileList <- profileService.list ?| (e => InternalServerError(e))
     } yield Ok(profileOverview(profileList.toList))
   }
 }

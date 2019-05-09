@@ -13,23 +13,31 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
   def create(name: String, vendor: String, desc: String, protocol: ProvisioningProtocol)(
       implicit ec: ExecutionContext
-  ): Future[Int] =
+  ): Future[Either[String, Int]] =
     db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name()))
+      .map(Right.apply)
+      .recoverWith {
+        case e: Exception => Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
+      }
 
-  def list(implicit ec: ExecutionContext): Future[Seq[Unittype]] = {
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[Unittype]]] = {
     db.run(for {
-      unitTypeRows <- UnitTypeDao.result
-      unitTypes = unitTypeRows.map(
-        row =>
-          new Unittype(
-            row.unitTypeId,
-            row.unitTypeName,
-            row.vendorName.orNull,
-            row.description.orNull,
-            ProvisioningProtocol.valueOf(row.protocol)
+        unitTypeRows <- UnitTypeDao.result
+        unitTypes = unitTypeRows.map(
+          row =>
+            new Unittype(
+              row.unitTypeId,
+              row.unitTypeName,
+              row.vendorName.orNull,
+              row.description.orNull,
+              ProvisioningProtocol.valueOf(row.protocol)
+          )
         )
-      )
-    } yield unitTypes)
+      } yield unitTypes)
+      .map(Right.apply)
+      .recoverWith {
+        case e: Exception => Future.successful(Left(s"Failed get unit types: ${e.getLocalizedMessage}"))
+      }
   }
 
 }

@@ -4,7 +4,6 @@ import freeacs.dbi.{Profile, ProvisioningProtocol, Unittype}
 import freeacs.dbi.util.SystemParameters
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-
 import scala.concurrent.{ExecutionContext, Future}
 
 class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
@@ -31,15 +30,21 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
   def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)
 
-  def create(unitId: String, unitTypeId: Int, profileId: Int)(implicit ec: ExecutionContext): Future[Int] =
-    db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId))
+  def create(unitId: String, unitTypeId: Int, profileId: Int)(implicit ec: ExecutionContext): Future[Either[String, Int]] =
+    db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
+      case e: Exception => Future.successful(Left(s"Failed to create unit $unitId: ${e.getLocalizedMessage}"))
+    }
 
-  def list(implicit ec: ExecutionContext): Future[Seq[freeacs.dbi.Unit]] =
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[freeacs.dbi.Unit]]] =
     db.run(
-      for {
-        result <- getUnitQuery.result
-      } yield result.map(mapToUnit)
-    )
+        for {
+          result <- getUnitQuery.result
+        } yield result.map(mapToUnit)
+      )
+      .map(Right.apply)
+      .recoverWith {
+        case e: Exception => Future.successful(Left(s"Failed get units: ${e.getLocalizedMessage}"))
+      }
 
   def getSecret(unitId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     db.run(for {
