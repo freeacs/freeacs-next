@@ -11,18 +11,10 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
   import dbConfig._
   import dbConfig.profile.api._
 
-  def create(unitType: Unittype)(implicit ec: ExecutionContext): Future[Int] = {
-    db.run(
-      UnitTypeDao += UnitTypeRow(
-        unitType.getId,
-        None,
-        unitType.getName,
-        Option(unitType.getVendor),
-        Option(unitType.getDescription),
-        unitType.getProtocol.name()
-      )
-    )
-  }
+  def create(name: String, vendor: String, desc: String, protocol: ProvisioningProtocol)(
+      implicit ec: ExecutionContext
+  ): Future[Int] =
+    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name()))
 
   def list(implicit ec: ExecutionContext): Future[Seq[Unittype]] = {
     db.run(for {

@@ -2,7 +2,7 @@
 @import views.CreateUnit
 @import freeacs.dbi.Profile
 
-@(form: Form[UnitForm.Unit], unitTypes: List[Unittype], profiles: List[Profile])(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(form: Form[UnitForm.Unit], unitTypes: Seq[Unittype], profiles: Seq[Profile])(implicit messagesProvider: MessagesProvider, flash: Flash)
 
 @layouts.default(CreateUnit) {
     <ol class="breadcrumb">

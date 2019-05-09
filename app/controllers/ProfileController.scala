@@ -1,10 +1,10 @@
 package controllers
 
-import freeacs.dbi.{Profile, Unittype}
+import freeacs.dbi.Unittype
 import io.kanaka.monadic.dsl._
 import play.api.Logging
-import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.i18n.{I18nSupport, MessagesProvider}
+import play.api.mvc.{AbstractController, ControllerComponents, Flash}
 import services.{ProfileService, UnitTypeService}
 import views.CreateProfile
 import views.html.templates.{profileCreate, profileOverview}
@@ -33,9 +33,16 @@ class ProfileController(
     for {
       unitTypeList <- unitTypeService.list
       form         <- form.bindFromRequest() ?| (form => BadRequest(profileCreate(form, unitTypeList.toList)))
-      _            <- profileService.create(new Profile(form.name, new Unittype(form.unitTypeId.toInt, null, null, null, null))) ?| InternalServerError
+      _            <- profileService.create(form.name, form.unitTypeId) ?| (e => failed(form, unitTypeList, e))
     } yield Redirect(CreateProfile.url).flashing("success" -> s"The Profile ${form.name} was created")
   }
+
+  private def failed(formData: ProfileForm.Profile, unitTypeList: Seq[Unittype], e: Throwable)(
+      implicit messagesProvider: MessagesProvider,
+      flash: Flash
+  ) =
+    InternalServerError(profileCreate(form.fill(formData), unitTypeList))
+      .flashing("failure" -> s"Failed to create profile ${formData.name}: ${e.getMessage}")
 
   def overview = Action.async {
     for {
@@ -49,16 +56,16 @@ object ProfileForm {
   import play.api.data.Forms._
 
   case class Profile(
-      id: Option[Long] = None,
+      id: Option[Int] = None,
       name: String,
-      unitTypeId: Long
+      unitTypeId: Int
   )
 
   val form = Form(
     mapping(
-      "id"         -> optional(longNumber),
+      "id"         -> optional(number),
       "name"       -> nonEmptyText(minLength = 3),
-      "unitTypeId" -> longNumber
+      "unitTypeId" -> number
     )(Profile.apply)(Profile.unapply)
   )
 }

@@ -4,11 +4,7 @@ import play.api.db.evolutions.EvolutionsComponents
 import play.api.db.slick.{DbName, SlickComponents}
 import slick.jdbc.JdbcProfile
 
-trait AppDatabaseConfig
-    extends DBComponents
-    with EvolutionsComponents
-    with HikariCPComponents
-    with SlickComponents {
+trait AppDatabaseConfig extends DBComponents with EvolutionsComponents with HikariCPComponents with SlickComponents {
   this: AppConfig =>
 
   applicationEvolutions

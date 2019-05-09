@@ -1,15 +1,17 @@
 package controllers
 
-import freeacs.dbi.{ProvisioningProtocol, Unittype}
+import freeacs.dbi.ProvisioningProtocol
+import io.kanaka.monadic.dsl._
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
-import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.api.i18n.{I18nSupport, MessagesProvider}
+import play.api.mvc.{AbstractController, ControllerComponents, Flash}
 import services.UnitTypeService
 import views.CreateUnitType
+import views.html.templates.unitTypeCreate
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeService)(
     implicit ec: ExecutionContext
@@ -23,36 +25,15 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
   }
 
   def postCreate = Action.async { implicit request =>
-    form.bindFromRequest.fold(
-      formWithErrors => {
-        Future.successful(BadRequest(views.html.templates.unitTypeCreate(formWithErrors)))
-      },
-      formData => {
-        unitTypeService
-          .create(
-            new Unittype(
-              formData.name,
-              formData.vendor,
-              formData.description,
-              formData.protocol
-            )
-          )
-          .map(
-            _ =>
-              Redirect(CreateUnitType.url).flashing(
-                "success" -> s"The Unit Type ${formData.name} was created"
-            )
-          )
-          .recover {
-            case e =>
-              logger.error("Failed to create Unit Type", e)
-              InternalServerError(views.html.templates.unitTypeCreate(form)).flashing(
-                "failure" -> s"Failed to create Unit Type ${formData.name}: ${e.getMessage}"
-              )
-          }
-      }
-    )
+    for {
+      form <- form.bindFromRequest() ?| (form => BadRequest(unitTypeCreate(form)))
+      _    <- unitTypeService.create(form.name, form.vendor, form.description, form.protocol) ?| (e => failed(form, e))
+    } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${form.name} was created")
   }
+
+  private def failed(formData: UnitTypeForm.UnitType, e: Throwable)(implicit messagesProvider: MessagesProvider, flash: Flash) =
+    InternalServerError(unitTypeCreate(form.fill(formData)))
+      .flashing("failure" -> s"Failed to create Unit Type ${formData.name}: ${e.getMessage}")
 
   def overview = Action.async {
     unitTypeService.list
