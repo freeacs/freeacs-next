@@ -6,5 +6,6 @@ case class SessionData(
     unit: Option[freeacs.dbi.Unit] = None,
     deviceId: Option[DeviceIdStruct] = None,
     events: Seq[EventStruct] = Seq.empty,
-    params: Seq[ParameterValueStruct] = Seq.empty
+    params: Seq[ParameterValueStruct] = Seq.empty,
+    requests: Seq[CwmpMethod] = Seq.empty
 )

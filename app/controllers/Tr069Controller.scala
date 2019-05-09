@@ -38,7 +38,7 @@ class Tr069Controller(
           header      <- getHeader(payload) ?| (error => BadRequest(error))
           sessionData <- getSessionData(sessionId, header) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
-          _           <- updateSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
+          _           <- putSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
         } yield result._2.withSession(session)
       case _ => Future.successful(Ok)
     }
@@ -55,14 +55,13 @@ class Tr069Controller(
       method: CwmpMethod,
       payload: Node
   ): Future[Either[String, (SessionData, Result)]] = {
-    method match {
+    (method match {
       case CwmpMethod.IN =>
         Future.successful(
           for {
             withDeviceId <- getDeviceId(sessionData, payload)
             withEvents   <- getEvents(withDeviceId, payload)
-            withParams   <- getParams(withEvents, payload)
-            sessionData = withParams
+            sessionData  <- getParams(withEvents, payload)
           } yield {
             val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
             logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
@@ -78,9 +77,13 @@ class Tr069Controller(
             (sessionData, result)
           }
         )
-      case _ =>
+      case otherMethod =>
+        logger.warn(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
         Future.successful(Right((sessionData, NotImplemented)))
-    }
+    }).map(_.map {
+      case (updatedSessionData, result) =>
+        (updatedSessionData.copy(requests = updatedSessionData.requests ++ Seq(method)), result)
+    })
   }
 
   private def getHeader(payload: Node): Either[String, HeaderStruct] =
@@ -112,7 +115,7 @@ class Tr069Controller(
       Future.successful(SessionData(sessionId, header))
     }
 
-  private def updateSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
+  private def putSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
     if (sessionData != updateSessionData)
       cache.set(sessionDataKey(sessionId), updateSessionData)
     else
