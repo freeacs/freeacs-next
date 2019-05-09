@@ -2,7 +2,7 @@
 @import views.CreateUnit
 @import freeacs.dbi.Profile
 
-@(form: Form[UnitForm.Unit], unitTypes: Seq[Unittype], profiles: Seq[Profile])(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(form: Form[UnitForm.Unit], unitTypes: Seq[Unittype], profiles: Seq[Profile], error: Option[String] = None)(implicit messagesProvider: MessagesProvider, flash: Flash)
 
 @layouts.default(CreateUnit) {
     <ol class="breadcrumb">
@@ -19,8 +19,8 @@
                 @b4.text(form("unitId"), '_label -> "UnitId", 'placeholder -> "Enter unitId")
                 @b4.submit('class -> "btn btn-primary"){ Submit }
             }
-            <p style="color: green">@flash.get("success").orNull</p>
-            <p style="color: red">@flash.get("failure").orNull</p>
+            <p style="color: green">@flash.get("success")</p>
+            <p style="color: red">@flash.get("failure").orElse(error)</p>
         </div>
     </div>
 }

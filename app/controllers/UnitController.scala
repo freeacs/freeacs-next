@@ -43,7 +43,7 @@ class UnitController(
   private def failed(formData: UnitForm.Unit, unitTypeList: Seq[Unittype], profileList: Seq[Profile], error: String)(
       implicit messagesProvider: MessagesProvider,
       flash: Flash
-  ) = InternalServerError(unitCreate(form.fill(formData), unitTypeList, profileList)).flashing("failure" -> error)
+  ) = InternalServerError(unitCreate(form.fill(formData), unitTypeList, profileList, Some(error)))
 
   def overview = Action.async {
     for {

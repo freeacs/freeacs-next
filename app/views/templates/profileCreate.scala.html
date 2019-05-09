@@ -2,7 +2,7 @@
 @import freeacs.dbi.Unittype
 @import views.CreateProfile
 
-@(form: Form[ProfileForm.Profile], unitTypes: Seq[Unittype])(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(form: Form[ProfileForm.Profile], unitTypes: Seq[Unittype], error: Option[String] = None)(implicit messagesProvider: MessagesProvider, flash: Flash)
 
 @layouts.default(CreateProfile) {
     <ol class="breadcrumb">
@@ -18,8 +18,8 @@
                 @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
                 @b4.submit('class -> "btn btn-primary"){ Submit }
             }
-            <p style="color: green">@flash.get("success").orNull</p>
-            <p style="color: red">@flash.get("failure").orNull</p>
+            <p style="color: green">@flash.get("success")</p>
+            <p style="color: red">@flash.get("failure").orElse(error)</p>
         </div>
     </div>
 }

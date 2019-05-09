@@ -40,7 +40,7 @@ class ProfileController(
   private def failed(formData: ProfileForm.Profile, unitTypeList: Seq[Unittype], error: String)(
       implicit messagesProvider: MessagesProvider,
       flash: Flash
-  ) = InternalServerError(profileCreate(form.fill(formData), unitTypeList)).flashing("failure" -> error)
+  ) = InternalServerError(profileCreate(form.fill(formData), unitTypeList, Some(error)))
 
   def overview = Action.async {
     for {

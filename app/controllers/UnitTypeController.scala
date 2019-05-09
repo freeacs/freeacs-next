@@ -32,7 +32,7 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
   }
 
   private def failed(formData: UnitTypeForm.UnitType, error: String)(implicit messagesProvider: MessagesProvider, flash: Flash) =
-    InternalServerError(unitTypeCreate(form.fill(formData))).flashing("failure" -> error)
+    InternalServerError(unitTypeCreate(form.fill(formData), Some(error)))
 
   def overview = Action.async {
     for {
