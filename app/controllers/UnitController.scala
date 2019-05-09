@@ -1,12 +1,14 @@
 package controllers
 
+import io.kanaka.monadic.dsl._
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
+import views.html.templates.{unitCreate, unitOverview}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class UnitController(
     cc: ControllerComponents,
@@ -25,56 +27,22 @@ class UnitController(
     for {
       unitTypeList <- unitTypeService.list
       profileList  <- profileService.list
-    } yield Ok(views.html.templates.unitCreate(form, unitTypeList.toList, profileList.toList))
+    } yield Ok(unitCreate(form, unitTypeList.toList, profileList.toList))
   }
 
   def postCreate = Action.async { implicit request =>
-    // Should use for yield here, but two flatMaps will have to suffice for now
-    unitTypeService.list.flatMap(unitTypeList => {
-      profileService.list.flatMap(profileList => {
-        form.bindFromRequest.fold(
-          formWithErrors => {
-            Future.successful(
-              BadRequest(
-                views.html.templates.unitCreate(formWithErrors, unitTypeList.toList, profileList.toList)
-              )
-            )
-          },
-          formData => {
-            unitService
-              .create(formData.unitId, formData.unitTypeId.toInt, formData.profileId.toInt)
-              .map(
-                _ =>
-                  Redirect(CreateUnit.url).flashing(
-                    "success" -> s"The Unit ${formData.unitId} was created"
-                )
-              )
-              .recover {
-                case e =>
-                  logger.error("Failed to create Unit", e)
-                  InternalServerError(
-                    views.html.templates.unitCreate(form, unitTypeList.toList, profileList.toList)
-                  ).flashing(
-                    "failure" -> s"Failed to create Unit ${formData.unitId}: ${e.getMessage}"
-                  )
-              }
-          }
-        )
-      })
-    })
+    for {
+      unitTypeList <- unitTypeService.list
+      profileList  <- profileService.list
+      form         <- form.bindFromRequest() ?| (form => BadRequest(unitCreate(form, unitTypeList.toList, profileList.toList)))
+      _            <- unitService.create(form.unitId, form.unitTypeId.toInt, form.profileId.toInt) ?| InternalServerError
+    } yield Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${form.unitId} was created")
   }
 
   def overview = Action.async {
-    unitService.list
-      .map(unitList => {
-        Ok(
-          views.html.templates.unitOverview(unitList.toList)
-        )
-      })
-      .recover {
-        case exception: Exception =>
-          InternalServerError(exception.getMessage)
-      }
+    for {
+      unitTypeList <- unitService.list
+    } yield Ok(unitOverview(unitTypeList.toList))
   }
 }
 

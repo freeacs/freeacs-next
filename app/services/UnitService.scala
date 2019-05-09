@@ -56,11 +56,7 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
     } yield if (result.isEmpty) None else result.head)
 
   private def getUnitQuery =
-    UnitDao
-      .join(ProfileDao)
-      .on(_.profileId === _.profileId)
-      .join(UnitTypeDao)
-      .on(_._1.unitTypeId === _.unitTypeId)
+    UnitDao.join(ProfileDao).on(_.profileId === _.profileId).join(UnitTypeDao).on(_._1.unitTypeId === _.unitTypeId)
 
   private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
     new freeacs.dbi.Unit(
