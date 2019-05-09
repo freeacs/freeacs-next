@@ -5,11 +5,13 @@ sealed trait AcsProtocol { self =>
 }
 
 object AcsProtocol {
-  case object Tr069 extends AcsProtocol
+  case object TR069 extends AcsProtocol
 
-  // Can throw match exception
+  val values = Seq(TR069)
+
+  def fromString(protocol: String): Option[AcsProtocol] =
+    values.find(_.name == protocol)
+
   def unsafeFromString(protocol: String): AcsProtocol =
-    protocol match {
-      case Tr069.name => Tr069
-    }
+    fromString(protocol).get
 }

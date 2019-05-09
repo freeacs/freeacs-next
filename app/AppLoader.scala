@@ -29,9 +29,8 @@ class AppComponents(context: Context)
     case GET(p"/unit/create")       => unitController.viewCreate
     case POST(p"/unit/create")      => unitController.postCreate
     case GET(p"/unit/overview")     => unitController.overview
-    case POST(p"/tr069")            => oldTr069Ctrl.provision
-    case POST(p"/tr069/prov")       => oldTr069Ctrl.provision
-    case POST(p"/test")             => tr069Controller.provision
+    case POST(p"/tr069")            => tr069Controller.provision
+    case POST(p"/tr069/prov")       => tr069Controller.provision
     case GET(p"/assets/$file*")     => assets.versioned("/public", file)
     case GET(p"/$path<.*>")         => redirectController.index(path, Dashboard)
   }

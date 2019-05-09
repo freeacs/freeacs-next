@@ -1,9 +1,9 @@
 package services
 
-import freeacs.dbi.{Profile, ProvisioningProtocol, Unittype}
-import freeacs.dbi.util.SystemParameters
+import models._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
@@ -20,7 +20,7 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
   import dbConfig._
   import dbConfig.profile.api._
 
-  def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[freeacs.dbi.Unit]] =
+  def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
     db.run(
       for {
         result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
@@ -35,7 +35,7 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
       case e: Exception => Future.successful(Left(s"Failed to create unit $unitId: ${e.getLocalizedMessage}"))
     }
 
-  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[freeacs.dbi.Unit]]] =
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnit]]] =
     db.run(
         for {
           result <- getUnitQuery.result
@@ -54,7 +54,7 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
                    (up, utp) =>
                      up.unitTypeParamId === utp.unitTypeParamId
                        && up.unitId === unitId
-                       && utp.name === SystemParameters.SECRET
+                       && utp.name === AcsParameter.secret
                  )
                  .map(_._1.value)
                  .result
@@ -64,24 +64,17 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
     UnitDao.join(ProfileDao).on(_.profileId === _.profileId).join(UnitTypeDao).on(_._1.unitTypeId === _.unitTypeId)
 
   private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
-    new freeacs.dbi.Unit(
+    AcsUnit(
       t._1._1.unitId,
-      new Unittype(
-        t._2.unitTypeId,
-        t._2.unitTypeName,
-        t._2.vendorName.orNull,
-        t._2.description.orNull,
-        ProvisioningProtocol.valueOf(t._2.protocol)
-      ),
-      new Profile(
-        t._1._2.profileId,
+      AcsProfile(
+        Some(t._1._2.profileId),
         t._1._2.profileName,
-        new Unittype(
-          t._2.unitTypeId,
+        AcsUnitType(
+          Some(t._2.unitTypeId),
           t._2.unitTypeName,
           t._2.vendorName.orNull,
           t._2.description.orNull,
-          ProvisioningProtocol.valueOf(t._2.protocol)
+          AcsProtocol.unsafeFromString(t._2.protocol)
         )
       )
     )

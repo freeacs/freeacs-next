@@ -1,6 +1,5 @@
 package config
 import controllers._
-import freeacs.dbi.DBIHolder
 import play.api.BuiltInComponentsFromContext
 
 trait AppControllersConfig {
@@ -26,14 +25,4 @@ trait AppControllersConfig {
 
   lazy val healthController =
     new HealthController(controllerComponents)
-
-  lazy val oldTr069Ctrl =
-    new OldTr069Controller(
-      controllerComponents,
-      properties,
-      baseCache,
-      config,
-      new DBIHolder(config, playDb),
-      unitService
-    )
 }

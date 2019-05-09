@@ -1,7 +1,6 @@
 @import views.UnitTypeOverview
-@import freeacs.dbi.Unittype
 
-@(unitTypes: List[Unittype])
+@(unitTypes: Seq[AcsUnitType])
 
 @layouts.default(UnitTypeOverview) {
     <ol class="breadcrumb">
@@ -33,10 +32,10 @@
                     <tbody>
                     @for(unitType <- unitTypes) {
                         <tr>
-                            <td>@unitType.getName</td>
-                            <td>@unitType.getVendor</td>
-                            <td>@unitType.getDescription</td>
-                            <td>@unitType.getProtocol</td>
+                            <td>@unitType.name</td>
+                            <td>@unitType.vendor</td>
+                            <td>@unitType.description</td>
+                            <td>@unitType.protocol</td>
                         </tr>
                     }
                     </tbody>

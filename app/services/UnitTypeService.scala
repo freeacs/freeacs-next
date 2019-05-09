@@ -1,5 +1,6 @@
 package services
-import freeacs.dbi.{ProvisioningProtocol, Unittype}
+
+import models._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -11,26 +12,24 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
   import dbConfig._
   import dbConfig.profile.api._
 
-  def create(name: String, vendor: String, desc: String, protocol: ProvisioningProtocol)(
+  def create(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
   ): Future[Either[String, Int]] =
-    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name()))
-      .map(Right.apply)
-      .recoverWith {
-        case e: Exception => Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
-      }
+    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name)).map(Right.apply).recoverWith {
+      case e: Exception => Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
+    }
 
-  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[Unittype]]] = {
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] = {
     db.run(for {
         unitTypeRows <- UnitTypeDao.result
         unitTypes = unitTypeRows.map(
           row =>
-            new Unittype(
-              row.unitTypeId,
+            AcsUnitType(
+              Some(row.unitTypeId),
               row.unitTypeName,
               row.vendorName.orNull,
               row.description.orNull,
-              ProvisioningProtocol.valueOf(row.protocol)
+              AcsProtocol.unsafeFromString(row.protocol)
           )
         )
       } yield unitTypes)

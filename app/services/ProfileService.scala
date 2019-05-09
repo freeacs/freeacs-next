@@ -1,7 +1,7 @@
 package services
 
+import models._
 import daos.Tables.ProfileRow
-import freeacs.dbi.{Profile, ProvisioningProtocol, Unittype}
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -18,22 +18,22 @@ class ProfileService(dbConfig: DatabaseConfig[JdbcProfile]) {
       case e: Exception => Future.successful(Left(s"Failed to create profile $name: ${e.getLocalizedMessage}"))
     }
 
-  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[Profile]]] = {
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] = {
     db.run(
         for {
           unitTypeRows <- ProfileDao.join(UnitTypeDao).on(_.unitTypeId === _.unitTypeId).result
         } yield
           unitTypeRows.map(
             row =>
-              new Profile(
-                row._1.profileId,
+              AcsProfile(
+                Some(row._1.profileId),
                 row._1.profileName,
-                new Unittype(
-                  row._1.unitTypeId,
+                AcsUnitType(
+                  Some(row._1.unitTypeId),
                   row._2.unitTypeName,
                   row._2.vendorName.orNull,
                   row._2.description.orNull,
-                  ProvisioningProtocol.valueOf(row._2.protocol)
+                  AcsProtocol.unsafeFromString(row._2.protocol)
                 )
             )
           )

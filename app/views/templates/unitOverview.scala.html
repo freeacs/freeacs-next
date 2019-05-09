@@ -1,6 +1,6 @@
 @import views.UnitOverview
 
-@(units: List[freeacs.dbi.Unit])
+@(units: List[AcsUnit])
 
 @layouts.default(UnitOverview) {
     <ol class="breadcrumb">
@@ -30,9 +30,9 @@
                     <tbody>
                     @for(unit <- units) {
                         <tr>
-                            <td>@unit.getId</td>
-                            <td>@unit.getProfile.getName</td>
-                            <td>@unit.getUnittype.getName</td>
+                            <td>@unit.unitId</td>
+                            <td>@unit.profile.name</td>
+                            <td>@unit.profile.unitType.name</td>
                         </tr>
                     }
                     </tbody>

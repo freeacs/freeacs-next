@@ -63,7 +63,7 @@ class Tr069Controller(
             withEvents   <- getEvents(withDeviceId, payload)
             sessionData  <- getParams(withEvents, payload)
           } yield {
-            val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
+            val unitId = sessionData.unit.map(_.unitId).getOrElse("N/A")
             logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
             val result = Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">

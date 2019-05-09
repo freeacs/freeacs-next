@@ -1,7 +1,7 @@
 package controllers
 
-import freeacs.dbi.ProvisioningProtocol
 import io.kanaka.monadic.dsl._
+import models.AcsProtocol
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
@@ -31,13 +31,13 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${data.name} was created")
   }
 
-  private def createUnitType(data: UnitType) =
+  private def createUnitType(data: UnitTypeForm.UnitType) =
     unitTypeService.create(data.name, data.vendor, data.description, data.protocol)
 
   def overview = Action.async {
     for {
       unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-    } yield Ok(unitTypeOverview(unitTypeList.toList))
+    } yield Ok(unitTypeOverview(unitTypeList))
   }
 }
 
@@ -46,34 +46,34 @@ object UnitTypeForm {
   import play.api.data.Forms._
 
   case class UnitType(
-      id: Option[Long] = None,
+      id: Option[Int] = None,
       name: String,
       vendor: String,
       description: String,
-      protocol: ProvisioningProtocol
+      protocol: AcsProtocol
   )
 
-  implicit def provisioningProtocolFormat: Formatter[ProvisioningProtocol] =
-    new Formatter[ProvisioningProtocol] {
+  implicit def provisioningProtocolFormat: Formatter[AcsProtocol] =
+    new Formatter[AcsProtocol] {
       override def bind(
           key: String,
           data: Map[String, String]
-      ): Either[Seq[FormError], ProvisioningProtocol] =
-        data.get(key).map(ProvisioningProtocol.valueOf).toRight(Seq(FormError(key, "error.required", Nil)))
+      ): Either[Seq[FormError], AcsProtocol] =
+        data.get(key).flatMap(AcsProtocol.fromString).toRight(Seq(FormError(key, "error.required", Nil)))
       override def unbind(
           key: String,
-          value: ProvisioningProtocol
+          value: AcsProtocol
       ): Map[String, String] =
-        Map(key -> value.toString)
+        Map(key -> value.name)
     }
 
   val form = Form(
     mapping(
-      "id"          -> optional(longNumber),
+      "id"          -> optional(number),
       "name"        -> nonEmptyText(minLength = 3),
       "vendor"      -> text,
       "description" -> text,
-      "protocol"    -> Forms.of[ProvisioningProtocol]
+      "protocol"    -> Forms.of[AcsProtocol]
     )(UnitType.apply)(UnitType.unapply)
   )
 }

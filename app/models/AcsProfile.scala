@@ -1,3 +1,3 @@
 package models
 
-case class AcsProfile(name: String, unitType: AcsUnitType)
+case class AcsProfile(id: Option[Int] = None, name: String, unitType: AcsUnitType)

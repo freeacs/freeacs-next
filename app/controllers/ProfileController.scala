@@ -25,7 +25,7 @@ class ProfileController(
   def viewCreate = Action.async { implicit request =>
     for {
       unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-    } yield Ok(profileCreate(form, unitTypeList.toList))
+    } yield Ok(profileCreate(form, unitTypeList))
   }
 
   def postCreate = Action.async { implicit request =>
@@ -42,7 +42,7 @@ class ProfileController(
   def overview = Action.async {
     for {
       profileList <- profileService.list ?| (e => InternalServerError(e))
-    } yield Ok(profileOverview(profileList.toList))
+    } yield Ok(profileOverview(profileList))
   }
 }
 
