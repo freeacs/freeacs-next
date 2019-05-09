@@ -1,10 +1,12 @@
 package controllers
+
+import io.kanaka.monadic.dsl._
 import akka.Done
 import models._
 import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents, Result}
+import play.api.mvc._
 import services.{ProfileService, UnitService, UnitTypeService}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,67 +28,95 @@ class Tr069Controller(
 
   def provision = Action.async { implicit request =>
     (for {
-      payload  <- request.body.asXml.flatMap(_.headOption)
-      method   <- CwmpMethod.fromNode(payload)
-      header   <- HeaderStruct.fromNode(payload)
-      deviceId <- DeviceIdStruct.fromNode(payload)
-      rSession <- request.session
-                   .get(SESSION_KEY)
-                   .map(_ => request.session)
-                   .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
-      sessionId <- rSession.get(SESSION_KEY)
-    } yield {
-      for {
-        sessionData                  <- getSessionData(sessionId, header, deviceId, payload)
-        (updatedSessionData, result) <- processRequest(sessionData, method)
-        _                            <- updateSessionData(sessionId, sessionData, updatedSessionData)
-      } yield result.withSession(rSession)
-    }).getOrElse {
-      logger.warn("Got no payload and no method, assuming empty")
-      Future.successful(Ok)
+      payload   <- request.body.asXml.flatMap(_.headOption)
+      method    <- CwmpMethod.fromNode(payload)
+      session   <- getSession(request)
+      sessionId <- session.get(SESSION_KEY)
+    } yield (payload, method, session, sessionId)) match {
+      case Some((payload, method, session, sessionId)) =>
+        for {
+          header      <- Future.successful(HeaderStruct.fromNode(payload)) ?| BadRequest("Missing header in payload")
+          sessionData <- getSessionData(sessionId, header, payload) ?| InternalServerError("Failed to get session")
+          result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
+          _           <- updateSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
+        } yield result._2.withSession(session)
+      case _ => Future.successful(Ok)
     }
   }
 
-  private def processRequest(sessionData: SessionData, method: CwmpMethod): Future[(SessionData, Result)] = {
+  private def getSession(request: Request[AnyContent]) =
+    request.session
+      .get(SESSION_KEY)
+      .map(_ => request.session)
+      .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
+
+  private def processRequest(
+      sessionData: SessionData,
+      method: CwmpMethod,
+      payload: Node
+  ): Future[Either[String, (SessionData, Result)]] = {
     method match {
       case CwmpMethod.IN =>
-        val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
-        logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
-        val response = Ok(
-          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-            <soapenv:Body>
-              <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-                <MaxEnvelopes>1</MaxEnvelopes>
-              </cwmp:InformResponse>
-            </soapenv:Body>
-          </soapenv:Envelope>
-        ).withHeaders("SOAPAction" -> "")
-        Future.successful((sessionData, response))
+        Future.successful(
+          for {
+            withDeviceId <- getDeviceId(sessionData, payload)
+            withEvents   <- getEvents(withDeviceId, payload)
+            withParams   <- getParams(withEvents, payload)
+            sessionData = withParams
+          } yield {
+            val unitId = sessionData.unit.map(_.getId).getOrElse("N/A")
+            logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
+            val result = Ok(
+              <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+              <soapenv:Body>
+                <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+                  <MaxEnvelopes>1</MaxEnvelopes>
+                </cwmp:InformResponse>
+              </soapenv:Body>
+            </soapenv:Envelope>
+            ).withHeaders("SOAPAction" -> "")
+            (sessionData, result)
+          }
+        )
       case _ =>
-        Future.successful((sessionData, NotImplemented))
+        Future.successful(Right((sessionData, NotImplemented)))
     }
   }
+
+  private def getEvents(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+    EventStruct.fromNode(payload) match {
+      case seq: Seq[EventStruct] if seq.nonEmpty => Right(sessionData.copy(events = seq))
+      case _                                     => Left("Missing events")
+    }
+
+  private def getParams(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+    ParameterValueStruct.fromNode(payload) match {
+      case seq: Seq[ParameterValueStruct] if seq.nonEmpty => Right(sessionData.copy(params = seq))
+      case _                                              => Left("Missing params")
+    }
+
+  private def getDeviceId(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+    DeviceIdStruct.fromNode(payload) match {
+      case Some(deviceIdStruct) => Right(sessionData.copy(deviceId = Some(deviceIdStruct)))
+      case None                 => Left("Missing deviceId")
+    }
 
   private def getSessionData(
       sessionId: String,
       header: HeaderStruct,
-      deviceId: DeviceIdStruct,
       payload: Node
   ): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
-      unitService
-        .find(deviceId.unitId)
-        .map(
-          unit =>
-            SessionData(
-              sessionId,
-              unit,
-              header,
-              deviceId,
-              EventStruct.fromNode(payload),
-              ParameterValueStruct.fromNode(payload)
-          )
+      Future.successful(
+        SessionData(
+          sessionId,
+          None,
+          header,
+          None,
+          EventStruct.fromNode(payload),
+          ParameterValueStruct.fromNode(payload)
         )
+      )
     }
 
   private def updateSessionData(
