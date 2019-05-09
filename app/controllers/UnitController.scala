@@ -41,8 +41,8 @@ class UnitController(
 
   def overview = Action.async {
     for {
-      unitTypeList <- unitService.list
-    } yield Ok(unitOverview(unitTypeList.toList))
+      unitList <- unitService.list
+    } yield Ok(unitOverview(unitList.toList))
   }
 }
 
