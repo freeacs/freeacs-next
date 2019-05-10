@@ -2,21 +2,6 @@
 
 The goal of this project is to combine that which has been previously been developed and deployed individually in the FreeACS project. 
 
-The plan is to
-
-1. import all modules from FreeACS (like core, stun, syslog etc) into this project, make it compile and work as it did before.
-2. Remove database polling in DBI so it will just be a holder for the ACS object. Remove the DBI object completely or make it a factory?
-3. Consider clustered hazelcast caching, for the Play Cache api, if necessary?
-
-## Positive side effects
-
-1. There will no longer be 6 modules making their own connection pool against the database.
-2. We can kick immediately and know if it succeeded instead of sending a "message" and wait for things to happen in another module.
-
-## Other thoughts
-
-This a huge game changer for this project, because today the project is too complex both to work with and to deploy.
-
 ## Send an inform
 
 1. Change the digest.secret in application.conf
