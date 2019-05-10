@@ -17,7 +17,8 @@ class Tr069Controller(
     unitService: UnitService,
     profileService: ProfileService,
     unitTypeService: UnitTypeService,
-    cache: AsyncCacheApi
+    cache: AsyncCacheApi,
+    userAction: UserAction
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -26,7 +27,7 @@ class Tr069Controller(
 
   import Tr069Controller._
 
-  def provision = Action.async { implicit request =>
+  def provision = userAction.async { implicit request =>
     (for {
       payload   <- request.body.asXml.flatMap(_.headOption)
       method    <- CwmpMethod.fromNode(payload)
