@@ -25,22 +25,18 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  import Tr069Controller._
-
-  def provision = secureAction.async { implicit request =>
-    val secureRequest = request.asInstanceOf[SecureRequest[AnyContent]]
+  def provision = secureAction.protect.async { implicit request =>
     (for {
-      payload   <- secureRequest.body.asXml.flatMap(_.headOption)
-      method    <- CwmpMethod.fromNode(payload)
-      sessionId <- secureRequest.session.get(SESSION_KEY)
-    } yield (payload, method, sessionId)) match {
-      case Some((payload, method, sessionId)) =>
+      payload <- request.body.asXml.flatMap(_.headOption)
+      method  <- CwmpMethod.fromNode(payload)
+    } yield (payload, method)) match {
+      case Some((payload, method)) =>
         for {
           header      <- getHeader(payload) ?| (error => BadRequest(error))
-          sessionData <- getSessionData(sessionId, header) ?| InternalServerError("Failed to get session")
+          sessionData <- getSessionData(request.sessionId, header) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
-          _           <- putSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
-        } yield result._2.withSession(secureRequest.session)
+          _           <- putSessionData(request.sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
+        } yield result._2.withSession(request.session)
       case _ => Future.successful(Ok)
     }
   }
@@ -115,10 +111,6 @@ class Tr069Controller(
       cache.set(sessionDataKey(sessionId), updateSessionData)
     else
       Future.successful(Done)
-}
 
-object Tr069Controller {
-  val SESSION_KEY = "uuid"
-
-  def sessionDataKey(sessionId: String) = s"$sessionId-data"
+  private def sessionDataKey(sessionId: String) = s"$sessionId-data"
 }

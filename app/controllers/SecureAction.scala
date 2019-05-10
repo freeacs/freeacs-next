@@ -3,7 +3,6 @@ package controllers
 import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import com.github.jarlah.authenticscala.Authenticator.challenge
 import com.typesafe.config.Config
-import controllers.Tr069Controller.SESSION_KEY
 import play.api.Logging
 import play.api.mvc._
 import play.api.mvc.Results._
@@ -11,12 +10,16 @@ import services.UnitService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SecureRequest[A](val username: Option[String], session: Session, sessionId: String, request: Request[A])
+class SecureRequest[A](val username: Option[String], override val session: Session, val sessionId: String, request: Request[A])
     extends WrappedRequest[A](request)
 
 class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[AnyContent])(implicit ec: ExecutionContext)
     extends ActionBuilderImpl(parser)
     with Logging {
+
+  val SESSION_KEY = "uuid"
+
+  def protect = this andThen transform
 
   override def invokeBlock[A](req: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     logger.debug(s"HTTP request: ${req.method} ${req.uri}")
@@ -43,6 +46,13 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
         block(new SecureRequest(None, session, sessionId, req))
     }
   }
+
+  private def transform(implicit ec: ExecutionContext): ActionTransformer[Request, SecureRequest] =
+    new ActionTransformer[Request, SecureRequest] {
+      override protected def executionContext: ExecutionContext = ec
+      override protected def transform[A](request: Request[A]): Future[SecureRequest[A]] =
+        Future.successful(request.asInstanceOf[SecureRequest[A]])
+    }
 
   private def getSession[A](request: Request[A]): Session =
     request.session
