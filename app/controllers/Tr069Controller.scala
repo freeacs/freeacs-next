@@ -17,38 +17,29 @@ class Tr069Controller(
     unitService: UnitService,
     profileService: ProfileService,
     unitTypeService: UnitTypeService,
-    cache: AsyncCacheApi
+    cache: AsyncCacheApi,
+    secureAction: SecureAction
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
     with I18nSupport
     with Logging {
 
-  import Tr069Controller._
-
-  def provision = Action.async { implicit request =>
+  def provision = secureAction.authenticate.async { implicit request =>
     (for {
-      payload   <- request.body.asXml.flatMap(_.headOption)
-      method    <- CwmpMethod.fromNode(payload)
-      session   <- getSession(request)
-      sessionId <- session.get(SESSION_KEY)
-    } yield (payload, method, session, sessionId)) match {
-      case Some((payload, method, session, sessionId)) =>
+      payload <- request.body.asXml.flatMap(_.headOption)
+      method  <- CwmpMethod.fromNode(payload)
+    } yield (payload, method)) match {
+      case Some((payload, method)) =>
         for {
           header      <- getHeader(payload) ?| (error => BadRequest(error))
-          sessionData <- getSessionData(sessionId, header) ?| InternalServerError("Failed to get session")
+          sessionData <- getSessionData(request.sessionId, header) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
-          _           <- putSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
-        } yield result._2.withSession(session)
+          _           <- putSessionData(request.sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
+        } yield result._2.withSession(request.session)
       case _ => Future.successful(Ok)
     }
   }
-
-  private def getSession(request: Request[AnyContent]): Option[Session] =
-    request.session
-      .get(SESSION_KEY)
-      .map(_ => request.session)
-      .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
 
   private def processRequest(
       sessionData: SessionData,
@@ -120,10 +111,6 @@ class Tr069Controller(
       cache.set(sessionDataKey(sessionId), updateSessionData)
     else
       Future.successful(Done)
-}
 
-object Tr069Controller {
-  val SESSION_KEY = "uuid"
-
-  def sessionDataKey(sessionId: String) = s"$sessionId-data"
+  private def sessionDataKey(sessionId: String) = s"$sessionId-data"
 }
