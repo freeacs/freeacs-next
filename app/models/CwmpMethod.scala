@@ -6,6 +6,7 @@ sealed abstract class CwmpMethod(val name: String) { self =>
 }
 
 object CwmpMethod {
+  case object EM   extends CwmpMethod("")
   case object IN   extends CwmpMethod("Inform")
   case object INr  extends CwmpMethod("InformResponse")
   case object ATC  extends CwmpMethod("AutonomousTransferComplete")

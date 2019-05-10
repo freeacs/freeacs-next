@@ -26,31 +26,24 @@ class Tr069Controller(
     with Logging {
 
   def provision = secureAction.authenticate.async { implicit request =>
-    (for {
-      payload <- request.body.asXml.flatMap(_.headOption)
-      method  <- CwmpMethod.fromNode(payload)
-    } yield (payload, method)) match {
-      case Some((payload, method)) =>
-        for {
-          header      <- getHeader(payload) ?| (error => BadRequest(error))
-          sessionData <- getSessionData(request.sessionId, header) ?| InternalServerError("Failed to get session")
-          result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
-          _           <- putSessionData(request.sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
-        } yield result._2.withSession(request.session)
-      case _ => Future.successful(Ok)
-    }
+    for {
+      sessionData <- getSessionData(request.sessionId) ?| InternalServerError("Failed to get session")
+      result      <- processRequest(sessionData, payload(request)) ?| (error => InternalServerError(error))
+      _           <- putSessionData(request.sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
+    } yield result._2.withSession(request.session)
   }
 
-  private def processRequest(
-      sessionData: SessionData,
-      method: CwmpMethod,
-      payload: Node
-  ): Future[Either[String, (SessionData, Result)]] = {
+  private def payload(request: SecureRequest[AnyContent]) =
+    request.body.asXml.flatMap(_.headOption).getOrElse(<Empty />)
+
+  private def processRequest(sessionData: SessionData, payload: Node): Future[Either[String, (SessionData, Result)]] = {
+    val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>
         Future.successful(
           for {
-            withDeviceId <- getDeviceId(sessionData, payload)
+            withHeader   <- getHeader(sessionData, payload)
+            withDeviceId <- getDeviceId(withHeader, payload)
             withEvents   <- getEvents(withDeviceId, payload)
             sessionData  <- getParams(withEvents, payload)
           } yield {
@@ -77,9 +70,9 @@ class Tr069Controller(
     })
   }
 
-  private def getHeader(payload: Node): Either[String, HeaderStruct] =
+  private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =
     HeaderStruct.fromNode(payload) match {
-      case Some(header) => Right(header)
+      case Some(header) => Right(sessionData.copy(header = Some(header)))
       case None         => Left("Missing header in payload")
     }
 
@@ -101,9 +94,9 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(sessionId: String, header: HeaderStruct): Future[SessionData] =
+  private def getSessionData(sessionId: String): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
-      Future.successful(SessionData(sessionId, header))
+      Future.successful(SessionData(sessionId))
     }
 
   private def putSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
