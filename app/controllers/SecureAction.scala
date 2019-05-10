@@ -15,51 +15,45 @@ class SecureRequest[A](val username: Option[String], override val session: Sessi
 
 class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[AnyContent])(implicit ec: ExecutionContext)
     extends ActionBuilderImpl(parser)
+    with ActionRefiner[Request, SecureRequest]
     with Logging {
 
-  val SESSION_KEY = "uuid"
+  private val sessionKey    = "uuid"
+  private val loggingAction = new LoggingAction(parser)
 
-  // compose invokeBlock with transform, where the latter is transforming our Request into SecureRequest
-  def authenticate = this andThen transform
+  val authenticate = loggingAction.andThen(this)
 
-  override def invokeBlock[A](req: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
+  override def refine[A](req: Request[A]): Future[Either[Result, SecureRequest[A]]] = {
     logger.debug(s"HTTP request: ${req.method} ${req.uri}")
     val authMethod = config.getString("auth.method")
     val session    = getSession(req)
-    val sessionId  = session.get(SESSION_KEY).get
+    val sessionId  = session.get(sessionKey).get
     authMethod.toLowerCase match {
       case method if method == "digest" && config.getString("digest.secret") == "changeme" =>
         logger.error("Digest secret must be changed from its default value!")
-        Future.successful(InternalServerError(""))
+        Future.successful(Left(InternalServerError("")))
       case method if "none" != method =>
         val context = getContext(req)
         (for {
           result <- authenticate(method, context)
         } yield {
           if (result.success) {
-            block(new SecureRequest(result.principal, session, sessionId, req))
+            Future.successful(Right(new SecureRequest(result.principal, session, sessionId, req)))
           } else {
-            Future.successful(Unauthorized.withHeaders(challenge(context, method).toSeq: _*))
+            Future.successful(Left(Unauthorized.withHeaders(challenge(context, method).toSeq: _*)))
           }
         }).flatten
       case _ =>
         logger.debug(s"Allowing request to pass through. Auth method is $authMethod")
-        block(new SecureRequest(None, session, sessionId, req))
+        Future.successful(Right(new SecureRequest(None, session, sessionId, req)))
     }
   }
 
-  private def transform: ActionTransformer[Request, SecureRequest] =
-    new ActionTransformer[Request, SecureRequest] {
-      override protected def executionContext: ExecutionContext = ec
-      override protected def transform[A](request: Request[A]): Future[SecureRequest[A]] =
-        Future.successful(request.asInstanceOf[SecureRequest[A]])
-    }
-
   private def getSession[A](request: Request[A]): Session =
     request.session
-      .get(SESSION_KEY)
+      .get(sessionKey)
       .map(_ => request.session)
-      .getOrElse(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString))
+      .getOrElse(request.session + (sessionKey -> java.util.UUID.randomUUID.toString))
 
   private def getContext[A](req: Request[A]) =
     AuthenticationContext(
@@ -75,4 +69,12 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
       (unitId: String) => unitDetails.getSecret(unitId).map(_.orNull),
       method
     )
+
+  private class LoggingAction(parser: BodyParser[AnyContent]) extends ActionBuilderImpl(parser) {
+    override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]) = {
+      logger.info("Receiving request from " + request.remoteAddress)
+      block(request)
+    }
+  }
+
 }

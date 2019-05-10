@@ -3,7 +3,7 @@ import controllers._
 import play.api.ApplicationLoader.Context
 import play.api.routing.Router
 import play.api.routing.sird._
-import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
+import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext, LoggerConfigurator}
 import views.Dashboard
 
 class AppComponents(context: Context)
@@ -37,6 +37,10 @@ class AppComponents(context: Context)
 }
 
 class AppLoader extends ApplicationLoader {
-  def load(context: Context): Application =
+  def load(context: Context): Application = {
+    LoggerConfigurator(context.environment.classLoader).foreach {
+      _.configure(context.environment, context.initialConfiguration, Map.empty)
+    }
     new AppComponents(context).application
+  }
 }
