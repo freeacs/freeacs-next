@@ -18,7 +18,7 @@ class Tr069Controller(
     profileService: ProfileService,
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
-    userAction: UserAction
+    secureAction: SecureAction
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -27,29 +27,23 @@ class Tr069Controller(
 
   import Tr069Controller._
 
-  def provision = userAction.async { implicit request =>
+  def provision = secureAction.async { implicit request =>
+    val secureRequest = request.asInstanceOf[SecureRequest[AnyContent]]
     (for {
-      payload   <- request.body.asXml.flatMap(_.headOption)
+      payload   <- secureRequest.body.asXml.flatMap(_.headOption)
       method    <- CwmpMethod.fromNode(payload)
-      session   <- getSession(request)
-      sessionId <- session.get(SESSION_KEY)
-    } yield (payload, method, session, sessionId)) match {
-      case Some((payload, method, session, sessionId)) =>
+      sessionId <- secureRequest.session.get(SESSION_KEY)
+    } yield (payload, method, sessionId)) match {
+      case Some((payload, method, sessionId)) =>
         for {
           header      <- getHeader(payload) ?| (error => BadRequest(error))
           sessionData <- getSessionData(sessionId, header) ?| InternalServerError("Failed to get session")
           result      <- processRequest(sessionData, method, payload) ?| (error => InternalServerError(error))
           _           <- putSessionData(sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
-        } yield result._2.withSession(session)
+        } yield result._2.withSession(secureRequest.session)
       case _ => Future.successful(Ok)
     }
   }
-
-  private def getSession(request: Request[AnyContent]): Option[Session] =
-    request.session
-      .get(SESSION_KEY)
-      .map(_ => request.session)
-      .orElse(Some(request.session + (SESSION_KEY -> java.util.UUID.randomUUID.toString)))
 
   private def processRequest(
       sessionData: SessionData,
