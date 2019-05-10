@@ -18,7 +18,8 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
     with ActionRefiner[Request, SecureRequest]
     with Logging {
 
-  private val sessionKey    = "uuid"
+  private val sessionKey = "uuid"
+
   private val loggingAction = new LoggingAction(parser)
 
   val authenticate = loggingAction.andThen(this)
