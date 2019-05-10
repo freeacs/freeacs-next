@@ -27,10 +27,10 @@ class Tr069Controller(
 
   def provision = secureAction.authenticate.async { implicit request =>
     for {
-      sessionData <- getSessionData(request.sessionId) ?| InternalServerError("Failed to get session")
-      result      <- processRequest(sessionData, payload(request)) ?| (error => InternalServerError(error))
-      _           <- putSessionData(request.sessionId, sessionData, result._1) ?| InternalServerError("Failed to update session")
-    } yield result._2.withSession(request.session)
+      sessionData                  <- getSessionData(request) ?| InternalServerError("Failed to get session")
+      (updatedSessionData, result) <- processRequest(sessionData, payload(request)) ?| (error => InternalServerError(error))
+      _                            <- putSessionData(request, sessionData, updatedSessionData) ?| InternalServerError("Failed to update session")
+    } yield result.withSession(request.session)
   }
 
   private def payload(request: SecureRequest[AnyContent]) =
@@ -47,7 +47,7 @@ class Tr069Controller(
             withEvents   <- getEvents(withDeviceId, payload)
             sessionData  <- getParams(withEvents, payload)
           } yield {
-            val unitId = sessionData.unit.map(_.unitId).getOrElse("N/A")
+            val unitId = sessionData.unitId.getOrElse("N/A")
             logger.warn(s"Got the following Inform from unit: $unitId:\n$sessionData")
             val result = Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
@@ -94,14 +94,18 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(sessionId: String): Future[SessionData] =
-    cache.getOrElseUpdate[SessionData](sessionDataKey(sessionId)) {
-      Future.successful(SessionData(sessionId))
+  private def getSessionData(request: SecureRequest[AnyContent]): Future[SessionData] =
+    cache.getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
+      Future.successful(SessionData(sessionId = request.sessionId, unitId = request.username))
     }
 
-  private def putSessionData(sessionId: String, sessionData: SessionData, updateSessionData: SessionData): Future[Done] =
-    if (sessionData != updateSessionData)
-      cache.set(sessionDataKey(sessionId), updateSessionData)
+  private def putSessionData(
+      request: SecureRequest[AnyContent],
+      sessionData: SessionData,
+      updatedSessionData: SessionData
+  ): Future[Done] =
+    if (sessionData != updatedSessionData)
+      cache.set(sessionDataKey(request.sessionId), updatedSessionData)
     else
       Future.successful(Done)
 
