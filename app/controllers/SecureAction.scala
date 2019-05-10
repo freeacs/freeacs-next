@@ -47,7 +47,7 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
     }
   }
 
-  private def transform(implicit ec: ExecutionContext): ActionTransformer[Request, SecureRequest] =
+  private def transform: ActionTransformer[Request, SecureRequest] =
     new ActionTransformer[Request, SecureRequest] {
       override protected def executionContext: ExecutionContext = ec
       override protected def transform[A](request: Request[A]): Future[SecureRequest[A]] =
