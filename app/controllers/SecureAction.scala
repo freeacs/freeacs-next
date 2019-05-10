@@ -19,7 +19,8 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
 
   val SESSION_KEY = "uuid"
 
-  def protect = this andThen transform
+  // compose invokeBlock with transform, where the latter is transforming our Request into SecureRequest
+  def authenticate = this andThen transform
 
   override def invokeBlock[A](req: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     logger.debug(s"HTTP request: ${req.method} ${req.uri}")

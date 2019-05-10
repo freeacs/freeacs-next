@@ -25,7 +25,7 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  def provision = secureAction.protect.async { implicit request =>
+  def provision = secureAction.authenticate.async { implicit request =>
     (for {
       payload <- request.body.asXml.flatMap(_.headOption)
       method  <- CwmpMethod.fromNode(payload)
