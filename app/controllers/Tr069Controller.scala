@@ -48,7 +48,8 @@ class Tr069Controller(
             sessionData  <- getParams(withEvents, payload)
           } yield {
             val unitId = sessionData.unitId.getOrElse("N/A")
-            logger.warn(s"Got an Inform from unit [$unitId]. SessionData:\n${pprint.tokenize(sessionData).mkString}")
+            val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+            logger.warn(s"Got an Inform from unit [$unitId]. SessionData:\n$debug")
             val result = Ok(
               <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Body>
