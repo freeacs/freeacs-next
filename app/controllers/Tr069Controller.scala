@@ -43,28 +43,24 @@ class Tr069Controller(
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>
-        Future.successful(
-          for {
-            withHeader   <- getHeader(sessionData, payload)
-            withDeviceId <- getDeviceId(withHeader, payload)
-            withEvents   <- getEvents(withDeviceId, payload)
-            sessionData  <- getParams(withEvents, payload)
-          } yield {
-            val unitId = sessionData.unitId.getOrElse("N/A")
-            val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
-            logger.warn(s"Got an Inform from unit [$unitId]. SessionData:\n$debug")
-            val result = Ok(
-              <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-                <soapenv:Body>
-                  <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-                    <MaxEnvelopes>1</MaxEnvelopes>
-                  </cwmp:InformResponse>
-                </soapenv:Body>
-              </soapenv:Envelope>
-            ).withHeaders("SOAPAction" -> "")
-            (sessionData, result)
+        (for {
+          withHeader   <- getHeader(sessionData, payload)
+          withDeviceId <- getDeviceId(withHeader, payload)
+          withEvents   <- getEvents(withDeviceId, payload)
+          sessionData  <- getParams(withEvents, payload)
+        } yield {
+          sessionData.unitId match {
+            case Some(unitId) =>
+              unitService.find(unitId).map { maybeUnit =>
+                processInform(sessionData.copy(unit = maybeUnit), sessionData.unitId)
+              }
+            case _ =>
+              Future.successful(processInform(sessionData))
           }
-        )
+        }) match { // we have an Either[String, Future[(SessionData, Result)]], but we need a Future[Either[String, (SessionData, Result)]]
+          case Left(s)  => Future.successful(Left(s))
+          case Right(f) => f.map(Right(_))
+        }
       case otherMethod =>
         logger.warn(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
         Future.successful(Right((sessionData, NotImplemented)))
@@ -72,6 +68,24 @@ class Tr069Controller(
       case (updatedSessionData, result) =>
         (updatedSessionData.copy(requests = updatedSessionData.requests ++ Seq(method)), result)
     })
+  }
+
+  private def processInform(
+      sessionData: SessionData,
+      unitId: Option[String] = None
+  ): (SessionData, Result) = {
+    val debug = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+    logger.warn(s"Got an Inform from unit [${unitId.getOrElse("anonymous")}]. SessionData:\n$debug")
+    val result = Ok(
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+        <soapenv:Body>
+          <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+            <MaxEnvelopes>1</MaxEnvelopes>
+          </cwmp:InformResponse>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    ).withHeaders("SOAPAction" -> "")
+    (sessionData, result)
   }
 
   private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =

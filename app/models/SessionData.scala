@@ -2,6 +2,7 @@ package models
 
 case class SessionData(
     sessionId: String,
+    unit: Option[AcsUnit] = None,
     unitId: Option[String] = None,
     header: Option[HeaderStruct] = None,
     deviceId: Option[DeviceIdStruct] = None,
