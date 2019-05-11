@@ -15,7 +15,8 @@ class ProfileService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
   def create(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): Future[Either[String, Int]] =
     db.run(ProfileDao += ProfileRow(-1, unitTypeId, name)).map(Right.apply).recoverWith {
-      case e: Exception => Future.successful(Left(s"Failed to create profile $name: ${e.getLocalizedMessage}"))
+      case e: Exception =>
+        Future.successful(Left(s"Failed to create profile $name: ${e.getLocalizedMessage}"))
     }
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] = {

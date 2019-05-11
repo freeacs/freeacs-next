@@ -3,7 +3,11 @@ import controllers._
 import play.api.BuiltInComponentsFromContext
 
 trait AppControllersConfig {
-  this: AppServicesConfig with BuiltInComponentsFromContext with AppConfig with AppCacheConfig with AppDatabaseConfig =>
+  this: AppServicesConfig
+    with BuiltInComponentsFromContext
+    with AppConfig
+    with AppCacheConfig
+    with AppDatabaseConfig =>
 
   lazy val redirectController =
     new RedirectController(controllerComponents)

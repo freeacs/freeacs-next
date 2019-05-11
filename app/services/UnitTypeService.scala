@@ -15,9 +15,12 @@ class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
   def create(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
   ): Future[Either[String, Int]] =
-    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name)).map(Right.apply).recoverWith {
-      case e: Exception => Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
-    }
+    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name))
+      .map(Right.apply)
+      .recoverWith {
+        case e: Exception =>
+          Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
+      }
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] = {
     db.run(for {

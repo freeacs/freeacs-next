@@ -10,11 +10,16 @@ import services.UnitService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SecureRequest[A](val username: Option[String], override val session: Session, val sessionId: String, request: Request[A])
-    extends WrappedRequest[A](request)
+class SecureRequest[A](
+    val username: Option[String],
+    override val session: Session,
+    val sessionId: String,
+    request: Request[A]
+) extends WrappedRequest[A](request)
 
-class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[AnyContent])(implicit ec: ExecutionContext)
-    extends ActionBuilderImpl(parser)
+class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[AnyContent])(
+    implicit ec: ExecutionContext
+) extends ActionBuilderImpl(parser)
     with ActionRefiner[Request, SecureRequest]
     with Logging {
 

@@ -30,7 +30,9 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
   def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)
 
-  def create(unitId: String, unitTypeId: Int, profileId: Int)(implicit ec: ExecutionContext): Future[Either[String, Int]] =
+  def create(unitId: String, unitTypeId: Int, profileId: Int)(
+      implicit ec: ExecutionContext
+  ): Future[Either[String, Int]] =
     db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
       case e: Exception => Future.successful(Left(s"Failed to create unit $unitId: ${e.getLocalizedMessage}"))
     }
@@ -61,7 +63,11 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
     } yield if (result.isEmpty) None else result.head)
 
   private def getUnitQuery =
-    UnitDao.join(ProfileDao).on(_.profileId === _.profileId).join(UnitTypeDao).on(_._1.unitTypeId === _.unitTypeId)
+    UnitDao
+      .join(ProfileDao)
+      .on(_.profileId === _.profileId)
+      .join(UnitTypeDao)
+      .on(_._1.unitTypeId === _.unitTypeId)
 
   private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
     AcsUnit(

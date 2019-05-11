@@ -1,9 +1,10 @@
 package controllers
 
 import io.kanaka.monadic.dsl._
+import models.AcsUnitType
 import play.api.Logging
-import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.i18n.{I18nSupport, MessagesProvider}
+import play.api.mvc.{AbstractController, ControllerComponents, Flash, Result}
 import services.{ProfileService, UnitTypeService}
 import views.CreateProfile
 import views.html.templates.{profileCreate, profileOverview}
@@ -32,12 +33,18 @@ class ProfileController(
     for {
       unitTypeList <- unitTypeService.list ?| (error => InternalServerError(error))
       data         <- form.bindFromRequest() ?| (form => BadRequest(profileCreate(form, unitTypeList.toList)))
-      _            <- createProfile(data) ?| (error => InternalServerError(profileCreate(form.fill(data), unitTypeList, Some(error))))
+      _            <- createProfile(data) ?| failedToCreate(data, unitTypeList)
     } yield Redirect(CreateProfile.url).flashing("success" -> s"The Profile ${data.name} was created")
   }
 
   private def createProfile(data: ProfileForm.Profile) =
     profileService.create(data.name, data.unitTypeId)
+
+  private def failedToCreate(
+      data: ProfileForm.Profile,
+      unitTypeList: Seq[AcsUnitType]
+  )(implicit messagesProvider: MessagesProvider, flash: Flash): String => Result =
+    error => InternalServerError(profileCreate(form.fill(data), unitTypeList, Some(error)))
 
   def overview = Action.async {
     for {

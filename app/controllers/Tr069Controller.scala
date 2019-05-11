@@ -27,16 +27,19 @@ class Tr069Controller(
 
   def provision = secureAction.authenticate.async { implicit request =>
     for {
-      sessionData                  <- getSessionData(request) ?| InternalServerError("Failed to get session")
-      (updatedSessionData, result) <- processRequest(sessionData, payload(request)) ?| (error => InternalServerError(error))
-      _                            <- putSessionData(request, sessionData, updatedSessionData) ?| InternalServerError("Failed to update session")
+      sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
+      (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
+      _                 <- putSessionData(request, sessionData, updated) ?| InternalServerError("Failed to update session")
     } yield result.withSession(request.session)
   }
 
   private def payload(request: SecureRequest[AnyContent]) =
     request.body.asXml.flatMap(_.headOption).getOrElse(<Empty />)
 
-  private def processRequest(sessionData: SessionData, payload: Node): Future[Either[String, (SessionData, Result)]] = {
+  private def processRequest(
+      sessionData: SessionData,
+      payload: Node
+  ): Future[Either[String, (SessionData, Result)]] = {
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>

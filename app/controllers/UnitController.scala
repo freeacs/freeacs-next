@@ -1,9 +1,10 @@
 package controllers
 
 import io.kanaka.monadic.dsl._
+import models.{AcsProfile, AcsUnitType}
 import play.api.Logging
-import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.i18n.{I18nSupport, MessagesProvider}
+import play.api.mvc.{AbstractController, ControllerComponents, Flash, Result}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
 import views.html.templates.{unitCreate, unitOverview}
@@ -35,12 +36,19 @@ class UnitController(
       unitTypeList <- unitTypeService.list ?| (error => InternalServerError(error))
       profileList  <- profileService.list ?| (error => InternalServerError(error))
       data         <- form.bindFromRequest() ?| (form => BadRequest(unitCreate(form, unitTypeList, profileList)))
-      _            <- createUnit(data) ?| (error => InternalServerError(unitCreate(form.fill(data), unitTypeList, profileList, Some(error))))
+      _            <- createUnit(data) ?| failedToCreate(data, unitTypeList, profileList)
     } yield Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${data.unitId} was created")
   }
 
   private def createUnit(data: Unit) =
     unitService.create(data.unitId, data.unitTypeId, data.profileId)
+
+  private def failedToCreate(
+      data: Unit,
+      unitTypeList: Seq[AcsUnitType],
+      profileList: Seq[AcsProfile]
+  )(implicit messagesProvider: MessagesProvider, flash: Flash): String => Result =
+    error => InternalServerError(unitCreate(form.fill(data), unitTypeList, profileList, Some(error)))
 
   def overview = Action.async {
     for {
