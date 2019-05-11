@@ -24,7 +24,12 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
     db.run(
       for {
         result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-      } yield result.map(mapToUnit)
+        params <- UnitParamDao.filter(_.unitId === unitId).result
+      } yield {
+        result.map(mapToUnit).map { unit =>
+          unit.copy(params = params.map(mapToUnitParam))
+        }
+      }
     )
 
   def count(implicit ec: ExecutionContext): Future[Int] =
@@ -68,6 +73,13 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
       .on(_.profileId === _.profileId)
       .join(UnitTypeDao)
       .on(_._1.unitTypeId === _.unitTypeId)
+
+  private def mapToUnitParam(t: daos.Tables.UnitParamRow) =
+    AcsUnitParameter(
+      unitId = t.unitId,
+      unitTypeParamId = t.unitTypeParamId,
+      value = t.value
+    )
 
   private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
     AcsUnit(

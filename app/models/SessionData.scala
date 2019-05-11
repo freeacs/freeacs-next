@@ -11,5 +11,6 @@ case class SessionData(
     requests: Seq[CwmpMethod] = Seq.empty,
     cwmpVersion: String = "1-0"
 ) {
-  def unitId = unit.map(_.unitId).orElse(deviceId.map(_.unitId))
+  lazy val unitId: Option[String]       = unit.map(_.unitId).orElse(deviceId.map(_.unitId))
+  lazy val serialNumber: Option[String] = deviceId.map(_.serialNumber.underlying)
 }
