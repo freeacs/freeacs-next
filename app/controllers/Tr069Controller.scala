@@ -74,7 +74,7 @@ class Tr069Controller(
     } yield {
       val debug  = pprint.PPrinter.BlackWhite.tokenize(updatedSessionData).mkString
       val unitId = updatedSessionData.unitId.getOrElse("anonymous")
-      logger.debug(s"Inform from unit [$unitId]. SessionData:\n$debug")
+      logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
       (updatedSessionData, createInformResponse(updatedSessionData.cwmpVersion))
     }
 

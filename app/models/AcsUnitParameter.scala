@@ -1,3 +1,8 @@
 package models
 
-case class AcsUnitParameter(unitId: String, unitTypeParamId: Int, value: Option[String])
+case class AcsUnitParameter(
+    unitId: String,
+    unitTypeParamId: Int,
+    unitTypeParamName: String,
+    value: Option[String]
+)

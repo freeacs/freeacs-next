@@ -24,7 +24,11 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
     db.run(
       for {
         result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-        params <- UnitParamDao.filter(_.unitId === unitId).result
+        params <- UnitParamDao
+                   .join(UnitTypeParamDao)
+                   .on(_.unitTypeParamId === _.unitTypeParamId)
+                   .filter(_._1.unitId === unitId)
+                   .result
       } yield {
         result.map(mapToUnit).map { unit =>
           unit.copy(params = params.map(mapToUnitParam))
@@ -74,11 +78,12 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
       .join(UnitTypeDao)
       .on(_._1.unitTypeId === _.unitTypeId)
 
-  private def mapToUnitParam(t: daos.Tables.UnitParamRow) =
+  private def mapToUnitParam(t: (daos.Tables.UnitParamRow, daos.Tables.UnitTypeParamRow)) =
     AcsUnitParameter(
-      unitId = t.unitId,
-      unitTypeParamId = t.unitTypeParamId,
-      value = t.value
+      unitId = t._1.unitId,
+      unitTypeParamId = t._1.unitTypeParamId,
+      unitTypeParamName = t._2.name,
+      value = t._1.value
     )
 
   private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
