@@ -52,7 +52,7 @@ class Tr069Controller(
           for {
             sessionWithMaybeUnit <- getUnit(sessionData)
             // TODO continue the chain by updating parameters in the db etc ..
-          } yield processInform(sessionWithMaybeUnit, sessionData.unitId)
+          } yield processInform(sessionWithMaybeUnit)
         }) match { // we have an Either[String, Future[(SessionData, Result)]], but we need a Future[Either[String, (SessionData, Result)]]
           case Left(s)  => Future.successful(Left(s))
           case Right(f) => f.map(Right(_))
@@ -76,12 +76,9 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def processInform(
-      sessionData: SessionData,
-      unitId: Option[String] = None
-  ): (SessionData, Result) = {
+  private def processInform(sessionData: SessionData): (SessionData, Result) = {
     val debug = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
-    logger.warn(s"Got an Inform from unit [${unitId.getOrElse("anonymous")}]. SessionData:\n$debug")
+    logger.warn(s"Inform from unit [${sessionData.unitId.getOrElse("anonymous")}]. SessionData:\n$debug")
     val result = Ok(
       <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
         <soapenv:Body>
