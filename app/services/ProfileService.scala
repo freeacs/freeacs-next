@@ -30,11 +30,11 @@ class ProfileService(dbConfig: DatabaseConfig[JdbcProfile]) {
                 Some(row._1.profileId),
                 row._1.profileName,
                 AcsUnitType(
-                  Some(row._1.unitTypeId),
-                  row._2.unitTypeName,
-                  row._2.vendorName.orNull,
-                  row._2.description.orNull,
-                  AcsProtocol.unsafeFromString(row._2.protocol)
+                  unitTypeId = Some(row._1.unitTypeId),
+                  name = row._2.unitTypeName,
+                  vendor = row._2.vendorName.orNull,
+                  description = row._2.description.orNull,
+                  protocol = AcsProtocol.unsafeFromString(row._2.protocol)
                 )
             )
           )
