@@ -6,7 +6,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
+class UnitService(dbConfig: DatabaseConfig[JdbcProfile], unitTypeService: UnitTypeService) {
 
   import daos.Tables.{
     Unit => UnitDao,
@@ -22,19 +22,33 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
   def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
     db.run(
-      for {
-        result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-        params <- UnitParamDao
-                   .join(UnitTypeParamDao)
-                   .on(_.unitTypeParamId === _.unitTypeParamId)
-                   .filter(_._1.unitId === unitId)
-                   .result
-      } yield {
-        result.map(mapToUnit).map { unit =>
-          unit.copy(params = params.map(mapToUnitParam))
+        for {
+          result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
+          params <- UnitParamDao
+                     .join(UnitTypeParamDao)
+                     .on(_.unitTypeParamId === _.unitTypeParamId)
+                     .filter(_._1.unitId === unitId)
+                     .result
+        } yield {
+          result.map(mapToUnit).map { unit =>
+            unit.copy(params = params.map(mapToUnitParam))
+          }
         }
+      )
+      .flatMap {
+        case Some(unit) =>
+          unitTypeService
+            .params(unit.profile.unitType.unitTypeId.get)
+            .map(
+              params =>
+                Some(
+                  unit
+                    .copy(profile = unit.profile.copy(unitType = unit.profile.unitType.copy(params = params)))
+              )
+            )
+        case _ =>
+          Future.successful(None)
       }
-    )
 
   def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)

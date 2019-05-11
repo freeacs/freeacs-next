@@ -5,5 +5,6 @@ case class AcsUnitType(
     name: String,
     vendor: String,
     description: String,
-    protocol: AcsProtocol
+    protocol: AcsProtocol,
+    params: Seq[AcsUnitTypeParameter] = Seq.empty
 )

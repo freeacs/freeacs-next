@@ -8,9 +8,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
 
-  import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow}
+  import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow, UnitTypeParam => UnitTypeParamDao}
   import dbConfig._
   import dbConfig.profile.api._
+
+  def params(unitTypeId: Int)(implicit ec: ExecutionContext): Future[Seq[AcsUnitTypeParameter]] =
+    db.run(
+      for {
+        params <- UnitTypeParamDao.filter(_.unitTypeId === unitTypeId).result
+      } yield
+        params.map { param =>
+          AcsUnitTypeParameter(param.unitTypeParamId, param.unitTypeId, param.name, param.flags)
+        }
+    )
 
   def create(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
