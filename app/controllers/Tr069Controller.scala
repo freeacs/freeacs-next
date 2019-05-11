@@ -49,14 +49,10 @@ class Tr069Controller(
           withEvents   <- getEvents(withDeviceId, payload)
           sessionData  <- getParams(withEvents, payload)
         } yield {
-          sessionData.unitId match {
-            case Some(unitId) =>
-              unitService.find(unitId).map { maybeUnit =>
-                processInform(sessionData.copy(unit = maybeUnit), sessionData.unitId)
-              }
-            case _ =>
-              Future.successful(processInform(sessionData))
-          }
+          for {
+            sessionWithMaybeUnit <- getUnit(sessionData)
+            // TODO continue the chain by updating parameters in the db etc ..
+          } yield processInform(sessionWithMaybeUnit, sessionData.unitId)
         }) match { // we have an Either[String, Future[(SessionData, Result)]], but we need a Future[Either[String, (SessionData, Result)]]
           case Left(s)  => Future.successful(Left(s))
           case Right(f) => f.map(Right(_))
@@ -69,6 +65,16 @@ class Tr069Controller(
         (updatedSessionData.copy(requests = updatedSessionData.requests ++ Seq(method)), result)
     })
   }
+
+  private def getUnit(sessionData: SessionData): Future[SessionData] =
+    sessionData.unitId match {
+      case Some(unitId) =>
+        unitService.find(unitId).map { maybeUnit =>
+          sessionData.copy(unit = maybeUnit)
+        }
+      case _ =>
+        Future.successful(sessionData)
+    }
 
   private def processInform(
       sessionData: SessionData,
