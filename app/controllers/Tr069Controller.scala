@@ -37,59 +37,67 @@ class Tr069Controller(
     request.body.asXml.flatMap(_.headOption).getOrElse(<Empty />)
 
   private def processRequest(
-      sessionData: SessionData,
+      initialSessionData: SessionData,
       payload: Node
   ): Future[Either[String, (SessionData, Result)]] = {
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>
-        (for {
-          withHeader   <- getHeader(sessionData, payload)
-          withDeviceId <- getDeviceId(withHeader, payload)
-          withEvents   <- getEvents(withDeviceId, payload)
-          sessionData  <- getParams(withEvents, payload)
-        } yield {
-          for {
-            sessionWithMaybeUnit <- getUnit(sessionData)
-            // TODO continue the chain by updating parameters in the db etc ..
-          } yield processInform(sessionWithMaybeUnit)
-        }) match { // we have an Either[String, Future[(SessionData, Result)]], but we need a Future[Either[String, (SessionData, Result)]]
+        populateSessionDataWithInform(initialSessionData, payload).map(processInformRequest) match {
           case Left(s)  => Future.successful(Left(s))
           case Right(f) => f.map(Right(_))
         }
       case otherMethod =>
-        logger.warn(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
-        Future.successful(Right((sessionData, NotImplemented)))
+        logger.debug(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
+        Future.successful(Right((initialSessionData, NotImplemented)))
     }).map(_.map {
-      case (updatedSessionData, result) =>
-        (updatedSessionData.copy(requests = updatedSessionData.requests ++ Seq(method)), result)
+      case (finalSessionData, result) =>
+        (finalSessionData.copy(requests = finalSessionData.requests ++ Seq(method)), result)
     })
   }
 
-  private def getUnit(sessionData: SessionData): Future[SessionData] =
-    sessionData.unitId match {
-      case Some(unitId) =>
-        unitService.find(unitId).map { maybeUnit =>
+  private def populateSessionDataWithInform(
+      sessionData: SessionData,
+      payload: Node
+  ): Either[String, SessionData] =
+    for {
+      withHeader   <- getHeader(sessionData, payload)
+      withDeviceId <- getDeviceId(withHeader, payload)
+      withEvents   <- getEvents(withDeviceId, payload)
+      withParams   <- getParams(withEvents, payload)
+    } yield withParams
+
+  private def processInformRequest(initialSessionData: SessionData): Future[(SessionData, Result)] =
+    for {
+      updatedSessionData <- getUnitFromUsername(initialSessionData).map(sd => sd.copy(username = sd.unitId))
+      // TODO continue the chain by updating parameters in the db etc ..
+    } yield {
+      val debug  = pprint.PPrinter.BlackWhite.tokenize(updatedSessionData).mkString
+      val unitId = updatedSessionData.unitId.getOrElse("anonymous")
+      logger.debug(s"Inform from unit [$unitId]. SessionData:\n$debug")
+      (updatedSessionData, createInformResponse(updatedSessionData.cwmpVersion))
+    }
+
+  private def getUnitFromUsername(sessionData: SessionData): Future[SessionData] =
+    sessionData.username match {
+      case Some(username) =>
+        unitService.find(username).map { maybeUnit =>
           sessionData.copy(unit = maybeUnit)
         }
       case _ =>
         Future.successful(sessionData)
     }
 
-  private def processInform(sessionData: SessionData): (SessionData, Result) = {
-    val debug = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
-    logger.warn(s"Inform from unit [${sessionData.unitId.getOrElse("anonymous")}]. SessionData:\n$debug")
-    val result = Ok(
+  private def createInformResponse(cwmpVersion: String): Result =
+    Ok(
       <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
         <soapenv:Body>
-          <cwmp:InformResponse xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+          <cwmp:InformResponse xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
             <MaxEnvelopes>1</MaxEnvelopes>
           </cwmp:InformResponse>
         </soapenv:Body>
       </soapenv:Envelope>
     ).withHeaders("SOAPAction" -> "")
-    (sessionData, result)
-  }
 
   private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =
     HeaderStruct.fromNode(payload) match {
@@ -117,7 +125,7 @@ class Tr069Controller(
 
   private def getSessionData(request: SecureRequest[AnyContent]): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
-      Future.successful(SessionData(sessionId = request.sessionId, unitId = request.username))
+      Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
     }
 
   private def putSessionData(
