@@ -38,7 +38,7 @@ class ProfileController(
   }
 
   private def createProfile(data: ProfileForm.Profile) =
-    profileService.create(data.name, data.unitTypeId)
+    profileService.createOrFail(data.name, data.unitTypeId)
 
   private def failedToCreate(
       data: ProfileForm.Profile,

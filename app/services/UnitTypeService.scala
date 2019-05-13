@@ -6,31 +6,37 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeService(dbConfig: DatabaseConfig[JdbcProfile]) {
+class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
   import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow, UnitTypeParam => UnitTypeParamDao}
   import dbConfig._
   import dbConfig.profile.api._
 
-  def params(unitTypeId: Int)(implicit ec: ExecutionContext): Future[Seq[AcsUnitTypeParameter]] =
-    db.run(
-      for {
-        params <- UnitTypeParamDao.filter(_.unitTypeId === unitTypeId).result
-      } yield
-        params.map { param =>
-          AcsUnitTypeParameter(param.unitTypeParamId, param.unitTypeId, param.name, param.flags)
-        }
-    )
+  def getParams(unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Seq[AcsUnitTypeParameter]] =
+    for {
+      params <- UnitTypeParamDao.filter(_.unitTypeId === unitTypeId).result
+    } yield
+      params.map { param =>
+        AcsUnitTypeParameter(param.unitTypeParamId, param.unitTypeId, param.name, param.flags)
+      }
 
   def create(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
-  ): Future[Either[String, Int]] =
-    db.run(UnitTypeDao += UnitTypeRow(-1, None, name, Option(vendor), Option(desc), protocol.name))
-      .map(Right.apply)
-      .recoverWith {
-        case e: Exception =>
-          Future.successful(Left(s"Failed to create unit type $name: ${e.getLocalizedMessage}"))
-      }
+  ): DBIO[Int] =
+    UnitTypeDao returning UnitTypeDao.map(_.unitTypeId) += UnitTypeRow(
+      -1,
+      None,
+      name,
+      Option(vendor),
+      Option(desc),
+      protocol.name
+    )
+
+  def createOrFail(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
+      implicit ec: ExecutionContext
+  ): Future[Either[String, Int]] = db.run(create(name, vendor, desc, protocol)).map(Right.apply).recoverWith {
+    case e => Future.successful(Left("Failed to create unit type " + e.getLocalizedMessage))
+  }
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] = {
     db.run(for {

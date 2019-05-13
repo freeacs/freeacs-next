@@ -62,7 +62,7 @@ class Tr069Controller(
       .flatMap(getEvents(_, payload))
       .flatMap(getParams(_, payload))
       .map(
-        loadUnitFromUsername(_)
+        loadUnit(_)
           .map(sessionData => sessionData.copy(username = sessionData.unitId))
           .flatMap(createUnit)
           .flatMap(updateAcsParams)
@@ -83,8 +83,8 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def loadUnitFromUsername(sessionData: SessionData): Future[SessionData] =
-    sessionData.username match {
+  private def loadUnit(sessionData: SessionData): Future[SessionData] =
+    sessionData.unitId match {
       case Some(username) =>
         unitService.find(username).map { maybeUnit =>
           sessionData.copy(unit = maybeUnit)
@@ -96,7 +96,12 @@ class Tr069Controller(
   private def createUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
       case None =>
-        Future.successful(sessionData)
+        val unitId       = sessionData.unsafeGetUnitId
+        val unitTypeName = sessionData.unsafeGetProductClass
+        val profileName  = "Default"
+        unitService
+          .createAndReturnUnit(unitId, profileName, unitTypeName)
+          .map(unit => sessionData.copy(unit = Some(unit)))
       case _ =>
         Future.successful(sessionData)
     }

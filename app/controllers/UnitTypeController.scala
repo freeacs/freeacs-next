@@ -32,7 +32,7 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
   }
 
   private def createUnitType(data: UnitTypeForm.UnitType) =
-    unitTypeService.create(data.name, data.vendor, data.description, data.protocol)
+    unitTypeService.createOrFail(data.name, data.vendor, data.description, data.protocol)
 
   private def failedToCreate(
       data: UnitType

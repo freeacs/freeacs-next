@@ -41,7 +41,7 @@ class UnitController(
   }
 
   private def createUnit(data: Unit) =
-    unitService.create(data.unitId, data.unitTypeId, data.profileId)
+    unitService.creatOrFail(data.unitId, data.unitTypeId, data.profileId)
 
   private def failedToCreate(
       data: Unit,

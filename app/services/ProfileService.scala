@@ -7,16 +7,20 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ProfileService(dbConfig: DatabaseConfig[JdbcProfile]) {
+class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
   import daos.Tables.{Profile => ProfileDao, UnitType => UnitTypeDao}
   import dbConfig._
   import dbConfig.profile.api._
 
-  def create(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): Future[Either[String, Int]] =
-    db.run(ProfileDao += ProfileRow(-1, unitTypeId, name)).map(Right.apply).recoverWith {
-      case e: Exception =>
-        Future.successful(Left(s"Failed to create profile $name: ${e.getLocalizedMessage}"))
+  def create(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] =
+    ProfileDao returning ProfileDao.map(_.profileId) += ProfileRow(-1, unitTypeId, name)
+
+  def createOrFail(name: String, unitTypeId: Int)(
+      implicit ec: ExecutionContext
+  ): Future[Either[String, Int]] =
+    db.run(create(name, unitTypeId)).map(Right.apply).recoverWith {
+      case e => Future.successful(Left("Failed to create profile: " + e.getLocalizedMessage))
     }
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] = {

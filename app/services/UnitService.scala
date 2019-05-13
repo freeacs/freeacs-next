@@ -6,7 +6,11 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitService(dbConfig: DatabaseConfig[JdbcProfile], unitTypeService: UnitTypeService) {
+class UnitService(
+    val dbConfig: DatabaseConfig[JdbcProfile],
+    unitTypeService: UnitTypeService,
+    profileService: ProfileService
+) {
 
   import daos.Tables.{
     Unit => UnitDao,
@@ -21,44 +25,64 @@ class UnitService(dbConfig: DatabaseConfig[JdbcProfile], unitTypeService: UnitTy
   import dbConfig.profile.api._
 
   def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
-    db.run(
-        for {
-          result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-          params <- UnitParamDao
-                     .join(UnitTypeParamDao)
-                     .on(_.unitTypeParamId === _.unitTypeParamId)
-                     .filter(_._1.unitId === unitId)
-                     .result
-        } yield {
-          result.map(mapToUnit).map { unit =>
-            unit.copy(params = params.map(mapToUnitParam))
-          }
-        }
+    db.run(findUnitQuery(unitId)).flatMap {
+      case Some(unit) => db.run(addUnitTypeParams(unit)).map(Some.apply)
+      case _          => Future.successful(None)
+    }
+
+  private def addUnitTypeParams(unit: AcsUnit)(implicit ec: ExecutionContext) =
+    unitTypeService
+      .getParams(unit.profile.unitType.unitTypeId.get)
+      .map(
+        params =>
+          unit.copy(profile = unit.profile.copy(unitType = unit.profile.unitType.copy(params = params)))
       )
-      .flatMap {
-        case Some(unit) =>
-          unitTypeService
-            .params(unit.profile.unitType.unitTypeId.get)
-            .map(
-              params =>
-                Some(
-                  unit
-                    .copy(profile = unit.profile.copy(unitType = unit.profile.unitType.copy(params = params)))
-              )
-            )
-        case _ =>
-          Future.successful(None)
+
+  private def findUnitQuery(unitId: String)(implicit ec: ExecutionContext) =
+    for {
+      result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
+      params <- UnitParamDao
+                 .join(UnitTypeParamDao)
+                 .on(_.unitTypeParamId === _.unitTypeParamId)
+                 .filter(_._1.unitId === unitId)
+                 .result
+    } yield {
+      result.map(mapToUnit).map { unit =>
+        unit.copy(params = params.map(mapToUnitParam))
       }
+    }
 
   def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)
 
-  def create(unitId: String, unitTypeId: Int, profileId: Int)(
+  private def create(unitId: String, unitTypeId: Int, profileId: Int)(
       implicit ec: ExecutionContext
-  ): Future[Either[String, Int]] =
-    db.run(UnitDao += UnitRow(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
-      case e: Exception => Future.successful(Left(s"Failed to create unit $unitId: ${e.getLocalizedMessage}"))
+  ): DBIO[AcsUnit] =
+    for {
+      _ <- UnitDao += UnitRow(
+            unitId,
+            unitTypeId,
+            profileId
+          )
+      unitRow <- getUnitQuery.filter(_._1._1.unitId === unitId).result.head
+    } yield mapToUnit(unitRow)
+
+  def creatOrFail(unitId: String, unitTypeId: Int, profileId: Int)(
+      implicit ec: ExecutionContext
+  ): Future[Either[String, AcsUnit]] =
+    db.run(create(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
+      case e => Future.successful(Left("Failed to create unit: " + e.getLocalizedMessage))
     }
+
+  def createAndReturnUnit(unitId: String, profileName: String, unitTypeName: String)(
+      implicit ec: ExecutionContext
+  ): Future[AcsUnit] =
+    db.run((for {
+      unitTypeId <- unitTypeService.create(unitTypeName, null, null, AcsProtocol.TR069)
+      profileId  <- profileService.create(profileName, unitTypeId)
+      acsUnit    <- create(unitId, profileId, unitTypeId)
+      withParams <- addUnitTypeParams(acsUnit)
+    } yield withParams).transactionally)
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnit]]] =
     db.run(
