@@ -40,15 +40,13 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
         Future.successful(Left(InternalServerError("")))
       case method if "none" != method =>
         val context = getContext(req)
-        (for {
-          result <- authenticate(method, context)
-        } yield {
+        authenticate(method, context).map { result =>
           if (result.success) {
-            Future.successful(Right(new SecureRequest(result.principal, session, sessionId, req)))
+            Right(new SecureRequest(result.principal, session, sessionId, req))
           } else {
-            Future.successful(Left(Unauthorized.withHeaders(challenge(context, method).toSeq: _*)))
+            Left(Unauthorized.withHeaders(challenge(context, method).toSeq: _*))
           }
-        }).flatten
+        }
       case _ =>
         logger.debug(s"Allowing request to pass through. Auth method is $authMethod")
         Future.successful(Right(new SecureRequest(None, session, sessionId, req)))
