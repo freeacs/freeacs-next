@@ -69,13 +69,24 @@ class Tr069Controller(
 
   private def processInformRequest(initialSessionData: SessionData): Future[(SessionData, Result)] =
     for {
-      updatedSessionData <- getUnitFromUsername(initialSessionData).map(sd => sd.copy(username = sd.unitId))
-      // TODO continue the chain by updating parameters in the db etc ..
-    } yield {
-      val debug  = pprint.PPrinter.BlackWhite.tokenize(updatedSessionData).mkString
-      val unitId = updatedSessionData.unitId.getOrElse("anonymous")
-      logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
-      (updatedSessionData, createInformResponse(updatedSessionData.cwmpVersion))
+      withMaybeUnit     <- getUnitFromUsername(initialSessionData).map(sd => sd.copy(username = sd.unitId))
+      withMaybeCreated  <- maybeCreateUnit(withMaybeUnit)
+      withUpdatedParams <- updateAcsParams(withMaybeCreated)
+    } yield respond(withUpdatedParams)
+
+  private def respond(sessionData: SessionData): (SessionData, Result) = {
+    val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+    val unitId = sessionData.unitId.getOrElse("anonymous")
+    logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
+    (sessionData, createInformResponse(sessionData.cwmpVersion))
+  }
+
+  private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
+    sessionData.unit match {
+      case Some(_) =>
+        Future.successful(sessionData)
+      case _ =>
+        Future.successful(sessionData)
     }
 
   private def getUnitFromUsername(sessionData: SessionData): Future[SessionData] =
@@ -84,6 +95,14 @@ class Tr069Controller(
         unitService.find(username).map { maybeUnit =>
           sessionData.copy(unit = maybeUnit)
         }
+      case _ =>
+        Future.successful(sessionData)
+    }
+
+  private def maybeCreateUnit(sessionData: SessionData): Future[SessionData] =
+    sessionData.unit match {
+      case None =>
+        Future.successful(sessionData)
       case _ =>
         Future.successful(sessionData)
     }
