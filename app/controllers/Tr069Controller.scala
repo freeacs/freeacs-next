@@ -8,9 +8,9 @@ import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import services.{ProfileService, UnitService, UnitTypeService}
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
+import util.MonadTransformers._
 
 class Tr069Controller(
     cc: ControllerComponents,
@@ -37,49 +37,43 @@ class Tr069Controller(
     request.body.asXml.flatMap(_.headOption).getOrElse(<Empty />)
 
   private def processRequest(
-      initialSessionData: SessionData,
+      sessionData: SessionData,
       payload: Node
   ): Future[Either[String, (SessionData, Result)]] = {
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>
-        populateSessionDataWithInform(initialSessionData, payload).map(processInformRequest) match {
-          case Left(s)  => Future.successful(Left(s))
-          case Right(f) => f.map(Right(_))
-        }
+        processInform(sessionData, payload)
       case otherMethod =>
         logger.debug(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
-        Future.successful(Right((initialSessionData, NotImplemented)))
+        Future.successful(Right((sessionData, NotImplemented)))
     }).map(_.map {
       case (finalSessionData, result) =>
         (finalSessionData.copy(requests = finalSessionData.requests ++ Seq(method)), result)
     })
   }
 
-  private def populateSessionDataWithInform(
+  private def processInform(
       sessionData: SessionData,
       payload: Node
-  ): Either[String, SessionData] =
-    for {
-      withHeader   <- getHeader(sessionData, payload)
-      withDeviceId <- getDeviceId(withHeader, payload)
-      withEvents   <- getEvents(withDeviceId, payload)
-      withParams   <- getParams(withEvents, payload)
-    } yield withParams
-
-  private def processInformRequest(initialSessionData: SessionData): Future[(SessionData, Result)] =
-    for {
-      withMaybeUnit     <- getUnitFromUsername(initialSessionData).map(sd => sd.copy(username = sd.unitId))
-      withMaybeCreated  <- maybeCreateUnit(withMaybeUnit)
-      withUpdatedParams <- updateAcsParams(withMaybeCreated)
-    } yield respond(withUpdatedParams)
-
-  private def respond(sessionData: SessionData): (SessionData, Result) = {
-    val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
-    val unitId = sessionData.unitId.getOrElse("anonymous")
-    logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
-    (sessionData, createInformResponse(sessionData.cwmpVersion))
-  }
+  ): Future[Either[String, (SessionData, Result)]] =
+    getHeader(sessionData, payload)
+      .flatMap(getDeviceId(_, payload))
+      .flatMap(getEvents(_, payload))
+      .flatMap(getParams(_, payload))
+      .map(
+        loadUnitFromUsername(_)
+          .map(sessionData => sessionData.copy(username = sessionData.unitId))
+          .flatMap(createUnit)
+          .flatMap(updateAcsParams)
+          .map { sessionData =>
+            val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+            val unitId = sessionData.unitId.getOrElse("anonymous")
+            logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
+            (sessionData, createInformResponse(sessionData.cwmpVersion))
+          }
+      )
+      .mapToFuture
 
   private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
@@ -89,7 +83,7 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def getUnitFromUsername(sessionData: SessionData): Future[SessionData] =
+  private def loadUnitFromUsername(sessionData: SessionData): Future[SessionData] =
     sessionData.username match {
       case Some(username) =>
         unitService.find(username).map { maybeUnit =>
@@ -99,7 +93,7 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def maybeCreateUnit(sessionData: SessionData): Future[SessionData] =
+  private def createUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
       case None =>
         Future.successful(sessionData)
