@@ -105,6 +105,7 @@ class Tr069Controller(
   private def maybeUpdateAcsParams(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
       case Some(unit) =>
+        // TODO update unit params based on the values given by the inform, if they do not match
         Future.successful(sessionData)
       case _ =>
         Future.successful(sessionData)
