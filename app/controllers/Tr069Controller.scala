@@ -13,8 +13,7 @@ import play.api.mvc._
 import services.{ProfileService, UnitService, UnitTypeService}
 import util.MonadTransformers._
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
 
 class Tr069Controller(
