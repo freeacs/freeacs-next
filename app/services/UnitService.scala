@@ -67,6 +67,15 @@ class UnitService(
                  .result
     } yield if (result.isEmpty) None else result.head)
 
+  def upsertParameters(params: Seq[AcsUnitParameter]) =
+    db.run(
+      DBIO
+        .sequence(
+          params.map(p => UnitParam.insertOrUpdate(UnitParamRow(p.unitId, p.unitTypeParamId, p.value)))
+        )
+        .transactionally
+    )
+
   private def getUnitQuery =
     Unit.join(Profile).on(_.profileId === _.profileId).join(UnitType).on(_._1.unitTypeId === _.unitTypeId)
 

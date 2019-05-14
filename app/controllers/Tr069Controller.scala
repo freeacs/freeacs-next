@@ -1,16 +1,20 @@
 package controllers
 
-import io.kanaka.monadic.dsl._
+import java.time.LocalDateTime
+
 import akka.Done
+import io.kanaka.monadic.dsl._
+import models.SystemParameters._
 import models._
 import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import services.{ProfileService, UnitService, UnitTypeService}
+import util.MonadTransformers._
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
-import util.MonadTransformers._
 
 class Tr069Controller(
     cc: ControllerComponents,
@@ -31,7 +35,12 @@ class Tr069Controller(
       sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
       (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
       _                 <- putSessionData(request, sessionData, updated) ?| InternalServerError("Failed to update session")
-    } yield result.withSession(request.session)
+    } yield {
+      if (updated.unit.isDefined)
+        result.withSession(request.session)
+      else
+        result
+    }
   }
 
   private def payload(request: SecureRequest[AnyContent]) =
@@ -69,7 +78,7 @@ class Tr069Controller(
           .flatMap(maybeUpdateAcsParams)
           .map { sessionData =>
             if (sessionData.unit.isDefined) {
-              val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+              val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData, height = 200).mkString
               val unitId = sessionData.unitId.getOrElse("anonymous")
               logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
               (sessionData, createInformResponse(sessionData.cwmpVersion))
@@ -79,7 +88,7 @@ class Tr069Controller(
             }
           }
       )
-      .mapToFuture
+      .mapToFutureEither
 
   private def loadUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unitId match {
@@ -105,11 +114,30 @@ class Tr069Controller(
   private def maybeUpdateAcsParams(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
       case Some(unit) =>
-        // TODO update unit params based on the values given by the inform, if they do not match
+        val firstConnect = getFirstConnectTimestamp(unit)
+        val lastConnect  = getLastConnectTimestamp(unit)
+        unitService.upsertParameters(Seq(firstConnect, lastConnect))
         Future.successful(sessionData)
       case _ =>
         Future.successful(sessionData)
     }
+
+  private def getFirstConnectTimestamp(unit: AcsUnit) = {
+    val utp = unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS).get
+    val ts  = LocalDateTime.now().toString
+    unit.params
+      .find(_.unitTypeParamName == FIRST_CONNECT_TMS)
+      .getOrElse(AcsUnitParameter(unit.unitId, utp.unitTypeParamId, utp.name, Some(ts)))
+  }
+
+  private def getLastConnectTimestamp(unit: AcsUnit) = {
+    val utp = unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS).get
+    val ts  = LocalDateTime.now().toString
+    unit.params
+      .find(_.unitTypeParamName == LAST_CONNECT_TMS)
+      .map(_.copy(value = Some(ts)))
+      .getOrElse(AcsUnitParameter(unit.unitId, utp.unitTypeParamId, utp.name, Some(ts)))
+  }
 
   private def createInformResponse(cwmpVersion: String): Result =
     Ok(
