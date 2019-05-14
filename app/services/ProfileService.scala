@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
-  import daos.Tables.{Profile => ProfileDao, UnitType => UnitTypeDao}
+  import daos.Tables.{Profile => ProfileDao, UnitType => UnitTypeDao, UnitTypeRow}
   import dbConfig._
   import dbConfig.profile.api._
 
@@ -20,33 +20,18 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
       case e => Future.successful(Left("Failed to create profile: " + e.getLocalizedMessage))
     }
 
-  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] = {
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] =
     db.run(
         for {
           unitTypeRows <- ProfileDao.join(UnitTypeDao).on(_.unitTypeId === _.unitTypeId).result
-        } yield
-          unitTypeRows.map(
-            row =>
-              AcsProfile(
-                Some(row._1.profileId),
-                row._1.profileName,
-                AcsUnitType(
-                  unitTypeId = Some(row._1.unitTypeId),
-                  name = row._2.unitTypeName,
-                  vendor = row._2.vendorName.orNull,
-                  description = row._2.description.orNull,
-                  protocol = AcsProtocol.unsafeFromString(row._2.protocol)
-                )
-            )
-          )
+        } yield unitTypeRows.map(mapToProfile)
       )
       .map(Right.apply)
       .recoverWith {
         case e: Exception => Future.successful(Left(s"Failed get profiles: ${e.getLocalizedMessage}"))
       }
-  }
 
-  def createProfileQuery(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] = {
+  def createProfileQuery(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] =
     for {
       profile <- ProfileDao
                   .filter(_.profileName === name)
@@ -58,6 +43,18 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
                   else
                     DBIO.successful(profile.map(_.profileId).get)
     } yield profileId
-  }
+
+  private def mapToProfile(row: (ProfileRow, UnitTypeRow)) =
+    AcsProfile(
+      Some(row._1.profileId),
+      row._1.profileName,
+      AcsUnitType(
+        unitTypeId = Some(row._1.unitTypeId),
+        name = row._2.unitTypeName,
+        vendor = row._2.vendorName.orNull,
+        description = row._2.description.orNull,
+        protocol = AcsProtocol.unsafeFromString(row._2.protocol)
+      )
+    )
 
 }

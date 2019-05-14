@@ -12,15 +12,7 @@ class UnitService(
     profileService: ProfileService
 ) {
 
-  import daos.Tables.{
-    Unit => UnitDao,
-    UnitRow,
-    Profile => ProfileDao,
-    UnitType => UnitTypeDao,
-    UnitParam => UnitParamDao,
-    UnitTypeParam => UnitTypeParamDao
-  }
-
+  import daos.Tables._
   import dbConfig._
   import dbConfig.profile.api._
 
@@ -31,7 +23,7 @@ class UnitService(
     }
 
   def count(implicit ec: ExecutionContext): Future[Int] =
-    db.run(UnitDao.length.result)
+    db.run(Unit.length.result)
 
   def creatOrFail(unitId: String, unitTypeId: Int, profileId: Int)(
       implicit ec: ExecutionContext
@@ -63,8 +55,8 @@ class UnitService(
 
   def getSecret(unitId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     db.run(for {
-      result <- UnitParamDao
-                 .join(UnitTypeParamDao)
+      result <- UnitParam
+                 .join(UnitTypeParam)
                  .on(
                    (up, utp) =>
                      up.unitTypeParamId === utp.unitTypeParamId
@@ -76,11 +68,7 @@ class UnitService(
     } yield if (result.isEmpty) None else result.head)
 
   private def getUnitQuery =
-    UnitDao
-      .join(ProfileDao)
-      .on(_.profileId === _.profileId)
-      .join(UnitTypeDao)
-      .on(_._1.unitTypeId === _.unitTypeId)
+    Unit.join(Profile).on(_.profileId === _.profileId).join(UnitType).on(_._1.unitTypeId === _.unitTypeId)
 
   private def addUnitTypeParamsQuery(unit: AcsUnit)(implicit ec: ExecutionContext): DBIO[AcsUnit] =
     unitTypeService
@@ -93,8 +81,8 @@ class UnitService(
   private def findUnitQuery(unitId: String)(implicit ec: ExecutionContext): DBIO[Option[AcsUnit]] =
     for {
       result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-      params <- UnitParamDao
-                 .join(UnitTypeParamDao)
+      params <- UnitParam
+                 .join(UnitTypeParam)
                  .on(_.unitTypeParamId === _.unitTypeParamId)
                  .filter(_._1.unitId === unitId)
                  .result
@@ -108,7 +96,7 @@ class UnitService(
       implicit ec: ExecutionContext
   ): DBIO[AcsUnit] =
     for {
-      _ <- UnitDao += UnitRow(
+      _ <- Unit += UnitRow(
             unitId,
             unitTypeId,
             profileId
@@ -124,7 +112,7 @@ class UnitService(
       value = t._1.value
     )
 
-  private def mapToUnit(t: ((daos.Tables.UnitRow, daos.Tables.ProfileRow), daos.Tables.UnitTypeRow)) =
+  private def mapToUnit(t: ((UnitRow, ProfileRow), UnitTypeRow)) =
     AcsUnit(
       t._1._1.unitId,
       AcsProfile(

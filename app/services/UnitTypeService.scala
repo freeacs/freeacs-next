@@ -3,7 +3,6 @@ package services
 import daos.Tables.UnitTypeParamRow
 import models._
 import slick.basic.DatabaseConfig
-import slick.dbio.DBIOAction
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,37 +20,26 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
       case e => Future.successful(Left("Failed to create unit type " + e.getLocalizedMessage))
     }
 
-  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] = {
+  def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] =
     db.run(for {
         unitTypeRows <- UnitTypeDao.result
         unitTypes = unitTypeRows.map(
-          row =>
-            AcsUnitType(
-              Some(row.unitTypeId),
-              row.unitTypeName,
-              row.vendorName.orNull,
-              row.description.orNull,
-              AcsProtocol.unsafeFromString(row.protocol)
-          )
+          row => mapToUnitType(row)
         )
       } yield unitTypes)
       .map(Right.apply)
       .recoverWith {
         case e: Exception => Future.successful(Left(s"Failed get unit types: ${e.getLocalizedMessage}"))
       }
-  }
 
   def getParamsQuery(unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Seq[AcsUnitTypeParameter]] =
     for {
       params <- UnitTypeParamDao.filter(_.unitTypeId === unitTypeId).result
-    } yield
-      params.map { param =>
-        AcsUnitTypeParameter(param.unitTypeParamId, param.unitTypeId, param.name, param.flags)
-      }
+    } yield params.map(mapToUnitTypeParameter)
 
   def createUnitTypeQuery(name: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
-  ): DBIO[Int] = {
+  ): DBIO[Int] =
     for {
       unitType <- UnitTypeDao.filter(_.unitTypeName === name).result.headOption
       unitTypeId <- if (unitType.isEmpty)
@@ -59,11 +47,10 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
                    else
                      DBIO.successful(unitType.map(_.unitTypeId).get)
     } yield unitTypeId
-  }
 
   def createUnitTypeQuery(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
-  ): DBIO[Int] = {
+  ): DBIO[Int] =
     (for {
       unitTypeId <- UnitTypeDao returning UnitTypeDao.map(_.unitTypeId) += UnitTypeRow(
                      -1,
@@ -77,5 +64,16 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
             UnitTypeParamRow(-1, unitTypeId, cp._1, cp._2)
           }
     } yield unitTypeId).transactionally
-  }
+
+  private def mapToUnitType(row: UnitTypeRow) =
+    AcsUnitType(
+      Some(row.unitTypeId),
+      row.unitTypeName,
+      row.vendorName.orNull,
+      row.description.orNull,
+      AcsProtocol.unsafeFromString(row.protocol)
+    )
+
+  private def mapToUnitTypeParameter(param: UnitTypeParamRow) =
+    AcsUnitTypeParameter(param.unitTypeParamId, param.unitTypeId, param.name, param.flags)
 }
