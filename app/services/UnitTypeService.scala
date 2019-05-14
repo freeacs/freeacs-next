@@ -1,5 +1,6 @@
 package services
 
+import daos.Tables.UnitTypeParamRow
 import models._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -54,13 +55,19 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
   def createUnitTypeQuery(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
-  ): DBIO[Int] =
-    UnitTypeDao returning UnitTypeDao.map(_.unitTypeId) += UnitTypeRow(
-      -1,
-      None,
-      name,
-      Option(vendor),
-      Option(desc),
-      protocol.name
-    )
+  ): DBIO[Int] = {
+    (for {
+      unitTypeId <- UnitTypeDao returning UnitTypeDao.map(_.unitTypeId) += UnitTypeRow(
+                     -1,
+                     None,
+                     name,
+                     Option(vendor),
+                     Option(desc),
+                     protocol.name
+                   )
+      _ <- UnitTypeParamDao ++= SystemParameters.commonParameters.map { cp =>
+            UnitTypeParamRow(-1, unitTypeId, cp._1, cp._2)
+          }
+    } yield unitTypeId).transactionally
+  }
 }
