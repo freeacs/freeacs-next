@@ -46,7 +46,18 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
       }
   }
 
-  def createProfileQuery(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] =
-    ProfileDao returning ProfileDao.map(_.profileId) += ProfileRow(-1, unitTypeId, name)
+  def createProfileQuery(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] = {
+    for {
+      profile <- ProfileDao
+                  .filter(_.profileName === name)
+                  .filter(_.unitTypeId === unitTypeId)
+                  .result
+                  .headOption
+      profileId <- if (profile.isEmpty)
+                    ProfileDao returning ProfileDao.map(_.profileId) += ProfileRow(-1, unitTypeId, name)
+                  else
+                    DBIO.successful(profile.map(_.profileId).get)
+    } yield profileId
+  }
 
 }

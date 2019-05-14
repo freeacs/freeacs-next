@@ -3,6 +3,7 @@ package services
 import daos.Tables.UnitTypeParamRow
 import models._
 import slick.basic.DatabaseConfig
+import slick.dbio.DBIOAction
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,8 +51,15 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
   def createUnitTypeQuery(name: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
-  ): DBIO[Int] =
-    createUnitTypeQuery(name, null, null, protocol)
+  ): DBIO[Int] = {
+    for {
+      unitType <- UnitTypeDao.filter(_.unitTypeName === name).result.headOption
+      unitTypeId <- if (unitType.isEmpty)
+                     createUnitTypeQuery(name, null, null, protocol)
+                   else
+                     DBIO.successful(unitType.map(_.unitTypeId).get)
+    } yield unitTypeId
+  }
 
   def createUnitTypeQuery(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
