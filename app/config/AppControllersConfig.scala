@@ -25,7 +25,7 @@ trait AppControllersConfig {
       unitTypeService,
       cache,
       userAction,
-      Settings.discoveryMode
+      settings
     )
 
   lazy val unitTypeController =

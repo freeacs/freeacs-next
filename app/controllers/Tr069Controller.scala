@@ -3,6 +3,7 @@ package controllers
 import java.time.LocalDateTime
 
 import akka.Done
+import config.Settings
 import io.kanaka.monadic.dsl._
 import models.SystemParameters._
 import models._
@@ -23,7 +24,7 @@ class Tr069Controller(
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,
-    discoveryMode: Boolean
+    settings: Settings
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -102,9 +103,13 @@ class Tr069Controller(
 
   private def maybeCreateUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
-      case None if discoveryMode =>
+      case None if settings.discoveryMode =>
         unitService
-          .createAndReturnUnit(sessionData.unsafeGetUnitId, "Default", sessionData.unsafeGetProductClass)
+          .createAndReturnUnit(
+            sessionData.unsafeGetUnitId,
+            "Default",
+            sessionData.unsafeGetProductClass(settings.appendHwVersion)
+          )
           .map(unit => sessionData.copy(unit = Some(unit)))
       case _ =>
         logger.debug("Unit is already loaded or discovery mode is not enabled. Not creating.")
