@@ -115,51 +115,58 @@ class Tr069Controller(
   private def maybeUpdateAcsParams(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
       case Some(unit) =>
-        val firstConnect = getFirstConnectTimestamp(unit)
-        val lastConnect  = getLastConnectTimestamp(unit)
-        unitService.upsertParameters(Seq(firstConnect, lastConnect))
-        Future.successful(sessionData)
+        for {
+          firstConnect <- getFirstConnectTimestamp(unit)
+          lastConnect  <- getLastConnectTimestamp(unit)
+          _            <- unitService.upsertParameters(Seq(firstConnect, lastConnect))
+          updatedUnit  <- unitService.find(unit.unitId)
+        } yield sessionData.copy(unit = updatedUnit)
       case _ =>
         Future.successful(sessionData)
     }
 
-  /**
-   *  Quite silly really, breaking the whole flow.
-   *  In addition the following two methods are almost identical.
-   */
-  private def getFirstConnectTimestamp(unit: AcsUnit) = {
-    val utp = unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS).getOrElse {
-      Await.result(
+  private def getFirstConnectTimestamp(unit: AcsUnit): Future[AcsUnitParameter] =
+    (unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS) match {
+      case Some(unitTypeParameter) =>
+        Future.successful(unitTypeParameter)
+      case None =>
         unitTypeService.createUnitTypeParameter(
           unit.profile.unitType.unitTypeId.get,
           FIRST_CONNECT_TMS,
           commonParameters(FIRST_CONNECT_TMS)
-        ),
-        Duration.apply(1, scala.concurrent.duration.SECONDS)
-      )
+        )
+    }).map { unitTypeParameter =>
+      unit.params
+        .find(_.unitTypeParamName == FIRST_CONNECT_TMS)
+        .getOrElse(
+          AcsUnitParameter(
+            unit.unitId,
+            unitTypeParameter.unitTypeParamId,
+            unitTypeParameter.name,
+            Some(LocalDateTime.now().toString)
+          )
+        )
     }
-    val ts = LocalDateTime.now().toString
-    unit.params
-      .find(_.unitTypeParamName == FIRST_CONNECT_TMS)
-      .getOrElse(AcsUnitParameter(unit.unitId, utp.unitTypeParamId, utp.name, Some(ts)))
-  }
 
-  private def getLastConnectTimestamp(unit: AcsUnit) = {
-    val utp = unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS).getOrElse {
-      Await.result(
+  private def getLastConnectTimestamp(unit: AcsUnit): Future[AcsUnitParameter] = {
+    (unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS) match {
+      case Some(unitTypeParameter) =>
+        Future.successful(unitTypeParameter)
+      case None =>
         unitTypeService.createUnitTypeParameter(
           unit.profile.unitType.unitTypeId.get,
           LAST_CONNECT_TMS,
           commonParameters(LAST_CONNECT_TMS)
-        ),
-        Duration.apply(1, scala.concurrent.duration.SECONDS)
-      )
+        )
+    }).map { unitTypeParameter =>
+      val ts = LocalDateTime.now().toString
+      unit.params
+        .find(_.unitTypeParamName == LAST_CONNECT_TMS)
+        .map(_.copy(value = Some(ts)))
+        .getOrElse(
+          AcsUnitParameter(unit.unitId, unitTypeParameter.unitTypeParamId, unitTypeParameter.name, Some(ts))
+        )
     }
-    val ts = LocalDateTime.now().toString
-    unit.params
-      .find(_.unitTypeParamName == LAST_CONNECT_TMS)
-      .map(_.copy(value = Some(ts)))
-      .getOrElse(AcsUnitParameter(unit.unitId, utp.unitTypeParamId, utp.name, Some(ts)))
   }
 
   private def createInformResponse(cwmpVersion: String): Result =
