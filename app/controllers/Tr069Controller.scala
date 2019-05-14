@@ -135,7 +135,7 @@ class Tr069Controller(
           FIRST_CONNECT_TMS,
           commonParameters(FIRST_CONNECT_TMS)
         ),
-        Duration.Inf
+        Duration.apply(1, scala.concurrent.duration.SECONDS)
       )
     }
     val ts = LocalDateTime.now().toString
@@ -152,7 +152,7 @@ class Tr069Controller(
           LAST_CONNECT_TMS,
           commonParameters(LAST_CONNECT_TMS)
         ),
-        Duration.Inf
+        Duration.apply(1, scala.concurrent.duration.SECONDS)
       )
     }
     val ts = LocalDateTime.now().toString
