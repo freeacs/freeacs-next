@@ -13,6 +13,18 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
   import dbConfig._
   import dbConfig.profile.api._
 
+  def createUnitTypeParameter(unitTypeId: Int, name: String, flag: String)(implicit ec: ExecutionContext) =
+    db.run(
+      for {
+        unitTypeParamId <- UnitTypeParamDao returning UnitTypeParamDao
+                            .map(_.unitTypeParamId) += UnitTypeParamRow(-1, unitTypeId, name, flag)
+        unitTypeParameter <- UnitTypeParamDao.filter(_.unitTypeParamId === unitTypeParamId).result.headOption
+      } yield
+        unitTypeParameter
+          .map(utp => AcsUnitTypeParameter(utp.unitTypeParamId, utp.unitTypeId, utp.name, utp.flags))
+          .get
+    )
+
   def createOrFail(name: String, vendor: String, desc: String, protocol: AcsProtocol)(
       implicit ec: ExecutionContext
   ): Future[Either[String, Int]] =

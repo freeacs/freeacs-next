@@ -13,7 +13,8 @@ import play.api.mvc._
 import services.{ProfileService, UnitService, UnitTypeService}
 import util.MonadTransformers._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.xml.Node
 
 class Tr069Controller(
@@ -122,17 +123,39 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
+  /**
+   *  Quite silly really, breaking the whole flow.
+   *  In addition the following two methods are almost identical.
+   */
   private def getFirstConnectTimestamp(unit: AcsUnit) = {
-    val utp = unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS).get
-    val ts  = LocalDateTime.now().toString
+    val utp = unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS).getOrElse {
+      Await.result(
+        unitTypeService.createUnitTypeParameter(
+          unit.profile.unitType.unitTypeId.get,
+          FIRST_CONNECT_TMS,
+          commonParameters(FIRST_CONNECT_TMS)
+        ),
+        Duration.Inf
+      )
+    }
+    val ts = LocalDateTime.now().toString
     unit.params
       .find(_.unitTypeParamName == FIRST_CONNECT_TMS)
       .getOrElse(AcsUnitParameter(unit.unitId, utp.unitTypeParamId, utp.name, Some(ts)))
   }
 
   private def getLastConnectTimestamp(unit: AcsUnit) = {
-    val utp = unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS).get
-    val ts  = LocalDateTime.now().toString
+    val utp = unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS).getOrElse {
+      Await.result(
+        unitTypeService.createUnitTypeParameter(
+          unit.profile.unitType.unitTypeId.get,
+          LAST_CONNECT_TMS,
+          commonParameters(LAST_CONNECT_TMS)
+        ),
+        Duration.Inf
+      )
+    }
+    val ts = LocalDateTime.now().toString
     unit.params
       .find(_.unitTypeParamName == LAST_CONNECT_TMS)
       .map(_.copy(value = Some(ts)))
