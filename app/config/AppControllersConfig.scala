@@ -24,7 +24,8 @@ trait AppControllersConfig {
       profileService,
       unitTypeService,
       cache,
-      userAction
+      userAction,
+      Settings.discoveryMode
     )
 
   lazy val unitTypeController =

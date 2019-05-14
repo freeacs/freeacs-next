@@ -4,5 +4,8 @@ import com.typesafe.config.ConfigFactory
 trait AppConfig {
   lazy val config = ConfigFactory.load()
 
-  val defaultDatabaseName = "default"
+  object Settings {
+    val defaultDatabaseName = "default"
+    lazy val discoveryMode  = config.getBoolean("discovery.mode")
+  }
 }

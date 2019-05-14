@@ -13,13 +13,10 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
   import dbConfig._
   import dbConfig.profile.api._
 
-  def create(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] =
-    ProfileDao returning ProfileDao.map(_.profileId) += ProfileRow(-1, unitTypeId, name)
-
   def createOrFail(name: String, unitTypeId: Int)(
       implicit ec: ExecutionContext
   ): Future[Either[String, Int]] =
-    db.run(create(name, unitTypeId)).map(Right.apply).recoverWith {
+    db.run(createProfileQuery(name, unitTypeId)).map(Right.apply).recoverWith {
       case e => Future.successful(Left("Failed to create profile: " + e.getLocalizedMessage))
     }
 
@@ -48,5 +45,8 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
         case e: Exception => Future.successful(Left(s"Failed get profiles: ${e.getLocalizedMessage}"))
       }
   }
+
+  def createProfileQuery(name: String, unitTypeId: Int)(implicit ec: ExecutionContext): DBIO[Int] =
+    ProfileDao returning ProfileDao.map(_.profileId) += ProfileRow(-1, unitTypeId, name)
 
 }

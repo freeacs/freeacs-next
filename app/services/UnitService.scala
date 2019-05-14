@@ -26,51 +26,17 @@ class UnitService(
 
   def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
     db.run(findUnitQuery(unitId)).flatMap {
-      case Some(unit) => db.run(addUnitTypeParams(unit)).map(Some.apply)
+      case Some(unit) => db.run(addUnitTypeParamsQuery(unit)).map(Some.apply)
       case _          => Future.successful(None)
-    }
-
-  private def addUnitTypeParams(unit: AcsUnit)(implicit ec: ExecutionContext) =
-    unitTypeService
-      .getParams(unit.profile.unitType.unitTypeId.get)
-      .map(
-        params =>
-          unit.copy(profile = unit.profile.copy(unitType = unit.profile.unitType.copy(params = params)))
-      )
-
-  private def findUnitQuery(unitId: String)(implicit ec: ExecutionContext) =
-    for {
-      result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
-      params <- UnitParamDao
-                 .join(UnitTypeParamDao)
-                 .on(_.unitTypeParamId === _.unitTypeParamId)
-                 .filter(_._1.unitId === unitId)
-                 .result
-    } yield {
-      result.map(mapToUnit).map { unit =>
-        unit.copy(params = params.map(mapToUnitParam))
-      }
     }
 
   def count(implicit ec: ExecutionContext): Future[Int] =
     db.run(UnitDao.length.result)
 
-  private def create(unitId: String, unitTypeId: Int, profileId: Int)(
-      implicit ec: ExecutionContext
-  ): DBIO[AcsUnit] =
-    for {
-      _ <- UnitDao += UnitRow(
-            unitId,
-            unitTypeId,
-            profileId
-          )
-      unitRow <- getUnitQuery.filter(_._1._1.unitId === unitId).result.head
-    } yield mapToUnit(unitRow)
-
   def creatOrFail(unitId: String, unitTypeId: Int, profileId: Int)(
       implicit ec: ExecutionContext
   ): Future[Either[String, AcsUnit]] =
-    db.run(create(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
+    db.run(createUnitQuery(unitId, unitTypeId, profileId)).map(Right.apply).recoverWith {
       case e => Future.successful(Left("Failed to create unit: " + e.getLocalizedMessage))
     }
 
@@ -78,10 +44,10 @@ class UnitService(
       implicit ec: ExecutionContext
   ): Future[AcsUnit] =
     db.run((for {
-      unitTypeId <- unitTypeService.create(unitTypeName, null, null, AcsProtocol.TR069)
-      profileId  <- profileService.create(profileName, unitTypeId)
-      acsUnit    <- create(unitId, profileId, unitTypeId)
-      withParams <- addUnitTypeParams(acsUnit)
+      unitTypeId <- unitTypeService.createUnitTypeQuery(unitTypeName, AcsProtocol.TR069)
+      profileId  <- profileService.createProfileQuery(profileName, unitTypeId)
+      acsUnit    <- createUnitQuery(unitId, profileId, unitTypeId)
+      withParams <- addUnitTypeParamsQuery(acsUnit)
     } yield withParams).transactionally)
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnit]]] =
@@ -115,6 +81,40 @@ class UnitService(
       .on(_.profileId === _.profileId)
       .join(UnitTypeDao)
       .on(_._1.unitTypeId === _.unitTypeId)
+
+  private def addUnitTypeParamsQuery(unit: AcsUnit)(implicit ec: ExecutionContext): DBIO[AcsUnit] =
+    unitTypeService
+      .getParamsQuery(unit.profile.unitType.unitTypeId.get)
+      .map(
+        params =>
+          unit.copy(profile = unit.profile.copy(unitType = unit.profile.unitType.copy(params = params)))
+      )
+
+  private def findUnitQuery(unitId: String)(implicit ec: ExecutionContext): DBIO[Option[AcsUnit]] =
+    for {
+      result <- getUnitQuery.filter(_._1._1.unitId === unitId).result.headOption
+      params <- UnitParamDao
+                 .join(UnitTypeParamDao)
+                 .on(_.unitTypeParamId === _.unitTypeParamId)
+                 .filter(_._1.unitId === unitId)
+                 .result
+    } yield {
+      result.map(mapToUnit).map { unit =>
+        unit.copy(params = params.map(mapToUnitParam))
+      }
+    }
+
+  private def createUnitQuery(unitId: String, unitTypeId: Int, profileId: Int)(
+      implicit ec: ExecutionContext
+  ): DBIO[AcsUnit] =
+    for {
+      _ <- UnitDao += UnitRow(
+            unitId,
+            unitTypeId,
+            profileId
+          )
+      unitRow <- getUnitQuery.filter(_._1._1.unitId === unitId).result.head
+    } yield mapToUnit(unitRow)
 
   private def mapToUnitParam(t: (daos.Tables.UnitParamRow, daos.Tables.UnitTypeParamRow)) =
     AcsUnitParameter(

@@ -18,7 +18,8 @@ class Tr069Controller(
     profileService: ProfileService,
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
-    secureAction: SecureAction
+    secureAction: SecureAction,
+    discoveryMode: Boolean
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -64,24 +65,21 @@ class Tr069Controller(
       .map(
         loadUnit(_)
           .map(sessionData => sessionData.copy(username = sessionData.unitId))
-          .flatMap(createUnit)
-          .flatMap(updateAcsParams)
+          .flatMap(maybeCreateUnit)
+          .flatMap(maybeUpdateAcsParams)
           .map { sessionData =>
-            val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
-            val unitId = sessionData.unitId.getOrElse("anonymous")
-            logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
-            (sessionData, createInformResponse(sessionData.cwmpVersion))
+            if (sessionData.unit.isDefined) {
+              val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData).mkString
+              val unitId = sessionData.unitId.getOrElse("anonymous")
+              logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
+              (sessionData, createInformResponse(sessionData.cwmpVersion))
+            } else {
+              logger.warn(s"Unit data is missing")
+              (sessionData, Ok)
+            }
           }
       )
       .mapToFuture
-
-  private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
-    sessionData.unit match {
-      case Some(_) =>
-        Future.successful(sessionData)
-      case _ =>
-        Future.successful(sessionData)
-    }
 
   private def loadUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unitId match {
@@ -93,15 +91,21 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def createUnit(sessionData: SessionData): Future[SessionData] =
+  private def maybeCreateUnit(sessionData: SessionData): Future[SessionData] =
     sessionData.unit match {
-      case None =>
-        val unitId       = sessionData.unsafeGetUnitId
-        val unitTypeName = sessionData.unsafeGetProductClass
-        val profileName  = "Default"
+      case None if discoveryMode =>
         unitService
-          .createAndReturnUnit(unitId, profileName, unitTypeName)
+          .createAndReturnUnit(sessionData.unsafeGetUnitId, "Default", sessionData.unsafeGetProductClass)
           .map(unit => sessionData.copy(unit = Some(unit)))
+      case _ =>
+        logger.debug("Unit is already loaded or discovery mode is not enabled. Not creating.")
+        Future.successful(sessionData)
+    }
+
+  private def maybeUpdateAcsParams(sessionData: SessionData): Future[SessionData] =
+    sessionData.unit match {
+      case Some(unit) =>
+        Future.successful(sessionData)
       case _ =>
         Future.successful(sessionData)
     }
