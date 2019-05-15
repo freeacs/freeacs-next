@@ -123,28 +123,52 @@ class Tr069Controller(
         for {
           firstConnect <- getTimestamp(unit, FIRST_CONNECT_TMS, update = false)
           lastConnect  <- getTimestamp(unit, LAST_CONNECT_TMS, update = true)
-          _            <- unitService.upsertParameters(Seq(firstConnect, lastConnect))
+          deviceParams <- getDeviceParameters(sessionData, unit)
+          _            <- unitService.upsertParameters(Seq(firstConnect, lastConnect) ++ deviceParams)
           updatedUnit  <- unitService.find(unit.unitId)
         } yield sessionData.copy(unit = updatedUnit)
       case _ =>
         Future.successful(sessionData)
     }
 
+  private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] = {
+    if (sessionData.keyRoot.isEmpty) {
+      return Future.successful(Seq.empty)
+    }
+    for {
+      softwareVersion <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.SOFTWARE_VERSION, "R"))
+      pII             <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.PERIODIC_INFORM_INTERVAL, "RW"))
+      connReqUrl      <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_URL, "R"))
+      connReqUser     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_USERNAME, "R"))
+      connReqPass     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_PASSWORD, "R"))
+    } yield
+      Seq(
+        makeUnitParam(unit.unitId, softwareVersion, sessionData.params),
+        makeUnitParam(unit.unitId, pII, sessionData.params),
+        makeUnitParam(unit.unitId, connReqUrl, sessionData.params),
+        makeUnitParam(unit.unitId, connReqUser, sessionData.params),
+        makeUnitParam(unit.unitId, connReqPass, sessionData.params)
+      )
+  }
+
+  private def makeUnitParam(
+      unitId: String,
+      softwareVersion: AcsUnitTypeParameter,
+      params: Seq[ParameterValueStruct]
+  ) =
+    AcsUnitParameter(
+      unitId,
+      softwareVersion.unitTypeParamId,
+      softwareVersion.name,
+      params.find(_.name == softwareVersion.name).map(_.value)
+    )
+
   private def getTimestamp(
       unit: AcsUnit,
       param: Parameter,
       update: Boolean
   ): Future[AcsUnitParameter] = {
-    (unit.unitTypeParams.find(_.name == param.name) match {
-      case Some(unitTypeParameter) =>
-        Future.successful(unitTypeParameter)
-      case None =>
-        unitTypeService.createUnitTypeParameter(
-          unit.profile.unitType.unitTypeId.get,
-          param.name,
-          param.flag
-        )
-    }).map { unitTypeParameter =>
+    getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
       val ts = LocalDateTime.now().toString
       unit.params
         .find(_.unitTypeParamName == param.name)
@@ -159,6 +183,18 @@ class Tr069Controller(
         )
     }
   }
+
+  private def getOrCreateUnitTypeParameter(unit: AcsUnit, param: Parameter) =
+    unit.unitTypeParams.find(_.name == param.name) match {
+      case Some(unitTypeParameter) =>
+        Future.successful(unitTypeParameter)
+      case None =>
+        unitTypeService.createUnitTypeParameter(
+          unit.profile.unitType.unitTypeId.get,
+          param.name,
+          param.flag
+        )
+    }
 
   private def createInformResponse(cwmpVersion: String): Result =
     Ok(

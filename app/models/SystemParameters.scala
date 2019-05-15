@@ -4,6 +4,9 @@ object SystemParameters {
 
   sealed abstract class Parameter(val name: String, val flag: String)
 
+  case class NamedParameter(override val name: String, override val flag: String)
+      extends Parameter(name, flag)
+
   case object desiredSoftwareVersion   extends Parameter("System.X_FREEACS-COM.DesiredSoftwareVersion", "X")
   case object SOFTWARE_URL             extends Parameter("System.X_FREEACS-COM.SoftwareURL", "X")
   case object SECRET                   extends Parameter("System.X_FREEACS-COM.Secret", "XC")

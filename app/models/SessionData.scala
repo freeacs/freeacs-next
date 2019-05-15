@@ -14,12 +14,12 @@ case class SessionData(
 ) {
   import SessionData._
   lazy val keyRoot                  = getKeyRoot(params)
-  lazy val CONFIG_FILES             = keyRoot + "DeviceInfo.VendorConfigFile."
-  lazy val SOFTWARE_VERSION         = keyRoot + "DeviceInfo.SoftwareVersion"
-  lazy val PERIODIC_INFORM_INTERVAL = keyRoot + "ManagementServer.PeriodicInformInterval"
-  lazy val CONNECTION_URL           = keyRoot + "ManagementServer.ConnectionRequestURL"
-  lazy val CONNECTION_PASSWORD      = keyRoot + "ManagementServer.ConnectionRequestPassword"
-  lazy val CONNECTION_USERNAME      = keyRoot + "ManagementServer.ConnectionRequestUsername"
+  lazy val CONFIG_FILES             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
+  lazy val SOFTWARE_VERSION         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
+  lazy val PERIODIC_INFORM_INTERVAL = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
+  lazy val CONNECTION_URL           = keyRoot.map(_ + "ManagementServer.ConnectionRequestURL").get
+  lazy val CONNECTION_PASSWORD      = keyRoot.map(_ + "ManagementServer.ConnectionRequestPassword").get
+  lazy val CONNECTION_USERNAME      = keyRoot.map(_ + "ManagementServer.ConnectionRequestUsername").get
   lazy val unitId                   = username.orElse(unit.map(_.unitId).orElse(deviceId.map(_.unitId)))
   lazy val serialNumber             = deviceId.map(_.serialNumber.underlying)
   lazy val firstConnect             = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET.name))
