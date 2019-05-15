@@ -132,7 +132,7 @@ class Tr069Controller(
 
   private def getTimestamp(
       unit: AcsUnit,
-      param: ParameterDefinition,
+      param: Parameter,
       update: Boolean
   ): Future[AcsUnitParameter] = {
     (unit.unitTypeParams.find(_.name == param.name) match {

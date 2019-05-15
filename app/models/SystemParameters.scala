@@ -2,39 +2,39 @@ package models
 
 object SystemParameters {
 
-  case class ParameterDefinition(name: String, flag: String)
+  sealed abstract class Parameter(val name: String, val flag: String)
 
-  val DESIRED_SOFTWARE_VERSION  = ParameterDefinition("System.X_FREEACS-COM.DesiredSoftwareVersion", "X")
-  val SOFTWARE_URL              = ParameterDefinition("System.X_FREEACS-COM.SoftwareURL", "X")
-  val SECRET                    = ParameterDefinition("System.X_FREEACS-COM.Secret", "XC")
-  val RESTART                   = ParameterDefinition("System.X_FREEACS-COM.Restart", "X")
-  val RESET                     = ParameterDefinition("System.X_FREEACS-COM.Reset", "X")
-  val DISCOVER                  = ParameterDefinition("System.X_FREEACS-COM.Discover", "X")
-  val COMMENT                   = ParameterDefinition("System.X_FREEACS-COM.Comment", "X")
-  val FIRST_CONNECT_TMS         = ParameterDefinition("System.X_FREEACS-COM.FirstConnectTms", "X")
-  val LAST_CONNECT_TMS          = ParameterDefinition("System.X_FREEACS-COM.LastConnectTms", "X")
-  val PROVISIONING_MODE         = ParameterDefinition("System.X_FREEACS-COM.ProvisioningMode", "X")
-  val INSPECTION_MESSAGE        = ParameterDefinition("System.X_FREEACS-COM.IM.Message", "X")
-  val SERVICE_WINDOW_ENABLE     = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Enable", "X")
-  val SERVICE_WINDOW_REGULAR    = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Regular", "X")
-  val SERVICE_WINDOW_DISRUPTIVE = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Disruptive", "X")
-  val SERVICE_WINDOW_FREQUENCY  = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Frequency", "X")
-  val SERVICE_WINDOW_SPREAD     = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Spread", "X")
-  val DEBUG                     = ParameterDefinition("System.X_FREEACS-COM.Debug", "X")
-  val JOB_CURRENT               = ParameterDefinition("System.X_FREEACS-COM.Job.Current", "X")
-  val JOB_CURRENT_KEY           = ParameterDefinition("System.X_FREEACS-COM.Job.CurrentKey", "X")
-  val JOB_HISTORY               = ParameterDefinition("System.X_FREEACS-COM.Job.History", "X")
-  val JOB_DISRUPTIVE            = ParameterDefinition("System.X_FREEACS-COM.Job.Disruptive", "X")
-  val SERIAL_NUMBER             = ParameterDefinition("System.X_FREEACS-COM.Device.SerialNumber", "X")
-  val SOFTWARE_VERSION          = ParameterDefinition("System.X_FREEACS-COM.Device.SoftwareVersion", "X")
-  val PERIODIC_INTERVAL         = ParameterDefinition("System.X_FREEACS-COM.Device.PeriodicInterval", "X")
-  val IP_ADDRESS                = ParameterDefinition("System.X_FREEACS-COM.Device.PublicIPAddress", "X")
-  val PROTOCOL                  = ParameterDefinition("System.X_FREEACS-COM.Device.PublicProtocol", "X")
-  val PORT                      = ParameterDefinition("System.X_FREEACS-COM.Device.PublicPort", "X")
-  val GUI_URL                   = ParameterDefinition("System.X_FREEACS-COM.Device.GUIURL", "X")
+  case object desiredSoftwareVersion   extends Parameter("System.X_FREEACS-COM.DesiredSoftwareVersion", "X")
+  case object SOFTWARE_URL             extends Parameter("System.X_FREEACS-COM.SoftwareURL", "X")
+  case object SECRET                   extends Parameter("System.X_FREEACS-COM.Secret", "XC")
+  case object RESTART                  extends Parameter("System.X_FREEACS-COM.Restart", "X")
+  case object RESET                    extends Parameter("System.X_FREEACS-COM.Reset", "X")
+  case object DISCOVER                 extends Parameter("System.X_FREEACS-COM.Discover", "X")
+  case object COMMENT                  extends Parameter("System.X_FREEACS-COM.Comment", "X")
+  case object FIRST_CONNECT_TMS        extends Parameter("System.X_FREEACS-COM.FirstConnectTms", "X")
+  case object LAST_CONNECT_TMS         extends Parameter("System.X_FREEACS-COM.LastConnectTms", "X")
+  case object PROVISIONING_MODE        extends Parameter("System.X_FREEACS-COM.ProvisioningMode", "X")
+  case object INSPECTION_MESSAGE       extends Parameter("System.X_FREEACS-COM.IM.Message", "X")
+  case object SERVICE_WINDOW_ENABLE    extends Parameter("System.X_FREEACS-COM.ServiceWindow.Enable", "X")
+  case object SERVICE_WINDOW_REGULAR   extends Parameter("System.X_FREEACS-COM.ServiceWindow.Regular", "X")
+  case object SERVICE_WINDOW_DISRUPT   extends Parameter("System.X_FREEACS-COM.ServiceWindow.Disruptive", "X")
+  case object SERVICE_WINDOW_FREQUENCY extends Parameter("System.X_FREEACS-COM.ServiceWindow.Frequency", "X")
+  case object SERVICE_WINDOW_SPREAD    extends Parameter("System.X_FREEACS-COM.ServiceWindow.Spread", "X")
+  case object DEBUG                    extends Parameter("System.X_FREEACS-COM.Debug", "X")
+  case object JOB_CURRENT              extends Parameter("System.X_FREEACS-COM.Job.Current", "X")
+  case object JOB_CURRENT_KEY          extends Parameter("System.X_FREEACS-COM.Job.CurrentKey", "X")
+  case object JOB_HISTORY              extends Parameter("System.X_FREEACS-COM.Job.History", "X")
+  case object JOB_DISRUPTIVE           extends Parameter("System.X_FREEACS-COM.Job.Disruptive", "X")
+  case object SERIAL_NUMBER            extends Parameter("System.X_FREEACS-COM.Device.SerialNumber", "X")
+  case object SOFTWARE_VERSION         extends Parameter("System.X_FREEACS-COM.Device.SoftwareVersion", "X")
+  case object PERIODIC_INTERVAL        extends Parameter("System.X_FREEACS-COM.Device.PeriodicInterval", "X")
+  case object IP_ADDRESS               extends Parameter("System.X_FREEACS-COM.Device.PublicIPAddress", "X")
+  case object PROTOCOL                 extends Parameter("System.X_FREEACS-COM.Device.PublicProtocol", "X")
+  case object PORT                     extends Parameter("System.X_FREEACS-COM.Device.PublicPort", "X")
+  case object GUI_URL                  extends Parameter("System.X_FREEACS-COM.Device.GUIURL", "X")
 
   val values = Seq(
-    DESIRED_SOFTWARE_VERSION,
+    desiredSoftwareVersion,
     SOFTWARE_URL,
     SECRET,
     RESTART,
@@ -47,7 +47,7 @@ object SystemParameters {
     INSPECTION_MESSAGE,
     SERVICE_WINDOW_ENABLE,
     SERVICE_WINDOW_REGULAR,
-    SERVICE_WINDOW_DISRUPTIVE,
+    SERVICE_WINDOW_DISRUPT,
     SERVICE_WINDOW_FREQUENCY,
     SERVICE_WINDOW_SPREAD,
     DEBUG,
