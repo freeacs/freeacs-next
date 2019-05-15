@@ -2,63 +2,65 @@ package models
 
 object SystemParameters {
 
-  val DESIRED_SOFTWARE_VERSION  = "System.X_FREEACS-COM.DesiredSoftwareVersion"
-  val SOFTWARE_URL              = "System.X_FREEACS-COM.SoftwareURL"
-  val SECRET                    = "System.X_FREEACS-COM.Secret"
-  val RESTART                   = "System.X_FREEACS-COM.Restart"
-  val RESET                     = "System.X_FREEACS-COM.Reset"
-  val DISCOVER                  = "System.X_FREEACS-COM.Discover"
-  val COMMENT                   = "System.X_FREEACS-COM.Comment"
-  val FIRST_CONNECT_TMS         = "System.X_FREEACS-COM.FirstConnectTms"
-  val LAST_CONNECT_TMS          = "System.X_FREEACS-COM.LastConnectTms"
-  val PROVISIONING_MODE         = "System.X_FREEACS-COM.ProvisioningMode"
-  val INSPECTION_MESSAGE        = "System.X_FREEACS-COM.IM.Message"
-  val SERVICE_WINDOW_ENABLE     = "System.X_FREEACS-COM.ServiceWindow.Enable"
-  val SERVICE_WINDOW_REGULAR    = "System.X_FREEACS-COM.ServiceWindow.Regular"
-  val SERVICE_WINDOW_DISRUPTIVE = "System.X_FREEACS-COM.ServiceWindow.Disruptive"
-  val SERVICE_WINDOW_FREQUENCY  = "System.X_FREEACS-COM.ServiceWindow.Frequency"
-  val SERVICE_WINDOW_SPREAD     = "System.X_FREEACS-COM.ServiceWindow.Spread"
-  val DEBUG                     = "System.X_FREEACS-COM.Debug"
-  val JOB_CURRENT               = "System.X_FREEACS-COM.Job.Current"
-  val JOB_CURRENT_KEY           = "System.X_FREEACS-COM.Job.CurrentKey"
-  val JOB_HISTORY               = "System.X_FREEACS-COM.Job.History"
-  val JOB_DISRUPTIVE            = "System.X_FREEACS-COM.Job.Disruptive"
-  val SERIAL_NUMBER             = "System.X_FREEACS-COM.Device.SerialNumber"
-  val SOFTWARE_VERSION          = "System.X_FREEACS-COM.Device.SoftwareVersion"
-  val PERIODIC_INTERVAL         = "System.X_FREEACS-COM.Device.PeriodicInterval"
-  val IP_ADDRESS                = "System.X_FREEACS-COM.Device.PublicIPAddress"
-  val PROTOCOL                  = "System.X_FREEACS-COM.Device.PublicProtocol"
-  val PORT                      = "System.X_FREEACS-COM.Device.PublicPort"
-  val GUI_URL                   = "System.X_FREEACS-COM.Device.GUIURL"
+  case class ParameterDefinition(name: String, flag: String)
 
-  var commonParameters = Map[String, String](
-    DESIRED_SOFTWARE_VERSION  -> "X",
-    SOFTWARE_URL              -> "X",
-    PROVISIONING_MODE         -> "X",
-    INSPECTION_MESSAGE        -> "X",
-    SERVICE_WINDOW_ENABLE     -> "X",
-    SERVICE_WINDOW_REGULAR    -> "X",
-    SERVICE_WINDOW_DISRUPTIVE -> "X",
-    SERVICE_WINDOW_FREQUENCY  -> "X",
-    SERVICE_WINDOW_SPREAD     -> "X",
-    DEBUG                     -> "X",
-    JOB_CURRENT               -> "X",
-    JOB_CURRENT_KEY           -> "X",
-    JOB_HISTORY               -> "X",
-    JOB_DISRUPTIVE            -> "X",
-    FIRST_CONNECT_TMS         -> "X",
-    LAST_CONNECT_TMS          -> "X",
-    SERIAL_NUMBER             -> "X",
-    RESTART                   -> "X",
-    RESET                     -> "X",
-    DISCOVER                  -> "X",
-    COMMENT                   -> "X",
-    SECRET                    -> "XC",
-    SOFTWARE_VERSION          -> "X",
-    PERIODIC_INTERVAL         -> "X",
-    IP_ADDRESS                -> "X",
-    PROTOCOL                  -> "X",
-    PORT                      -> "X",
-    GUI_URL                   -> "X"
+  val DESIRED_SOFTWARE_VERSION  = ParameterDefinition("System.X_FREEACS-COM.DesiredSoftwareVersion", "X")
+  val SOFTWARE_URL              = ParameterDefinition("System.X_FREEACS-COM.SoftwareURL", "X")
+  val SECRET                    = ParameterDefinition("System.X_FREEACS-COM.Secret", "XC")
+  val RESTART                   = ParameterDefinition("System.X_FREEACS-COM.Restart", "X")
+  val RESET                     = ParameterDefinition("System.X_FREEACS-COM.Reset", "X")
+  val DISCOVER                  = ParameterDefinition("System.X_FREEACS-COM.Discover", "X")
+  val COMMENT                   = ParameterDefinition("System.X_FREEACS-COM.Comment", "X")
+  val FIRST_CONNECT_TMS         = ParameterDefinition("System.X_FREEACS-COM.FirstConnectTms", "X")
+  val LAST_CONNECT_TMS          = ParameterDefinition("System.X_FREEACS-COM.LastConnectTms", "X")
+  val PROVISIONING_MODE         = ParameterDefinition("System.X_FREEACS-COM.ProvisioningMode", "X")
+  val INSPECTION_MESSAGE        = ParameterDefinition("System.X_FREEACS-COM.IM.Message", "X")
+  val SERVICE_WINDOW_ENABLE     = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Enable", "X")
+  val SERVICE_WINDOW_REGULAR    = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Regular", "X")
+  val SERVICE_WINDOW_DISRUPTIVE = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Disruptive", "X")
+  val SERVICE_WINDOW_FREQUENCY  = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Frequency", "X")
+  val SERVICE_WINDOW_SPREAD     = ParameterDefinition("System.X_FREEACS-COM.ServiceWindow.Spread", "X")
+  val DEBUG                     = ParameterDefinition("System.X_FREEACS-COM.Debug", "X")
+  val JOB_CURRENT               = ParameterDefinition("System.X_FREEACS-COM.Job.Current", "X")
+  val JOB_CURRENT_KEY           = ParameterDefinition("System.X_FREEACS-COM.Job.CurrentKey", "X")
+  val JOB_HISTORY               = ParameterDefinition("System.X_FREEACS-COM.Job.History", "X")
+  val JOB_DISRUPTIVE            = ParameterDefinition("System.X_FREEACS-COM.Job.Disruptive", "X")
+  val SERIAL_NUMBER             = ParameterDefinition("System.X_FREEACS-COM.Device.SerialNumber", "X")
+  val SOFTWARE_VERSION          = ParameterDefinition("System.X_FREEACS-COM.Device.SoftwareVersion", "X")
+  val PERIODIC_INTERVAL         = ParameterDefinition("System.X_FREEACS-COM.Device.PeriodicInterval", "X")
+  val IP_ADDRESS                = ParameterDefinition("System.X_FREEACS-COM.Device.PublicIPAddress", "X")
+  val PROTOCOL                  = ParameterDefinition("System.X_FREEACS-COM.Device.PublicProtocol", "X")
+  val PORT                      = ParameterDefinition("System.X_FREEACS-COM.Device.PublicPort", "X")
+  val GUI_URL                   = ParameterDefinition("System.X_FREEACS-COM.Device.GUIURL", "X")
+
+  val values = Seq(
+    DESIRED_SOFTWARE_VERSION,
+    SOFTWARE_URL,
+    SECRET,
+    RESTART,
+    RESET,
+    DISCOVER,
+    COMMENT,
+    FIRST_CONNECT_TMS,
+    LAST_CONNECT_TMS,
+    PROVISIONING_MODE,
+    INSPECTION_MESSAGE,
+    SERVICE_WINDOW_ENABLE,
+    SERVICE_WINDOW_REGULAR,
+    SERVICE_WINDOW_DISRUPTIVE,
+    SERVICE_WINDOW_FREQUENCY,
+    SERVICE_WINDOW_SPREAD,
+    DEBUG,
+    JOB_CURRENT,
+    JOB_CURRENT_KEY,
+    JOB_HISTORY,
+    JOB_DISRUPTIVE,
+    SERIAL_NUMBER,
+    SOFTWARE_VERSION,
+    PERIODIC_INTERVAL,
+    IP_ADDRESS,
+    PROTOCOL,
+    PORT,
+    GUI_URL
   )
 }

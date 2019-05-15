@@ -131,18 +131,18 @@ class Tr069Controller(
     }
 
   private def getFirstConnectTimestamp(unit: AcsUnit): Future[AcsUnitParameter] =
-    (unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS) match {
+    (unit.unitTypeParams.find(_.name == FIRST_CONNECT_TMS.name) match {
       case Some(unitTypeParameter) =>
         Future.successful(unitTypeParameter)
       case None =>
         unitTypeService.createUnitTypeParameter(
           unit.profile.unitType.unitTypeId.get,
-          FIRST_CONNECT_TMS,
-          commonParameters(FIRST_CONNECT_TMS)
+          FIRST_CONNECT_TMS.name,
+          FIRST_CONNECT_TMS.flag
         )
     }).map { unitTypeParameter =>
       unit.params
-        .find(_.unitTypeParamName == FIRST_CONNECT_TMS)
+        .find(_.unitTypeParamName == FIRST_CONNECT_TMS.name)
         .getOrElse(
           AcsUnitParameter(
             unit.unitId,
@@ -154,19 +154,19 @@ class Tr069Controller(
     }
 
   private def getLastConnectTimestamp(unit: AcsUnit): Future[AcsUnitParameter] = {
-    (unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS) match {
+    (unit.unitTypeParams.find(_.name == LAST_CONNECT_TMS.name) match {
       case Some(unitTypeParameter) =>
         Future.successful(unitTypeParameter)
       case None =>
         unitTypeService.createUnitTypeParameter(
           unit.profile.unitType.unitTypeId.get,
-          LAST_CONNECT_TMS,
-          commonParameters(LAST_CONNECT_TMS)
+          LAST_CONNECT_TMS.name,
+          LAST_CONNECT_TMS.flag
         )
     }).map { unitTypeParameter =>
       val ts = LocalDateTime.now().toString
       unit.params
-        .find(_.unitTypeParamName == LAST_CONNECT_TMS)
+        .find(_.unitTypeParamName == LAST_CONNECT_TMS.name)
         .map(_.copy(value = Some(ts)))
         .getOrElse(
           AcsUnitParameter(unit.unitId, unitTypeParameter.unitTypeParamId, unitTypeParameter.name, Some(ts))

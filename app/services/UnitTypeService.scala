@@ -72,8 +72,8 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
                      Option(desc),
                      protocol.name
                    )
-      _ <- UnitTypeParamDao ++= SystemParameters.commonParameters.map { cp =>
-            UnitTypeParamRow(-1, unitTypeId, cp._1, cp._2)
+      _ <- UnitTypeParamDao ++= SystemParameters.values.map { cp =>
+            UnitTypeParamRow(-1, unitTypeId, cp.name, cp.flag)
           }
     } yield unitTypeId).transactionally
 

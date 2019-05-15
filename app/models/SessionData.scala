@@ -18,7 +18,7 @@ case class SessionData(
     .map(_(0) + '.')
   lazy val unitId: Option[String]       = username.orElse(unit.map(_.unitId).orElse(deviceId.map(_.unitId)))
   lazy val serialNumber: Option[String] = deviceId.map(_.serialNumber.underlying)
-  lazy val firstConnect: Boolean        = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET))
+  lazy val firstConnect: Boolean        = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET.name))
   def unsafeGetUnitId: String           = unitId.get
   def unsafeGetProductClass(appendHwVersion: Boolean): String =
     deviceId.map { deviceId =>

@@ -61,7 +61,7 @@ class UnitService(
                    (up, utp) =>
                      up.unitTypeParamId === utp.unitTypeParamId
                        && up.unitId === unitId
-                       && utp.name === SystemParameters.SECRET
+                       && utp.name === SystemParameters.SECRET.name
                  )
                  .map(_._1.value)
                  .result
