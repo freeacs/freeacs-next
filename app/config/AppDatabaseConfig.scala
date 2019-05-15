@@ -14,5 +14,5 @@ trait AppDatabaseConfig
 
   applicationEvolutions
 
-  lazy val slickDbConf = slickApi.dbConfig[JdbcProfile](DbName(Settings.defaultDatabaseName))
+  lazy val slickDbConf = slickApi.dbConfig[JdbcProfile](DbName(settings.defaultDatabaseName))
 }

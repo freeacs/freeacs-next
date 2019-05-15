@@ -12,6 +12,10 @@ case class SessionData(
     requests: Seq[CwmpMethod] = Seq.empty,
     cwmpVersion: String = "1-0"
 ) {
+  lazy val keyRoot: Option[String] = params
+    .find(_.name.startsWith("Device."))
+    .orElse(params.find(_.name.startsWith("InternetGatewayDevice.")))
+    .map(_.name.split('.')(0) + '.')
   lazy val unitId: Option[String]       = username.orElse(unit.map(_.unitId).orElse(deviceId.map(_.unitId)))
   lazy val serialNumber: Option[String] = deviceId.map(_.serialNumber.underlying)
   lazy val firstConnect: Boolean        = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET))

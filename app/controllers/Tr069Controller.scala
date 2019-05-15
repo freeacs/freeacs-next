@@ -82,6 +82,7 @@ class Tr069Controller(
               val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData, height = 200).mkString
               val unitId = sessionData.unitId.getOrElse("anonymous")
               logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
+              logger.warn("Keyroot " + sessionData.keyRoot)
               (sessionData, createInformResponse(sessionData.cwmpVersion))
             } else {
               logger.warn(s"Unit data is missing")
