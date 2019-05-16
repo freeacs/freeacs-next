@@ -217,7 +217,7 @@ class Tr069Controller(
           </cwmp:InformResponse>
         </soapenv:Body>
       </soapenv:Envelope>
-    ).withHeaders("SOAPAction" -> "")
+    ).withHeaders("SOAPAction" -> "").as("text/xml")
 
   private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =
     HeaderStruct.fromNode(payload) match {
