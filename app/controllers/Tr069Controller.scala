@@ -124,8 +124,8 @@ class Tr069Controller(
           firstConnect <- getTimestamp(unit, FIRST_CONNECT_TMS, update = false)
           lastConnect  <- getTimestamp(unit, LAST_CONNECT_TMS, update = true)
           deviceParams <- getDeviceParameters(sessionData, unit)
-          filteredParams = filterParams(Seq(firstConnect, lastConnect) ++ deviceParams, unit.params)
-          _           <- unitService.upsertParameters(filteredParams)
+          parameters = filterParams(deviceParams :+ firstConnect :+ lastConnect, unit.params)
+          _           <- unitService.upsertParameters(parameters)
           updatedUnit <- unitService.find(unit.unitId)
         } yield sessionData.copy(unit = updatedUnit)
       case _ =>
