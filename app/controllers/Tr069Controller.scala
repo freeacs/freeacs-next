@@ -1,6 +1,7 @@
 package controllers
 
 import java.time.LocalDateTime
+import java.util.Locale
 
 import akka.Done
 import config.Settings
@@ -31,21 +32,32 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  def provision = secureAction.authenticate.async(parse.tolerantXml) { implicit request =>
+  val xmlOrText = parse.using { request =>
+    request.contentType.map(_.toLowerCase(Locale.ENGLISH).split(";").head) match {
+      case Some("application/xml") | Some("text/xml") | Some("text/html") if request.hasBody =>
+        parse.tolerantXml
+      case _ => parse.tolerantText
+    }
+  }
+
+  def provision = secureAction.authenticate.async(xmlOrText) { implicit request =>
     for {
       sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
       (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
       _                 <- putSessionData(request, sessionData, updated) ?| InternalServerError("Failed to update session")
     } yield {
-      if (updated.unit.isDefined)
+      if (updated.unit.isDefined) {
         result.withSession(request.session)
-      else
+      } else
         result
     }
   }
 
-  private def payload(request: SecureRequest[NodeSeq]): Node =
-    request.body.headOption.getOrElse(<Empty />)
+  private def payload(request: SecureRequest[_]): Node =
+    request.body match {
+      case xml: NodeSeq => xml.headOption.getOrElse(<Empty />)
+      case _            => <Empty />
+    }
 
   private def processRequest(
       sessionData: SessionData,
@@ -218,14 +230,16 @@ class Tr069Controller(
     Ok(
       <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                         xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                         xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
         <soapenv:Body>
-          <cwmp:GetParameterValues >
+          <cwmp:SetParameterValues>
             <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
               <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
               <Value xsi:type="xsd:number">8600</Value>
             </ParameterNames>
-          </cwmp:GetParameterValues>
+          </cwmp:SetParameterValues>
         </soapenv:Body>
       </soapenv:Envelope>
     ).withHeaders("SOAPAction" -> "").as("text/xml")
@@ -234,6 +248,8 @@ class Tr069Controller(
     Ok(
       <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                         xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                         xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
         <soapenv:Body>
           <cwmp:GetParameterValues >
@@ -248,7 +264,13 @@ class Tr069Controller(
   private def createInformResponse(cwmpVersion: String): Result =
     Ok(
       <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                        xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                         xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
+        <soapenv:Header>
+          <cwmp:ID soapenv:mustUnderstand="1">1</cwmp:ID>
+        </soapenv:Header>
         <soapenv:Body>
           <cwmp:InformResponse>
             <MaxEnvelopes>1</MaxEnvelopes>
@@ -281,13 +303,13 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(request: SecureRequest[NodeSeq]): Future[SessionData] =
+  private def getSessionData(request: SecureRequest[_]): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
       Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
     }
 
   private def putSessionData(
-      request: SecureRequest[NodeSeq],
+      request: SecureRequest[_],
       sessionData: SessionData,
       updatedSessionData: SessionData
   ): Future[Done] =
