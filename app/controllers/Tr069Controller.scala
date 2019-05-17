@@ -15,7 +15,7 @@ import services.{ProfileService, UnitService, UnitTypeService}
 import util.MonadTransformers._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.Node
+import scala.xml.{Node, NodeSeq}
 
 class Tr069Controller(
     cc: ControllerComponents,
@@ -31,7 +31,7 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  def provision = secureAction.authenticate.async { implicit request =>
+  def provision = secureAction.authenticate.async(parse.tolerantXml) { implicit request =>
     for {
       sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
       (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
@@ -44,8 +44,8 @@ class Tr069Controller(
     }
   }
 
-  private def payload(request: SecureRequest[AnyContent]) =
-    request.body.asXml.flatMap(_.headOption).getOrElse(<Empty />)
+  private def payload(request: SecureRequest[NodeSeq]): Node =
+    request.body.headOption.getOrElse(<Empty />)
 
   private def processRequest(
       sessionData: SessionData,
@@ -281,13 +281,13 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(request: SecureRequest[AnyContent]): Future[SessionData] =
+  private def getSessionData(request: SecureRequest[NodeSeq]): Future[SessionData] =
     cache.getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
       Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
     }
 
   private def putSessionData(
-      request: SecureRequest[AnyContent],
+      request: SecureRequest[NodeSeq],
       sessionData: SessionData,
       updatedSessionData: SessionData
   ): Future[Done] =
