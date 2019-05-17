@@ -55,6 +55,12 @@ class Tr069Controller(
     (method match {
       case CwmpMethod.IN =>
         processInform(sessionData, payload)
+      case CwmpMethod.EM if sessionData.unit.isDefined =>
+        Future.successful(Right((sessionData, createGetParameterValuesResponse(sessionData.cwmpVersion))))
+      case CwmpMethod.GPVr if sessionData.unit.isDefined =>
+        Future.successful(Right((sessionData, createSetParameterValuesResponse(sessionData.cwmpVersion))))
+      case CwmpMethod.SPVr if sessionData.unit.isDefined =>
+        Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
       case otherMethod =>
         logger.debug(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
         Future.successful(Right((sessionData, NotImplemented)))
@@ -208,11 +214,43 @@ class Tr069Controller(
         )
     }
 
+  private def createSetParameterValuesResponse(cwmpVersion: String): Result =
+    Ok(
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                        xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                        xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
+        <soapenv:Body>
+          <cwmp:GetParameterValues >
+            <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
+              <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
+              <Value xsi:type="xsd:number">8600</Value>
+            </ParameterNames>
+          </cwmp:GetParameterValues>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    ).withHeaders("SOAPAction" -> "").as("text/xml")
+
+  private def createGetParameterValuesResponse(cwmpVersion: String): Result =
+    Ok(
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                        xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                        xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
+        <soapenv:Body>
+          <cwmp:GetParameterValues >
+            <ParameterNames soapenc:arrayType="xsd:string[1]">
+              <string>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</string>
+            </ParameterNames>
+          </cwmp:GetParameterValues>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    ).withHeaders("SOAPAction" -> "").as("text/xml")
+
   private def createInformResponse(cwmpVersion: String): Result =
     Ok(
-      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                        xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
         <soapenv:Body>
-          <cwmp:InformResponse xmlns:cwmp={s"urn:dslforum-org:cwmp-$cwmpVersion"}>
+          <cwmp:InformResponse>
             <MaxEnvelopes>1</MaxEnvelopes>
           </cwmp:InformResponse>
         </soapenv:Body>
