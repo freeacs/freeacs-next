@@ -107,6 +107,11 @@ class Tr069Controller(
               (sessionData, Ok)
             }
           }
+          .recoverWith {
+            case e: Exception =>
+              logger.error("Something failed when loading and updating unit", e)
+              Future.successful((sessionData, Ok))
+          }
       )
       .mapToFutureEither
 
