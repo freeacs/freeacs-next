@@ -35,7 +35,7 @@ class Tr069Controller(
   def provision = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
     for {
       sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
-      (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
+      (updated, result) <- processRequest(sessionData, getBodyAsXml(request)) ?| (e => InternalServerError(e))
       _                 <- putSessionData(request, sessionData, updated) ?| InternalServerError("Failed to update session")
     } yield {
       if (updated.unit.isDefined) {
@@ -53,7 +53,7 @@ class Tr069Controller(
     }
   }
 
-  private def payload(request: SecureRequest[_]): Node =
+  private def getBodyAsXml(request: SecureRequest[_]): Node =
     request.body match {
       case xml: NodeSeq => xml.headOption.getOrElse(<Empty />)
       case _            => <Empty />
