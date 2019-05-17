@@ -32,15 +32,7 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  val xmlOrText = parse.using { request =>
-    request.contentType.map(_.toLowerCase(Locale.ENGLISH).split(";").head) match {
-      case Some("application/xml") | Some("text/xml") | Some("text/html") if request.hasBody =>
-        parse.tolerantXml
-      case _ => parse.tolerantText
-    }
-  }
-
-  def provision = secureAction.authenticate.async(xmlOrText) { implicit request =>
+  def provision = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
     for {
       sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
       (updated, result) <- processRequest(sessionData, payload(request)) ?| (e => InternalServerError(e))
@@ -50,6 +42,14 @@ class Tr069Controller(
         result.withSession(request.session)
       } else
         result
+    }
+  }
+
+  private val parseAsXmlOrText = parse.using { request =>
+    request.contentType.map(_.toLowerCase(Locale.ENGLISH).split(";").head) match {
+      case Some("application/xml") | Some("text/xml") | Some("text/html") if request.hasBody =>
+        parse.tolerantXml
+      case _ => parse.tolerantText
     }
   }
 
