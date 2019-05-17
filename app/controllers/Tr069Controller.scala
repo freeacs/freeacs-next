@@ -147,7 +147,7 @@ class Tr069Controller(
           firstConnect <- getTimestamp(unit, FIRST_CONNECT_TMS, update = false)
           lastConnect  <- getTimestamp(unit, LAST_CONNECT_TMS, update = true)
           deviceParams <- getDeviceParameters(sessionData, unit)
-          parameters = filterParams(deviceParams :+ firstConnect :+ lastConnect, unit.params)
+          parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, unit.params)
           _           <- unitService.upsertParameters(parameters)
           updatedUnit <- unitService.find(unit.unitId)
         } yield sessionData.copy(unit = updatedUnit)
@@ -155,11 +155,11 @@ class Tr069Controller(
         Future.successful(sessionData)
     }
 
-  private def filterParams(
-      paramsToUpsert: Seq[AcsUnitParameter],
+  private def getParamsToUpdate(
+      newParameters: Seq[AcsUnitParameter],
       existingParams: Seq[AcsUnitParameter]
   ) =
-    paramsToUpsert.filter(
+    newParameters.filter(
       p =>
         existingParams.exists(
           up => up.unitTypeParamName == p.unitTypeParamName && up.value != p.value
