@@ -269,7 +269,7 @@ class Tr069Controller(
         <cwmp:SetParameterValues>
           <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
             <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
-            <Value xsi:type="xsd:number">8600</Value>
+            <Value>8600</Value>
           </ParameterNames>
         </cwmp:SetParameterValues>
       }
