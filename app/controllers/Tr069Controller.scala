@@ -264,38 +264,35 @@ class Tr069Controller(
     }
 
   private def createSetParameterValuesResponse(cwmpVersion: String): Result =
-    Ok(
-      createEnvelope(cwmpVersion) {
-        <cwmp:SetParameterValues>
-          <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
-            <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
-            <Value>8600</Value>
-          </ParameterNames>
-        </cwmp:SetParameterValues>
-      }
-    ).withHeaders("SOAPAction" -> "").as("text/xml")
+    SoapEnvelope(cwmpVersion) {
+      <cwmp:SetParameterValues>
+        <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
+          <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
+          <Value>8600</Value>
+        </ParameterNames>
+      </cwmp:SetParameterValues>
+    }
 
   private def createGetParameterValuesResponse(cwmpVersion: String): Result =
-    Ok(
-      createEnvelope(cwmpVersion) {
-        <cwmp:GetParameterValues >
-          <ParameterNames soapenc:arrayType="xsd:string[1]">
-            <string>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</string>
-          </ParameterNames>
-        </cwmp:GetParameterValues>
-      }
-    ).withHeaders("SOAPAction" -> "").as("text/xml")
+    SoapEnvelope(cwmpVersion) {
+      <cwmp:GetParameterValues >
+        <ParameterNames soapenc:arrayType="xsd:string[1]">
+          <string>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</string>
+        </ParameterNames>
+      </cwmp:GetParameterValues>
+    }
 
   private def createInformResponse(cwmpVersion: String): Result =
-    Ok(
-      createEnvelope(cwmpVersion) {
-        <cwmp:InformResponse>
-          <MaxEnvelopes>1</MaxEnvelopes>
-        </cwmp:InformResponse>
-      }
-    ).withHeaders("SOAPAction" -> "").as("text/xml")
+    SoapEnvelope(cwmpVersion) {
+      <cwmp:InformResponse>
+        <MaxEnvelopes>1</MaxEnvelopes>
+      </cwmp:InformResponse>
+    }
 
-  private def createEnvelope(cwmpVersion: String)(body: => Node): Node = {
+  private def SoapEnvelope(cwmpVersion: String)(body: => Node): Result =
+    Soap(Envelope(cwmpVersion)(body))
+
+  private def Envelope(cwmpVersion: String)(body: => Node): Node = {
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                       xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
                       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -309,6 +306,9 @@ class Tr069Controller(
       </soapenv:Body>
     </soapenv:Envelope>
   }
+
+  private def Soap(body: => Node): Result =
+    Ok(body).withHeaders("SOAPAction" -> "").as("text/xml")
 
   private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =
     HeaderStruct.fromNode(payload) match {
