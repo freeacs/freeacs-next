@@ -34,9 +34,9 @@ class Tr069Controller(
 
   def provision = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
     for {
-      sessionData       <- getSessionData(request) ?| InternalServerError("Failed to get session")
-      (updated, result) <- processRequest(sessionData, getBodyAsXml(request)) ?| (e => InternalServerError(e))
-      _                 <- putSessionData(request, sessionData, updated) ?| InternalServerError("Failed to update session")
+      sessionData       <- getSessionData(request) ?| (result => result)
+      (updated, result) <- processRequest(sessionData, getBodyAsXml(request)) ?| (result => result)
+      _                 <- putSessionData(request, sessionData, updated) ?| (result => result)
     } yield {
       if (updated.unit.isDefined) {
         result.withSession(request.session)
@@ -62,7 +62,7 @@ class Tr069Controller(
   private def processRequest(
       sessionData: SessionData,
       payload: Node
-  ): Future[Either[String, (SessionData, Result)]] = {
+  ): Future[Either[Result, (SessionData, Result)]] = {
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN =>
@@ -74,12 +74,17 @@ class Tr069Controller(
       case CwmpMethod.SPVr if sessionData.unit.isDefined =>
         Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
       case otherMethod =>
-        logger.debug(s"Got ${otherMethod.abbr} method, answering with NotImplemented")
-        Future.successful(Right((sessionData, NotImplemented)))
-    }).map(_.map {
-      case (finalSessionData, result) =>
-        (finalSessionData.copy(requests = finalSessionData.requests ++ Seq(method)), result)
-    })
+        logger.debug(s"Got ${otherMethod.abbr} method, answering with Ok")
+        Future.successful(Right((sessionData, Ok)))
+    }).flatMap {
+      case Left(error) =>
+        logger.error(s"Failed to process request: $error")
+        Future.successful(Left(Ok))
+      case Right((finalData, result)) =>
+        Future.successful(
+          Right((finalData.copy(requests = finalData.requests ++ Seq(method)), result))
+        )
+    }
   }
 
   private def processInform(
@@ -308,20 +313,32 @@ class Tr069Controller(
       case None                 => Left("Missing deviceId")
     }
 
-  private def getSessionData(request: SecureRequest[_]): Future[SessionData] =
-    cache.getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
-      Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
-    }
+  private def getSessionData(request: SecureRequest[_]): Future[Either[Result, SessionData]] =
+    cache
+      .getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
+        Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
+      }
+      .map(Right.apply)
+      .recoverWith {
+        case e: Exception =>
+          logger.error("Failed to get session data", e)
+          Future.successful(Left(Ok))
+      }
 
   private def putSessionData(
       request: SecureRequest[_],
       sessionData: SessionData,
       updatedSessionData: SessionData
-  ): Future[Done] =
-    if (sessionData != updatedSessionData)
-      cache.set(sessionDataKey(request.sessionId), updatedSessionData)
-    else
-      Future.successful(Done)
+  ): Future[Either[Result, Done]] =
+    if (sessionData != updatedSessionData) {
+      cache.set(sessionDataKey(request.sessionId), updatedSessionData).map(Right.apply).recoverWith {
+        case e: Exception =>
+          logger.error("Failed to update session data", e)
+          Future.successful(Left(Ok))
+      }
+    } else {
+      Future.successful(Right(Done))
+    }
 
   private def sessionDataKey(sessionId: String) = s"$sessionId-data"
 }
