@@ -87,31 +87,15 @@ class Tr069Controller(
 
       case CwmpMethod.EM if sessionData.unit.isDefined =>
         if (shouldDiscoverDeviceParameters(sessionData)) {
-          (getDiscoverUnitParam(sessionData) match {
-            case Some(up) if up.value.contains("1") =>
-              val discoverUtp = getDiscoverUnitTypeParam(sessionData)
-              unitService.upsertParameters(
-                Seq(
-                  AcsUnitParameter(
-                    sessionData.unsafeGetUnitId,
-                    discoverUtp.unitTypeParamId,
-                    discoverUtp.name,
-                    Some("0")
-                  )
-                )
-              )
-            case _ => Future.successful(Seq.empty)
-          }).map[Either[Result, (SessionData, Result)]] { _ =>
-            Right(
-              (
-                sessionData,
-                createGetParameterNamesResponse(
-                  s"${sessionData.unsafeKeyRoot}ManagementServer.",
-                  sessionData.cwmpVersion
-                )
+          maybeClearDiscoverParam(sessionData).map(_.map { _ =>
+            (
+              sessionData,
+              createGetParameterNamesResponse(
+                s"${sessionData.unsafeKeyRoot}ManagementServer.",
+                sessionData.cwmpVersion
               )
             )
-          }
+          })
         } else {
           Future.successful(
             Right(
@@ -162,6 +146,34 @@ class Tr069Controller(
         )
     }
   }
+
+  private def maybeClearDiscoverParam(sessionData: SessionData): Future[Either[String, Done]] =
+    getDiscoverUnitParam(sessionData) match {
+      case Some(up) if up.value.contains("1") =>
+        val discoverUtp = getDiscoverUnitTypeParam(sessionData)
+        unitService
+          .upsertParameters(
+            Seq(
+              AcsUnitParameter(
+                sessionData.unsafeGetUnitId,
+                discoverUtp.unitTypeParamId,
+                discoverUtp.name,
+                Some("0")
+              )
+            )
+          )
+          .map(_ => Right(Done))
+          .recoverWith {
+            case e: Exception =>
+              Future.successful(
+                Left(
+                  s"Failed to clear discover param for unit ${sessionData.unsafeGetUnitId}: ${e.getLocalizedMessage}"
+                )
+              )
+          }
+      case _ =>
+        Future.successful(Right(Done))
+    }
 
   private def getParamsToRead(sessionData: SessionData) = {
     sessionData.unit.get.unitTypeParams.filter { utp =>
