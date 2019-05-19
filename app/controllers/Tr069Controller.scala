@@ -86,26 +86,7 @@ class Tr069Controller(
         processInform(sessionData, payload)
 
       case CwmpMethod.EM if sessionData.unit.isDefined =>
-        if (shouldDiscoverDeviceParameters(sessionData)) {
-          maybeClearDiscoverParam(sessionData).map(_.map { _ =>
-            (
-              sessionData,
-              createGetParameterNamesResponse(
-                s"${sessionData.unsafeKeyRoot}ManagementServer.",
-                sessionData.cwmpVersion
-              )
-            )
-          })
-        } else {
-          Future.successful(
-            Right(
-              (
-                sessionData,
-                createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
-              )
-            )
-          )
-        }
+        processEmpty(sessionData)
 
       case CwmpMethod.GPNr =>
         // TODO:
@@ -146,6 +127,28 @@ class Tr069Controller(
         )
     }
   }
+
+  private def processEmpty(sessionData: SessionData) =
+    if (shouldDiscoverDeviceParameters(sessionData)) {
+      maybeClearDiscoverParam(sessionData).map(_.map { _ =>
+        (
+          sessionData,
+          createGetParameterNamesResponse(
+            s"${sessionData.unsafeKeyRoot}ManagementServer.",
+            sessionData.cwmpVersion
+          )
+        )
+      })
+    } else {
+      Future.successful(
+        Right(
+          (
+            sessionData,
+            createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
+          )
+        )
+      )
+    }
 
   private def maybeClearDiscoverParam(sessionData: SessionData): Future[Either[String, Done]] =
     getDiscoverUnitParam(sessionData) match {
