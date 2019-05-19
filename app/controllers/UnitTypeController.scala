@@ -1,17 +1,16 @@
 package controllers
 
-import io.kanaka.monadic.dsl._
 import models.AcsProtocol
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
-import play.api.i18n.{I18nSupport, MessagesProvider}
-import play.api.mvc.{AbstractController, ControllerComponents, Flash, Result}
+import play.api.i18n.I18nSupport
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.UnitTypeService
 import views.CreateUnitType
 import views.html.templates.{unitTypeCreate, unitTypeOverview}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeService)(
     implicit ec: ExecutionContext
@@ -25,24 +24,33 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
   }
 
   def postCreate = Action.async { implicit request =>
-    for {
-      data <- form.bindFromRequest() ?| (form => BadRequest(unitTypeCreate(form)))
-      _    <- createUnitType(data) ?| failedToCreate(data)
-    } yield Redirect(CreateUnitType.url).flashing("success" -> s"The Unit Type ${data.name} was created")
+    form.bindFromRequest.fold(
+      formWithErrors => Future.successful(BadRequest(unitTypeCreate(formWithErrors))),
+      unitTypeData =>
+        unitTypeService
+          .createOrFail(
+            unitTypeData.name,
+            unitTypeData.vendor,
+            unitTypeData.description,
+            unitTypeData.protocol
+          )
+          .map {
+            case Right(_) =>
+              Redirect(CreateUnitType.url)
+                .flashing("success" -> s"The Unit Type ${unitTypeData.name} was created")
+            case Left(error) =>
+              InternalServerError(unitTypeCreate(form.fill(unitTypeData), Some(error)))
+        }
+    )
   }
 
-  private def createUnitType(data: UnitTypeForm.UnitType) =
-    unitTypeService.createOrFail(data.name, data.vendor, data.description, data.protocol)
-
-  private def failedToCreate(
-      data: UnitType
-  )(implicit messagesProvider: MessagesProvider, flash: Flash): String => Result =
-    error => InternalServerError(unitTypeCreate(form.fill(data), Some(error)))
-
   def overview = Action.async {
-    for {
-      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-    } yield Ok(unitTypeOverview(unitTypeList))
+    unitTypeService.list.map {
+      case Right(unitTypeList) =>
+        Ok(unitTypeOverview(unitTypeList))
+      case Left(error) =>
+        InternalServerError(error)
+    }
   }
 }
 

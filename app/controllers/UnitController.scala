@@ -1,15 +1,13 @@
 package controllers
 
-import io.kanaka.monadic.dsl._
-import models.{AcsProfile, AcsUnitType}
 import play.api.Logging
-import play.api.i18n.{I18nSupport, MessagesProvider}
-import play.api.mvc.{AbstractController, ControllerComponents, Flash, Result}
+import play.api.i18n.I18nSupport
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
 import views.html.templates.{unitCreate, unitOverview}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class UnitController(
     cc: ControllerComponents,
@@ -25,35 +23,52 @@ class UnitController(
   import UnitForm._
 
   def viewCreate = Action.async { implicit request =>
-    for {
-      unitTypeList <- unitTypeService.list ?| (e => InternalServerError(e))
-      profileList  <- profileService.list ?| (e => InternalServerError(e))
-    } yield Ok(unitCreate(form, unitTypeList.toList, profileList.toList))
+    unitTypeService.list.flatMap {
+      case Right(unitTypeList) =>
+        profileService.list.map {
+          case Right(profileList) =>
+            Ok(unitCreate(form, unitTypeList.toList, profileList.toList))
+          case Left(error) =>
+            InternalServerError(error)
+        }
+      case Left(error) =>
+        Future.successful(InternalServerError(error))
+    }
   }
 
   def postCreate = Action.async { implicit request =>
-    for {
-      unitTypeList <- unitTypeService.list ?| (error => InternalServerError(error))
-      profileList  <- profileService.list ?| (error => InternalServerError(error))
-      data         <- form.bindFromRequest() ?| (form => BadRequest(unitCreate(form, unitTypeList, profileList)))
-      _            <- createUnit(data) ?| failedToCreate(data, unitTypeList, profileList)
-    } yield Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${data.unitId} was created")
+    unitTypeService.list.flatMap {
+      case Right(unitTypeList) =>
+        profileService.list.flatMap {
+          case Right(profileList) =>
+            form.bindFromRequest.fold(
+              formWithErrors =>
+                Future.successful(BadRequest(unitCreate(formWithErrors, unitTypeList, profileList))),
+              unitData =>
+                unitService.creatOrFail(unitData.unitId, unitData.unitTypeId, unitData.profileId).map {
+                  case Right(_) =>
+                    Redirect(CreateUnit.url).flashing("success" -> s"The Unit ${unitData.unitId} was created")
+                  case Left(error) =>
+                    InternalServerError(
+                      unitCreate(form.fill(unitData), unitTypeList, profileList, Some(error))
+                    )
+              }
+            )
+          case Left(error) =>
+            Future.successful(InternalServerError(error))
+        }
+      case Left(error) =>
+        Future.successful(InternalServerError(error))
+    }
   }
 
-  private def createUnit(data: Unit) =
-    unitService.creatOrFail(data.unitId, data.unitTypeId, data.profileId)
-
-  private def failedToCreate(
-      data: Unit,
-      unitTypeList: Seq[AcsUnitType],
-      profileList: Seq[AcsProfile]
-  )(implicit messagesProvider: MessagesProvider, flash: Flash): String => Result =
-    error => InternalServerError(unitCreate(form.fill(data), unitTypeList, profileList, Some(error)))
-
   def overview = Action.async {
-    for {
-      unitList <- unitService.list ?| (e => InternalServerError(e))
-    } yield Ok(unitOverview(unitList.toList))
+    unitService.list.map {
+      case Right(unitList) =>
+        Ok(unitOverview(unitList.toList))
+      case Left(error) =>
+        InternalServerError(error)
+    }
   }
 }
 
