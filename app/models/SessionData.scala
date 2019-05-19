@@ -14,6 +14,7 @@ case class SessionData(
 ) {
   import SessionData._
   lazy val keyRoot                  = getKeyRoot(params)
+  lazy val unsafeKeyRoot            = keyRoot.get
   lazy val CONFIG_FILES             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
   lazy val SOFTWARE_VERSION         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
   lazy val PERIODIC_INFORM_INTERVAL = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
