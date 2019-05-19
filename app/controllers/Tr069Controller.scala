@@ -176,17 +176,16 @@ class Tr069Controller(
         Future.successful(Right(Done))
     }
 
-  private def getParamsToRead(sessionData: SessionData) = {
-    sessionData.unit.get.unitTypeParams.filter { utp =>
+  private def getParamsToRead(sessionData: SessionData) =
+    sessionData.unsafeGetUnit.unitTypeParams.filter { utp =>
       utp.name == sessionData.PERIODIC_INFORM_INTERVAL || utp.flags.contains("A")
     }
-  }
 
   private def getDiscoverUnitParam(sessionData: SessionData) =
-    sessionData.unit.get.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
+    sessionData.unsafeGetUnit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
   private def getDiscoverUnitTypeParam(sessionData: SessionData) =
-    sessionData.unit.get.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
+    sessionData.unsafeGetUnit.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
 
   private def shouldDiscoverDeviceParameters(sessionData: SessionData) =
     sessionData.unit.exists(_.unitTypeParams.forall(_.flags.contains("X"))) &&

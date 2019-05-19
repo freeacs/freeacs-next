@@ -13,18 +13,23 @@ case class SessionData(
     cwmpVersion: String = "1-0"
 ) {
   import SessionData._
-  lazy val keyRoot                  = getKeyRoot(params)
-  lazy val unsafeKeyRoot            = keyRoot.get
+  lazy val keyRoot = getKeyRoot(params)
+
+  lazy val unsafeKeyRoot   = keyRoot.get
+  lazy val unsafeGetUnitId = unitId.get
+  lazy val unsafeGetUnit   = unit.get
+
   lazy val CONFIG_FILES             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
   lazy val SOFTWARE_VERSION         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
   lazy val PERIODIC_INFORM_INTERVAL = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
   lazy val CONNECTION_URL           = keyRoot.map(_ + "ManagementServer.ConnectionRequestURL").get
   lazy val CONNECTION_PASSWORD      = keyRoot.map(_ + "ManagementServer.ConnectionRequestPassword").get
   lazy val CONNECTION_USERNAME      = keyRoot.map(_ + "ManagementServer.ConnectionRequestUsername").get
-  lazy val unitId                   = username.orElse(unit.map(_.unitId).orElse(deviceId.map(_.unitId)))
-  lazy val serialNumber             = deviceId.map(_.serialNumber.underlying)
-  lazy val firstConnect             = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET.name))
-  lazy val unsafeGetUnitId          = unitId.get
+
+  lazy val unitId       = username.orElse(unit.map(_.unitId).orElse(deviceId.map(_.unitId)))
+  lazy val serialNumber = deviceId.map(_.serialNumber.underlying)
+  lazy val firstConnect = unit.exists(!_.params.exists(_.unitTypeParamName != SECRET.name))
+
   def unsafeGetProductClass(appendHwVersion: Boolean): String =
     SessionData.unsafeGetProductClass(deviceId, appendHwVersion)
 }
