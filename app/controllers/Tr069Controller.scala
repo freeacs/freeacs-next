@@ -84,35 +84,58 @@ class Tr069Controller(
     (method match {
       case CwmpMethod.IN =>
         processInform(sessionData, payload)
+        Future.successful(Right((sessionData, Ok)))
+
       case CwmpMethod.EM if sessionData.unit.isDefined =>
         if (shouldDiscoverDeviceParameters(sessionData)) {
+          (getDiscoverUnitParam(sessionData) match {
+            case Some(up) if up.value.contains("1") =>
+              val discoverUtp = getDiscoverUnitTypeParam(sessionData)
+              unitService.upsertParameters(
+                Seq(
+                  AcsUnitParameter(
+                    sessionData.unsafeGetUnitId,
+                    discoverUtp.unitTypeParamId,
+                    discoverUtp.name,
+                    Some("0")
+                  )
+                )
+              )
+            case _ => Future.successful(Seq.empty)
+          }).map[Either[Result, (SessionData, Result)]] { _ =>
+            Right(
+              (
+                sessionData,
+                createGetParameterNamesResponse(sessionData.unsafeKeyRoot, sessionData.cwmpVersion)
+              )
+            )
+          }
+        } else {
           Future.successful(
             Right(
               (
                 sessionData,
-                createGetParameterNamesResponse(
-                  sessionData.unsafeKeyRoot, // if by some reason this is not set, crash hard
-                  sessionData.cwmpVersion
-                )
+                createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
               )
             )
           )
-        } else {
-          // TODO:
-          // 1. Find parameters with Read Always flags in unit params
-          // 2. Ask CPE for the values of all those params, including PII
-          Future.successful(Right((sessionData, createGetParameterValuesResponse(sessionData.cwmpVersion))))
         }
+
       case CwmpMethod.GPNr =>
         // TODO:
         // 1. Extract parameters from GPN response
         // 2. Find all parameters that does not exist in unit type
         // 3. Save those parameters in unit type
         // 4. Update unit in sessionData
-        // TODO: (duplicate requirement from above)
-        // 1. Find parameters with Read Always flags in unit params
-        // 2. Ask CPE for the values of all those params, including PII
-        Future.successful(Right((sessionData, createGetParameterValuesResponse(sessionData.cwmpVersion))))
+        Future.successful(
+          Right(
+            (
+              sessionData,
+              createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
+            )
+          )
+        )
+
       case CwmpMethod.GPVr if sessionData.unit.isDefined =>
         // TODO:
         // 1. Extract parameter values from GPV response
@@ -120,8 +143,10 @@ class Tr069Controller(
         // 3. Ask CPE to save the values of those parameters
         // 4. Then save those units in the ACS
         Future.successful(Right((sessionData, createSetParameterValuesResponse(sessionData.cwmpVersion))))
+
       case CwmpMethod.SPVr if sessionData.unit.isDefined =>
         Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
+
       case otherMethod =>
         logger.debug(s"Got ${otherMethod.abbr} method, answering with Ok")
         Future.successful(Right((sessionData, Ok)))
@@ -136,13 +161,28 @@ class Tr069Controller(
     }
   }
 
+  private def getParamsToRead(sessionData: SessionData) = {
+    sessionData.unit.get.unitTypeParams.filter { utp =>
+      utp.name == sessionData.PERIODIC_INFORM_INTERVAL || utp.flags.contains("A")
+    }
+  }
+
+  private def getDiscoverUnitParam(sessionData: SessionData) =
+    sessionData.unit.get.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name).headOption
+
+  private def getDiscoverUnitTypeParam(sessionData: SessionData) =
+    sessionData.unit.get.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
+
   private def shouldDiscoverDeviceParameters(sessionData: SessionData) =
     sessionData.unit.exists(_.unitTypeParams.forall(_.flags.contains("X"))) &&
-      (settings.discoveryMode || sessionData.unit.exists(
-        _.params.exists(
-          p => p.unitTypeParamName == SystemParameters.DISCOVER.name && p.value.contains("1")
-        )
-      ))
+      (settings.discoveryMode || unitDiscoveryParamIsSet(sessionData))
+
+  private def unitDiscoveryParamIsSet(sessionData: SessionData) =
+    sessionData.unit.exists(
+      _.params.exists(
+        p => p.unitTypeParamName == SystemParameters.DISCOVER.name && p.value.contains("1")
+      )
+    )
 
   private def putSessionData(
       request: SecureRequest[_],
@@ -328,11 +368,14 @@ class Tr069Controller(
       </cwmp:GetParameterNames>
     }
 
-  private def createGetParameterValuesResponse(cwmpVersion: String): Result =
+  private def createGetParameterValuesResponse(
+      params: Seq[AcsUnitTypeParameter],
+      cwmpVersion: String
+  ): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:GetParameterValues>
-        <ParameterNames soapenc:arrayType="xsd:string[1]">
-          <string>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</string>
+        <ParameterNames soapenc:arrayType={s"xsd:string[${params.length}]"}>
+          {params.map(param => <string>{param}</string>)}
         </ParameterNames>
       </cwmp:GetParameterValues>
     }
