@@ -106,7 +106,10 @@ class Tr069Controller(
             Right(
               (
                 sessionData,
-                createGetParameterNamesResponse(sessionData.unsafeKeyRoot, sessionData.cwmpVersion)
+                createGetParameterNamesResponse(
+                  s"${sessionData.unsafeKeyRoot}ManagementServer.",
+                  sessionData.cwmpVersion
+                )
               )
             )
           }
