@@ -5,7 +5,6 @@ import java.util.Locale
 
 import akka.Done
 import config.Settings
-import io.kanaka.monadic.dsl._
 import models.SystemParameters._
 import models._
 import play.api.Logging
@@ -33,15 +32,22 @@ class Tr069Controller(
     with Logging {
 
   def provision = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
-    for {
-      sessionData       <- getSessionData(request) ?| (result => result)
-      (updated, result) <- processRequest(sessionData, getBodyAsXml(request)) ?| (result => result)
-      _                 <- putSessionData(request, sessionData, updated) ?| (result => result)
-    } yield {
-      if (updated.unit.isDefined) {
-        result.withSession(request.session)
-      } else
-        result
+    getSessionData(request).flatMap {
+      case Right(sessionData) =>
+        processRequest(sessionData, getBodyAsXml(request)).flatMap {
+          case Right((updatedSessionData, result)) =>
+            putSessionData(request, sessionData, updatedSessionData).flatMap {
+              case Right(Done) =>
+                if (updatedSessionData.unit.isDefined) {
+                  Future.successful(result.withSession(request.session))
+                } else {
+                  Future.successful(result)
+                }
+              case Left(error) => Future.successful(error)
+            }
+          case Left(error) => Future.successful(error)
+        }
+      case Left(error) => Future.successful(error)
     }
   }
 

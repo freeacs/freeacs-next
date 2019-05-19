@@ -28,7 +28,6 @@ libraryDependencies += "com.typesafe.slick" %% "slick" % slickVersion
 libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % slickVersion
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.0" % "test"
 libraryDependencies += "com.lihaoyi" %% "pprint" % "0.5.3"
-libraryDependencies += "io.kanaka" %% "play-monadic-actions" % "2.1.0"
 
 enablePlugins(JavaAppPackaging)
 
