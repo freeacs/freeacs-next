@@ -183,7 +183,7 @@ class Tr069Controller(
   }
 
   private def getDiscoverUnitParam(sessionData: SessionData) =
-    sessionData.unit.get.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name).headOption
+    sessionData.unit.get.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
   private def getDiscoverUnitTypeParam(sessionData: SessionData) =
     sessionData.unit.get.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
