@@ -5,7 +5,7 @@ The goal of this project is to combine that which has been previously been devel
 ## Send an inform
 
 1. Change the digest.secret in application.conf
-2. Start the application
+2. Start the application either with sbt run or from your preferred IDE
 3. Send an Inform to the acs like the curl below:
 
 ```
