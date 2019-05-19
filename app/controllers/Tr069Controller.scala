@@ -134,7 +134,7 @@ class Tr069Controller(
         (
           sessionData,
           createGetParameterNamesResponse(
-            s"${sessionData.unsafeKeyRoot}ManagementServer.",
+            sessionData.unsafeKeyRoot,
             sessionData.cwmpVersion
           )
         )
@@ -231,10 +231,6 @@ class Tr069Controller(
           .flatMap(maybeUpdateAcsParams)
           .map { sessionData =>
             if (sessionData.unit.isDefined) {
-              val debug  = pprint.PPrinter.BlackWhite.tokenize(sessionData, height = 200).mkString
-              val unitId = sessionData.unitId.getOrElse("anonymous")
-              logger.warn(s"Inform from unit [$unitId]. SessionData:\n$debug")
-              logger.warn("Keyroot " + sessionData.keyRoot)
               (sessionData, createInformResponse(sessionData.cwmpVersion))
             } else {
               logger.warn(s"Unit data is missing")
@@ -392,7 +388,7 @@ class Tr069Controller(
     SoapEnvelope(cwmpVersion) {
       <cwmp:GetParameterValues>
         <ParameterNames soapenc:arrayType={s"xsd:string[${params.length}]"}>
-          {params.map(param => <string>{param}</string>)}
+          {params.map(param => <string>{param.name}</string>)}
         </ParameterNames>
       </cwmp:GetParameterValues>
     }
@@ -407,7 +403,7 @@ class Tr069Controller(
   private def SoapEnvelope(cwmpVersion: String)(body: => Node): Result =
     Soap(Envelope(cwmpVersion)(body))
 
-  private def Envelope(cwmpVersion: String)(body: => Node): Node = {
+  private def Envelope(cwmpVersion: String)(body: => Node): Node =
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                       xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
                       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -420,7 +416,6 @@ class Tr069Controller(
         {body}
       </soapenv:Body>
     </soapenv:Envelope>
-  }
 
   private def Soap(body: => Node): Result =
     Ok(body).withHeaders("SOAPAction" -> "").as("text/xml")
