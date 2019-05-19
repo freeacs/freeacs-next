@@ -165,6 +165,7 @@ class Tr069Controller(
           .map(_ => Right(Done))
           .recoverWith {
             case e: Exception =>
+              logger.error(s"Failed to clear discover param for unit ${sessionData.unsafeGetUnitId}", e)
               Future.successful(
                 Left(
                   s"Failed to clear discover param for unit ${sessionData.unsafeGetUnitId}: ${e.getLocalizedMessage}"
