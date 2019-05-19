@@ -2,6 +2,15 @@
 
 The goal of this project is to combine that which has previously been developed and deployed individually in the FreeACS project. 
 
+This project will serve the following purposes:
+
+1. Provisioning server 
+2. Administration gui
+3. Scheduler
+4. ++
+
+The project is built with a minimal version of the Play framework which in turn is built on top of Akka HTTP. Its using Slick for asynchronous data access, Play Cache for caching things like unit type, groups, jobs etc (the cache can be easily distributed with hazelcast), and uses plain and core Scala to do the stuff that needs to be coded. For an object oriented programmer there is not big jump to understand this code base. 
+
 ## Send an inform
 
 1. Change the digest.secret in application.conf
