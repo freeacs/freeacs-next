@@ -31,7 +31,7 @@ case class SessionData(
 object SessionData {
   def unsafeGetProductClass(deviceId: Option[DeviceIdStruct], appendHwVersion: Boolean): String =
     deviceId.map { deviceId =>
-      // TODO
+      println(appendHwVersion)
       deviceId.productClass.underlying
     }.get
 

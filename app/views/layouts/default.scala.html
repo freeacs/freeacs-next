@@ -88,12 +88,12 @@
 
         <div id="wrapper">
             <ul class="sidebar navbar-nav">
-                @MenuItem("Dashboard", List(Dashboard), currentPage, "fa fa-dashboard", displayChildren = false)
-                @MenuItem("Unit Type", List(UnitTypeOverview, CreateUnitType), currentPage, "fa fa-gears")
-                @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage, "fa fa-gear")
-                @MenuItem("Units", List(UnitOverview, CreateUnit), currentPage, "fa fa-hdd-o")
-                @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage, "fa fa-group")
-                @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage, "fa fa-calendar")
+                @MenuItem("Dashboard", List(Dashboard), currentPage, displayChildren = false)
+                @MenuItem("Unit Type", List(UnitTypeOverview, CreateUnitType), currentPage)
+                @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage)
+                @MenuItem("Units", List(UnitOverview, CreateUnit), currentPage)
+                @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage)
+                @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage)
             </ul>
             <div id="content-wrapper">
                 <div class="container-fluid">

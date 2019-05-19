@@ -11,7 +11,7 @@ import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import services.{ProfileService, UnitService, UnitTypeService}
+import services.{UnitService, UnitTypeService}
 import util.MonadTransformers._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -20,7 +20,6 @@ import scala.xml.{Node, NodeSeq}
 class Tr069Controller(
     cc: ControllerComponents,
     unitService: UnitService,
-    profileService: ProfileService,
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,

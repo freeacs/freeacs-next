@@ -1,4 +1,4 @@
-name := "freeacs-play"
+name := "freeacs-next"
 
 version := "1.0"
 
@@ -8,13 +8,28 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
 resolvers += "jitpack" at "https://jitpack.io"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.8"
 
 val slickVersion = "3.3.0"
 
 val playSlick = "4.0.1"
 
-scalacOptions += "-Xfatal-warnings"
+scalacOptions ++= Seq(
+  "-encoding", "UTF-8",
+  "-unchecked",
+  "-deprecation",
+  "-Xfuture",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Ywarn-unused:implicits",
+  "-Ywarn-unused:locals",
+  "-Ywarn-unused:params",
+  "-Ywarn-unused:patvars",
+  "-Ywarn-unused:privates",
+  "-Xfatal-warnings"
+)
 
 libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"

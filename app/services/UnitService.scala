@@ -22,7 +22,7 @@ class UnitService(
       case _          => Future.successful(None)
     }
 
-  def count(implicit ec: ExecutionContext): Future[Int] =
+  def count: Future[Int] =
     db.run(Unit.length.result)
 
   def creatOrFail(unitId: String, unitTypeId: Int, profileId: Int)(

@@ -21,7 +21,6 @@ trait AppControllersConfig {
     new Tr069Controller(
       controllerComponents,
       unitService,
-      profileService,
       unitTypeService,
       cache,
       userAction,
