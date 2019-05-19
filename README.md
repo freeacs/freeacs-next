@@ -9,7 +9,7 @@ This project will serve the following purposes:
 3. Scheduler
 4. ++
 
-The project is built with a minimal version of the Play framework which in turn is built on top of Akka HTTP. Its using Slick for asynchronous data access, Play Cache for caching things like unit type, groups, jobs etc (the cache can be easily distributed with hazelcast), and uses plain and core Scala to do the stuff that needs to be coded. For an object oriented programmer there is no big jumps needed to understand this code base. 
+The project is built with a minimal version of the Play framework which in turn is built on top of Akka HTTP. Its using Slick for asynchronous data access, Play Cache for caching things like unit type, groups, jobs etc (the cache can be easily distributed with hazelcast), and uses plain and core Scala to do the stuff that needs to be coded. For an object oriented programmer there is no big jumps needed to understand this code base. Another reason to avoid using advanced scala libraries is to be ready for Scala 3 aka Dotty in 2020.
 
 ## Send an inform
 
