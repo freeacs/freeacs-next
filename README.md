@@ -1,4 +1,4 @@
-# FreeACS Play
+# FreeACS Next
 
 The goal of this project is to combine that which has been previously been developed and deployed individually in the FreeACS project. 
 
