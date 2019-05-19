@@ -84,7 +84,6 @@ class Tr069Controller(
     (method match {
       case CwmpMethod.IN =>
         processInform(sessionData, payload)
-        Future.successful(Right((sessionData, Ok)))
 
       case CwmpMethod.EM if sessionData.unit.isDefined =>
         if (shouldDiscoverDeviceParameters(sessionData)) {
