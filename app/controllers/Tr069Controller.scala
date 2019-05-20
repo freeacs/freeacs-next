@@ -81,8 +81,7 @@ class Tr069Controller(
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
       case CwmpMethod.IN if maybeSessionData.isDefined =>
-        logger.error("Misplaced Inform (there is already a session, will now ask cpe to close connection)")
-        Future.successful(Right((maybeSessionData.head, Ok.withHeaders("Connection" -> "close"))))
+        Future.successful(Left("Misplaced Inform (there is already a session)"))
 
       case CwmpMethod.IN if maybeSessionData.isEmpty =>
         processInform(request.sessionId, request.username, payload)
@@ -122,13 +121,12 @@ class Tr069Controller(
         Future.successful(Right((maybeSessionData.head, Ok.withHeaders("Connection" -> "close"))))
 
       case otherMethod =>
-        logger.debug(s"Got ${otherMethod.abbr} method, answering with Ok")
-        Future.successful(Left(Ok))
+        Future.successful(Left(s"Got ${otherMethod.abbr}, but could not handle it."))
     }).flatMap {
-      case Left(error) =>
+      case Left(error: String) =>
         logger.error(s"Failed to process request: $error")
         Future.successful(Left(Ok))
-      case Right((finalData, result)) =>
+      case Right((finalData: SessionData, result: Result)) =>
         Future.successful(
           Right((finalData.copy(requests = finalData.requests ++ Seq(method)), result))
         )
@@ -160,14 +158,13 @@ class Tr069Controller(
   private def maybeClearDiscoverParam(unit: AcsUnit): Future[Either[String, Done]] =
     getDiscoverUnitParam(unit) match {
       case Some(up) if up.value.contains("1") =>
-        val discoverUtp = getDiscoverUnitTypeParam(unit)
         unitService
           .upsertParameters(
             Seq(
               AcsUnitParameter(
                 unit.unitId,
-                discoverUtp.unitTypeParamId,
-                discoverUtp.name,
+                up.unitTypeParamId,
+                up.unitTypeParamName,
                 Some("0")
               )
             )
@@ -175,12 +172,9 @@ class Tr069Controller(
           .map(_ => Right(Done))
           .recoverWith {
             case e: Exception =>
-              logger.error(s"Failed to clear discover param for unit ${unit.unitId}", e)
-              Future.successful(
-                Left(
-                  s"Failed to clear discover param for unit ${unit.unitId}: ${e.getLocalizedMessage}"
-                )
-              )
+              val errorMsg = s"Failed to clear discover param for unit ${unit.unitId}"
+              logger.error(errorMsg, e)
+              Future.successful(Left(errorMsg))
           }
       case _ =>
         Future.successful(Right(Done))
@@ -193,9 +187,6 @@ class Tr069Controller(
 
   private def getDiscoverUnitParam(unit: AcsUnit) =
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
-
-  private def getDiscoverUnitTypeParam(unit: AcsUnit) =
-    unit.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
 
   private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
     unit.unitTypeParams.forall(_.flags.contains("X")) &&
@@ -239,7 +230,8 @@ class Tr069Controller(
           case Some(unit) =>
             Future.successful(unit)
           case None =>
-            unitService.createAndReturnUnit(username, "Default", deviceId.productClass.underlying)
+            val newUnitTypeName = deviceId.productClass.underlying
+            unitService.createAndReturnUnit(username, "Default", newUnitTypeName)
         }
         .map(
           unit =>

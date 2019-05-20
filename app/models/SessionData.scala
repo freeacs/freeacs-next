@@ -12,20 +12,13 @@ case class SessionData(
     cwmpVersion: String = "1-0"
 ) {
   import SessionData._
-  lazy val keyRoot: Option[String] = getKeyRoot(params)
-
+  lazy val keyRoot: Option[String]          = getKeyRoot(params)
   lazy val CONFIG_FILES: String             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
   lazy val SOFTWARE_VERSION: String         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
   lazy val PERIODIC_INFORM_INTERVAL: String = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
   lazy val CONNECTION_URL: String           = keyRoot.map(_ + "ManagementServer.ConnectionRequestURL").get
   lazy val CONNECTION_PASSWORD: String      = keyRoot.map(_ + "ManagementServer.ConnectionRequestPassword").get
   lazy val CONNECTION_USERNAME: String      = keyRoot.map(_ + "ManagementServer.ConnectionRequestUsername").get
-
-  def productClass(appendHwVersion: Boolean): String =
-    if (appendHwVersion)
-      deviceId.productClass.underlying // TODO
-    else
-      deviceId.productClass.underlying
 }
 
 object SessionData {
