@@ -249,8 +249,9 @@ class Tr069Controller(
         .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
     }).mapToFutureEither.recoverWith {
       case e: Exception =>
-        logger.error("Failed to load unit", e)
-        Future.successful(Left("Failed to load unit"))
+        val errorMsg = "Failed to load unit"
+        logger.error(errorMsg, e)
+        Future.successful(Left(errorMsg))
     }
   }
 
@@ -293,14 +294,14 @@ class Tr069Controller(
 
   private def makeUnitParam(
       unitId: String,
-      softwareVersion: AcsUnitTypeParameter,
-      params: Seq[ParameterValueStruct]
+      param: AcsUnitTypeParameter,
+      paramValues: Seq[ParameterValueStruct]
   ) =
     AcsUnitParameter(
       unitId,
-      softwareVersion.unitTypeParamId,
-      softwareVersion.name,
-      params.find(_.name == softwareVersion.name).map(_.value)
+      param.unitTypeParamId,
+      param.name,
+      paramValues.find(_.name == param.name).map(_.value)
     )
 
   private def getTimestamp(
@@ -309,17 +310,22 @@ class Tr069Controller(
       update: Boolean
   ): Future[AcsUnitParameter] = {
     getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
-      val ts = LocalDateTime.now().toString
+      val timestamp = LocalDateTime.now().toString
       unit.params
         .find(_.unitTypeParamName == param.name)
-        .map { p =>
+        .map { up =>
           if (update)
-            p.copy(value = Some(ts))
+            up.copy(value = Some(timestamp))
           else
-            p
+            up
         }
         .getOrElse(
-          AcsUnitParameter(unit.unitId, unitTypeParameter.unitTypeParamId, unitTypeParameter.name, Some(ts))
+          AcsUnitParameter(
+            unit.unitId,
+            unitTypeParameter.unitTypeParamId,
+            unitTypeParameter.name,
+            Some(timestamp)
+          )
         )
     }
   }
