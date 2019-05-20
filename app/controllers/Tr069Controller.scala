@@ -30,23 +30,22 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  def provision = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
+  def provision: Action[_] = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
     getSessionData(request).flatMap {
       case Right(sessionData) =>
-        processRequest(sessionData, getBodyAsXml(request)).flatMap {
+        processRequest(request, sessionData, getBodyAsXml(request)).flatMap {
           case Right((updatedSessionData, result)) =>
-            putSessionData(request, sessionData, updatedSessionData).flatMap {
+            putSessionData(request.sessionId, sessionData, updatedSessionData).flatMap {
               case Right(Done) =>
-                if (updatedSessionData.unit.isDefined) {
-                  Future.successful(result.withSession(request.session))
-                } else {
-                  Future.successful(result)
-                }
-              case Left(error) => Future.successful(error)
+                Future.successful(result.withSession(request.session))
+              case Left(error) =>
+                Future.successful(error)
             }
-          case Left(error) => Future.successful(error)
+          case Left(error) =>
+            Future.successful(error)
         }
-      case Left(error) => Future.successful(error)
+      case Left(error) =>
+        Future.successful(error)
     }
   }
 
@@ -54,41 +53,44 @@ class Tr069Controller(
     request.contentType.map(_.toLowerCase(Locale.ENGLISH).split(";").head) match {
       case Some("application/xml") | Some("text/xml") | Some("text/html") if request.hasBody =>
         parse.tolerantXml
-      case _ => parse.tolerantText
+      case _ =>
+        parse.tolerantText
     }
   }
 
-  private def getSessionData(request: SecureRequest[_]): Future[Either[Result, SessionData]] =
-    cache
-      .getOrElseUpdate[SessionData](sessionDataKey(request.sessionId)) {
-        Future.successful(SessionData(sessionId = request.sessionId, username = request.username))
-      }
-      .map(Right.apply)
-      .recoverWith {
-        case e: Exception =>
-          logger.error("Failed to get session data", e)
-          Future.successful(Left(Ok))
-      }
+  private def getSessionData(request: SecureRequest[_]): Future[Either[Result, Option[SessionData]]] =
+    cache.get[SessionData](sessionDataKey(request.sessionId)).map(Right.apply).recoverWith {
+      case e: Exception =>
+        logger.error("Failed to get session data", e)
+        Future.successful(Left(Ok))
+    }
 
   private def getBodyAsXml(request: SecureRequest[_]): Node =
     request.body match {
-      case xml: NodeSeq => xml.headOption.getOrElse(<Empty />)
-      case _            => <Empty />
+      case xml: NodeSeq =>
+        xml.headOption.getOrElse(<Empty />)
+      case _ =>
+        <Empty />
     }
 
   private def processRequest(
-      sessionData: SessionData,
+      request: SecureRequest[_],
+      maybeSessionData: Option[SessionData],
       payload: Node
   ): Future[Either[Result, (SessionData, Result)]] = {
     val method = CwmpMethod.fromNode(payload).getOrElse(CwmpMethod.EM)
     (method match {
-      case CwmpMethod.IN =>
-        processInform(sessionData, payload)
+      case CwmpMethod.IN if maybeSessionData.isDefined =>
+        logger.error("Misplaced Inform (there is already a session, will now ask cpe to close connection)")
+        Future.successful(Right((maybeSessionData.head, Ok.withHeaders("Connection" -> "close"))))
 
-      case CwmpMethod.EM if sessionData.unit.isDefined =>
-        processEmpty(sessionData)
+      case CwmpMethod.IN if maybeSessionData.isEmpty =>
+        processInform(request.sessionId, request.username, payload)
 
-      case CwmpMethod.GPNr =>
+      case CwmpMethod.EM if maybeSessionData.isDefined =>
+        processEmpty(maybeSessionData.head)
+
+      case CwmpMethod.GPNr if maybeSessionData.isDefined =>
         // TODO:
         // 1. Extract parameters from GPN response
         // 2. Find all parameters that does not exist in unit type
@@ -97,26 +99,31 @@ class Tr069Controller(
         Future.successful(
           Right(
             (
-              sessionData,
-              createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
+              maybeSessionData.head,
+              createGetParameterValuesResponse(
+                getParamsToRead(maybeSessionData.head),
+                maybeSessionData.map(_.cwmpVersion).head
+              )
             )
           )
         )
 
-      case CwmpMethod.GPVr if sessionData.unit.isDefined =>
+      case CwmpMethod.GPVr if maybeSessionData.isDefined =>
         // TODO:
         // 1. Extract parameter values from GPV response
         // 2. Find all parameters where ACS has a different set value
         // 3. Ask CPE to save the values of those parameters
         // 4. Then save those units in the ACS
-        Future.successful(Right((sessionData, createSetParameterValuesResponse(sessionData.cwmpVersion))))
+        Future.successful(
+          Right((maybeSessionData.head, createSetParameterValuesResponse(maybeSessionData.head.cwmpVersion)))
+        )
 
-      case CwmpMethod.SPVr if sessionData.unit.isDefined =>
-        Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
+      case CwmpMethod.SPVr if maybeSessionData.isDefined =>
+        Future.successful(Right((maybeSessionData.head, Ok.withHeaders("Connection" -> "close"))))
 
       case otherMethod =>
         logger.debug(s"Got ${otherMethod.abbr} method, answering with Ok")
-        Future.successful(Right((sessionData, Ok)))
+        Future.successful(Left(Ok))
     }).flatMap {
       case Left(error) =>
         logger.error(s"Failed to process request: $error")
@@ -128,13 +135,13 @@ class Tr069Controller(
     }
   }
 
-  private def processEmpty(sessionData: SessionData) =
-    if (shouldDiscoverDeviceParameters(sessionData)) {
-      maybeClearDiscoverParam(sessionData).map(_.map { _ =>
+  private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
+    if (shouldDiscoverDeviceParameters(sessionData.unit)) {
+      maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
         (
           sessionData,
           createGetParameterNamesResponse(
-            sessionData.unsafeKeyRoot,
+            sessionData.keyRoot.get,
             sessionData.cwmpVersion
           )
         )
@@ -150,15 +157,15 @@ class Tr069Controller(
       )
     }
 
-  private def maybeClearDiscoverParam(sessionData: SessionData): Future[Either[String, Done]] =
-    getDiscoverUnitParam(sessionData) match {
+  private def maybeClearDiscoverParam(unit: AcsUnit): Future[Either[String, Done]] =
+    getDiscoverUnitParam(unit) match {
       case Some(up) if up.value.contains("1") =>
-        val discoverUtp = getDiscoverUnitTypeParam(sessionData)
+        val discoverUtp = getDiscoverUnitTypeParam(unit)
         unitService
           .upsertParameters(
             Seq(
               AcsUnitParameter(
-                sessionData.unsafeGetUnitId,
+                unit.unitId,
                 discoverUtp.unitTypeParamId,
                 discoverUtp.name,
                 Some("0")
@@ -168,10 +175,10 @@ class Tr069Controller(
           .map(_ => Right(Done))
           .recoverWith {
             case e: Exception =>
-              logger.error(s"Failed to clear discover param for unit ${sessionData.unsafeGetUnitId}", e)
+              logger.error(s"Failed to clear discover param for unit ${unit.unitId}", e)
               Future.successful(
                 Left(
-                  s"Failed to clear discover param for unit ${sessionData.unsafeGetUnitId}: ${e.getLocalizedMessage}"
+                  s"Failed to clear discover param for unit ${unit.unitId}: ${e.getLocalizedMessage}"
                 )
               )
           }
@@ -180,34 +187,32 @@ class Tr069Controller(
     }
 
   private def getParamsToRead(sessionData: SessionData) =
-    sessionData.unsafeGetUnit.unitTypeParams.filter { utp =>
+    sessionData.unit.unitTypeParams.filter { utp =>
       utp.name == sessionData.PERIODIC_INFORM_INTERVAL || utp.flags.contains("A")
     }
 
-  private def getDiscoverUnitParam(sessionData: SessionData) =
-    sessionData.unsafeGetUnit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
+  private def getDiscoverUnitParam(unit: AcsUnit) =
+    unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
-  private def getDiscoverUnitTypeParam(sessionData: SessionData) =
-    sessionData.unsafeGetUnit.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
+  private def getDiscoverUnitTypeParam(unit: AcsUnit) =
+    unit.unitTypeParams.find(_.name == SystemParameters.DISCOVER.name).head
 
-  private def shouldDiscoverDeviceParameters(sessionData: SessionData) =
-    sessionData.unit.exists(_.unitTypeParams.forall(_.flags.contains("X"))) &&
-      (settings.discoveryMode || unitDiscoveryParamIsSet(sessionData))
+  private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
+    unit.unitTypeParams.forall(_.flags.contains("X")) &&
+      (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
 
-  private def unitDiscoveryParamIsSet(sessionData: SessionData) =
-    sessionData.unit.exists(
-      _.params.exists(
-        p => p.unitTypeParamName == SystemParameters.DISCOVER.name && p.value.contains("1")
-      )
+  private def unitDiscoveryParamIsSet(unit: AcsUnit) =
+    unit.params.exists(
+      p => p.unitTypeParamName == SystemParameters.DISCOVER.name && p.value.contains("1")
     )
 
   private def putSessionData(
-      request: SecureRequest[_],
-      sessionData: SessionData,
+      sessionId: String,
+      maybeSessionData: Option[SessionData],
       updatedSessionData: SessionData
   ): Future[Either[Result, Done]] =
-    if (sessionData != updatedSessionData) {
-      cache.set(sessionDataKey(request.sessionId), updatedSessionData).map(Right.apply).recoverWith {
+    if (!maybeSessionData.contains(updatedSessionData)) {
+      cache.set(sessionDataKey(sessionId), updatedSessionData).map(Right.apply).recoverWith {
         case e: Exception =>
           logger.error("Failed to update session data", e)
           Future.successful(Left(Ok))
@@ -217,73 +222,55 @@ class Tr069Controller(
     }
 
   private def processInform(
-      sessionData: SessionData,
+      sessionId: String,
+      maybeUsername: Option[String],
       payload: Node
-  ): Future[Either[String, (SessionData, Result)]] =
-    getHeader(sessionData, payload)
-      .flatMap(getDeviceId(_, payload))
-      .flatMap(getEvents(_, payload))
-      .flatMap(getParams(_, payload))
-      .map(
-        loadUnit(_)
-          .map(sessionData => sessionData.copy(username = sessionData.unitId))
-          .flatMap(maybeCreateUnit)
-          .flatMap(maybeUpdateAcsParams)
-          .map { sessionData =>
-            if (sessionData.unit.isDefined) {
-              (sessionData, createInformResponse(sessionData.cwmpVersion))
-            } else {
-              logger.warn(s"Unit data is missing")
-              (sessionData, Ok)
-            }
-          }
-          .recoverWith {
-            case e: Exception =>
-              logger.error("Something failed when loading and updating unit", e)
-              Future.successful((sessionData, Ok))
-          }
-      )
-      .mapToFutureEither
-
-  private def loadUnit(sessionData: SessionData): Future[SessionData] =
-    sessionData.unitId match {
-      case Some(username) =>
-        unitService.find(username).map { maybeUnit =>
-          sessionData.copy(unit = maybeUnit)
+  ): Future[Either[String, (SessionData, Result)]] = {
+    (for {
+      header   <- getHeader(payload)
+      events   <- getEvents(payload)
+      params   <- getParams(payload)
+      deviceId <- getDeviceId(payload)
+    } yield {
+      val username = maybeUsername.getOrElse(deviceId.unitId)
+      unitService
+        .find(username)
+        .flatMap {
+          case Some(unit) =>
+            Future.successful(unit)
+          case None =>
+            unitService.createAndReturnUnit(username, "Default", deviceId.productClass.underlying)
         }
-      case _ =>
-        Future.successful(sessionData)
-    }
-
-  private def maybeCreateUnit(sessionData: SessionData): Future[SessionData] =
-    sessionData.unit match {
-      case None if settings.discoveryMode =>
-        unitService
-          .createAndReturnUnit(
-            sessionData.unsafeGetUnitId,
-            "Default",
-            sessionData.unsafeGetProductClass(settings.appendHwVersion)
+        .map(
+          unit =>
+            SessionData(
+              username = username,
+              sessionId = sessionId,
+              unit = unit,
+              deviceId = deviceId,
+              events = events,
+              params = params,
+              header = header
           )
-          .map(unit => sessionData.copy(unit = Some(unit)))
-      case _ =>
-        logger.debug("Unit is already loaded or discovery mode is not enabled. Not creating.")
-        Future.successful(sessionData)
+        )
+        .flatMap(updateAcsParams)
+        .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
+    }).mapToFutureEither.recoverWith {
+      case e: Exception =>
+        logger.error("Failed to load unit", e)
+        Future.successful(Left("Failed to load unit"))
     }
+  }
 
-  private def maybeUpdateAcsParams(sessionData: SessionData): Future[SessionData] =
-    sessionData.unit match {
-      case Some(unit) =>
-        for {
-          firstConnect <- getTimestamp(unit, FIRST_CONNECT_TMS, update = false)
-          lastConnect  <- getTimestamp(unit, LAST_CONNECT_TMS, update = true)
-          deviceParams <- getDeviceParameters(sessionData, unit)
-          parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, unit.params)
-          _           <- unitService.upsertParameters(parameters)
-          updatedUnit <- unitService.find(unit.unitId)
-        } yield sessionData.copy(unit = updatedUnit)
-      case _ =>
-        Future.successful(sessionData)
-    }
+  private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
+    for {
+      firstConnect <- getTimestamp(sessionData.unit, FIRST_CONNECT_TMS, update = false)
+      lastConnect  <- getTimestamp(sessionData.unit, LAST_CONNECT_TMS, update = true)
+      deviceParams <- getDeviceParameters(sessionData, sessionData.unit)
+      parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, sessionData.unit.params)
+      _                <- unitService.upsertParameters(parameters)
+      maybeUpdatedUnit <- unitService.find(sessionData.unit.unitId)
+    } yield maybeUpdatedUnit.map(unit => sessionData.copy(unit = unit)).getOrElse(sessionData)
 
   private def getParamsToUpdate(
       newParameters: Seq[AcsUnitParameter],
@@ -296,10 +283,7 @@ class Tr069Controller(
         ) || p.value.isDefined
     )
 
-  private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] = {
-    if (sessionData.keyRoot.isEmpty) {
-      return Future.successful(Seq.empty)
-    }
+  private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] =
     for {
       softwareVersion <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.SOFTWARE_VERSION, "R"))
       pII             <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.PERIODIC_INFORM_INTERVAL, "RW"))
@@ -314,7 +298,6 @@ class Tr069Controller(
         makeUnitParam(unit.unitId, connReqUser, sessionData.params),
         makeUnitParam(unit.unitId, connReqPass, sessionData.params)
       )
-  }
 
   private def makeUnitParam(
       unitId: String,
@@ -420,27 +403,27 @@ class Tr069Controller(
   private def Soap(body: => Node): Result =
     Ok(body).withHeaders("SOAPAction" -> "").as("text/xml")
 
-  private def getHeader(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+  private def getHeader(payload: Node): Either[String, HeaderStruct] =
     HeaderStruct.fromNode(payload) match {
-      case Some(header) => Right(sessionData.copy(header = Some(header)))
+      case Some(header) => Right(header)
       case None         => Left("Missing header in payload")
     }
 
-  private def getEvents(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+  private def getEvents(payload: Node): Either[String, Seq[EventStruct]] =
     EventStruct.fromNode(payload) match {
-      case seq: Seq[EventStruct] if seq.nonEmpty => Right(sessionData.copy(events = seq))
+      case seq: Seq[EventStruct] if seq.nonEmpty => Right(seq)
       case _                                     => Left("Missing events")
     }
 
-  private def getParams(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+  private def getParams(payload: Node): Either[String, Seq[ParameterValueStruct]] =
     ParameterValueStruct.fromNode(payload) match {
-      case seq: Seq[ParameterValueStruct] if seq.nonEmpty => Right(sessionData.copy(params = seq))
+      case seq: Seq[ParameterValueStruct] if seq.nonEmpty => Right(seq)
       case _                                              => Left("Missing params")
     }
 
-  private def getDeviceId(sessionData: SessionData, payload: Node): Either[String, SessionData] =
+  private def getDeviceId(payload: Node): Either[String, DeviceIdStruct] =
     DeviceIdStruct.fromNode(payload) match {
-      case Some(deviceIdStruct) => Right(sessionData.copy(deviceId = Some(deviceIdStruct)))
+      case Some(deviceIdStruct) => Right(deviceIdStruct)
       case None                 => Left("Missing deviceId")
     }
 
