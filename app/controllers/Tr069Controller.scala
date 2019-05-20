@@ -95,17 +95,9 @@ class Tr069Controller(
         // 2. Find all parameters that does not exist in unit type
         // 3. Save those parameters in unit type
         // 4. Update unit in sessionData
-        Future.successful(
-          Right(
-            (
-              maybeSessionData.head,
-              createGetParameterValuesResponse(
-                getParamsToRead(maybeSessionData.head),
-                maybeSessionData.map(_.cwmpVersion).head
-              )
-            )
-          )
-        )
+        val sessionData  = maybeSessionData.head
+        val paramsToRead = getParamsToRead(sessionData)
+        Future.successful(Right((sessionData, createGPV(paramsToRead, sessionData.cwmpVersion))))
 
       case CwmpMethod.GPVr if maybeSessionData.isDefined =>
         // TODO:
@@ -113,12 +105,12 @@ class Tr069Controller(
         // 2. Find all parameters where ACS has a different set value
         // 3. Ask CPE to save the values of those parameters
         // 4. Then save those units in the ACS
-        Future.successful(
-          Right((maybeSessionData.head, createSetParameterValuesResponse(maybeSessionData.head.cwmpVersion)))
-        )
+        val sessionData = maybeSessionData.head
+        Future.successful(Right((sessionData, createSPV(sessionData.cwmpVersion))))
 
       case CwmpMethod.SPVr if maybeSessionData.isDefined =>
-        Future.successful(Right((maybeSessionData.head, Ok.withHeaders("Connection" -> "close"))))
+        val sessionData = maybeSessionData.head
+        Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
 
       case otherMethod =>
         Future.successful(Left(s"Got ${otherMethod.abbr}, but could not handle it."))
@@ -126,32 +118,20 @@ class Tr069Controller(
       case Left(error: String) =>
         logger.error(s"Failed to process request: $error")
         Future.successful(Left(Ok))
-      case Right((finalData: SessionData, result: Result)) =>
-        Future.successful(
-          Right((finalData.copy(requests = finalData.requests ++ Seq(method)), result))
-        )
+      case Right((sessionData: SessionData, result: Result)) =>
+        val finalSessionData = sessionData.copy(requests = sessionData.requests ++ Seq(method))
+        Future.successful(Right((finalSessionData, result)))
     }
   }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
     if (shouldDiscoverDeviceParameters(sessionData.unit, sessionData.recentlyUpdated)) {
       maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
-        (
-          sessionData,
-          createGetParameterNamesResponse(
-            sessionData.keyRoot.get,
-            sessionData.cwmpVersion
-          )
-        )
+        (sessionData, createGPN(sessionData.keyRoot.get, sessionData.cwmpVersion))
       })
     } else {
       Future.successful(
-        Right(
-          (
-            sessionData,
-            createGetParameterValuesResponse(getParamsToRead(sessionData), sessionData.cwmpVersion)
-          )
-        )
+        Right((sessionData, createGPV(getParamsToRead(sessionData), sessionData.cwmpVersion)))
       )
     }
 
@@ -250,7 +230,7 @@ class Tr069Controller(
           )
         )
         .flatMap(updateAcsParams)
-        .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
+        .map(sessionData => (sessionData, createIN(sessionData.cwmpVersion)))
     }).mapToFutureEither.recoverWith {
       case e: Exception =>
         val errorMsg = "Failed to load unit"
@@ -351,7 +331,7 @@ class Tr069Controller(
         )
     }
 
-  private def createSetParameterValuesResponse(cwmpVersion: String): Result =
+  private def createSPV(cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:SetParameterValues>
         <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
@@ -361,7 +341,7 @@ class Tr069Controller(
       </cwmp:SetParameterValues>
     }
 
-  private def createGetParameterNamesResponse(keyRoot: String, cwmpVersion: String): Result =
+  private def createGPN(keyRoot: String, cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:GetParameterNames>
         <ParameterNames>
@@ -371,7 +351,7 @@ class Tr069Controller(
       </cwmp:GetParameterNames>
     }
 
-  private def createGetParameterValuesResponse(
+  private def createGPV(
       params: Seq[AcsUnitTypeParameter],
       cwmpVersion: String
   ): Result =
@@ -383,7 +363,7 @@ class Tr069Controller(
       </cwmp:GetParameterValues>
     }
 
-  private def createInformResponse(cwmpVersion: String): Result =
+  private def createIN(cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:InformResponse>
         <MaxEnvelopes>1</MaxEnvelopes>
