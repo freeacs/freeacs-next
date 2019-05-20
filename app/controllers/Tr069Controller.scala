@@ -134,7 +134,7 @@ class Tr069Controller(
   }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
-    if (shouldDiscoverDeviceParameters(sessionData.unit)) {
+    if (shouldDiscoverDeviceParameters(sessionData.unit, sessionData.recentlyUpdated)) {
       maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
         (
           sessionData,
@@ -188,8 +188,12 @@ class Tr069Controller(
   private def getDiscoverUnitParam(unit: AcsUnit) =
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
-  private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
-    unit.unitTypeParams.forall(_.flags.contains("X")) &&
+  private def shouldDiscoverDeviceParameters(unit: AcsUnit, recentlyUpdated: Seq[String]) =
+    unit.unitTypeParams.forall(
+      up =>
+        up.flags.contains("X")
+          || recentlyUpdated.contains(up.name)
+    ) &&
       (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
@@ -263,7 +267,12 @@ class Tr069Controller(
       parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, sessionData.unit.params)
       _                <- unitService.upsertParameters(parameters)
       maybeUpdatedUnit <- unitService.find(sessionData.unit.unitId)
-    } yield maybeUpdatedUnit.map(unit => sessionData.copy(unit = unit)).getOrElse(sessionData)
+    } yield
+      maybeUpdatedUnit
+        .map(
+          unit => sessionData.copy(unit = unit, recentlyUpdated = parameters.map(_.unitTypeParamName))
+        )
+        .getOrElse(sessionData)
 
   private def getParamsToUpdate(
       newParameters: Seq[AcsUnitParameter],
