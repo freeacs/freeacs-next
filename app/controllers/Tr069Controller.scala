@@ -31,9 +31,9 @@ class Tr069Controller(
     with Logging {
 
   def provision: Action[_] = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
-    getSessionData(request).flatMap {
+    getSessionData(request.sessionId).flatMap {
       case Right(sessionData) =>
-        processRequest(request, sessionData, getBodyAsXml(request)).flatMap {
+        processRequest(request.sessionId, request.username, sessionData, getBodyAsXml(request.body)).flatMap {
           case Right((updatedSessionData, result)) =>
             putSessionData(request.sessionId, sessionData, updatedSessionData).flatMap {
               case Right(Done) =>
@@ -58,15 +58,15 @@ class Tr069Controller(
     }
   }
 
-  private def getSessionData(request: SecureRequest[_]): Future[Either[Result, Option[SessionData]]] =
-    cache.get[SessionData](sessionDataKey(request.sessionId)).map(Right.apply).recoverWith {
+  private def getSessionData(sessionId: String): Future[Either[Result, Option[SessionData]]] =
+    cache.get[SessionData](sessionDataKey(sessionId)).map(Right.apply).recoverWith {
       case e: Exception =>
         logger.error("Failed to get session data", e)
         Future.successful(Left(Ok))
     }
 
-  private def getBodyAsXml(request: SecureRequest[_]): Node =
-    request.body match {
+  private def getBodyAsXml(body: java.io.Serializable): Node =
+    body match {
       case xml: NodeSeq =>
         xml.headOption.getOrElse(<Empty />)
       case _ =>
@@ -74,7 +74,8 @@ class Tr069Controller(
     }
 
   private def processRequest(
-      request: SecureRequest[_],
+      sessionId: String,
+      username: Option[String],
       maybeSessionData: Option[SessionData],
       payload: Node
   ): Future[Either[Result, (SessionData, Result)]] = {
@@ -84,7 +85,7 @@ class Tr069Controller(
         Future.successful(Left("Misplaced Inform (there is already a session)"))
 
       case CwmpMethod.IN if maybeSessionData.isEmpty =>
-        processInform(request.sessionId, request.username, payload)
+        processInform(sessionId, username, payload)
 
       case CwmpMethod.EM if maybeSessionData.isDefined =>
         processEmpty(maybeSessionData.head)
