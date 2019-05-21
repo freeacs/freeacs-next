@@ -15,7 +15,8 @@ trait AppControllersConfig {
   lazy val unitController =
     new UnitController(controllerComponents, unitService, profileService, unitTypeService)
 
-  lazy val userAction = new SecureAction(unitService, config, controllerComponents.parsers.defaultBodyParser)
+  lazy val userAction =
+    new SecureAction(unitService, config, environment, controllerComponents.parsers.defaultBodyParser)
 
   lazy val tr069Controller =
     new Tr069Controller(
