@@ -175,8 +175,8 @@ class Tr069Controller(
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
   private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
-    unit.unitTypeParams.forall(up => up.flags.contains("X")) &&
-      (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
+    (unit.unitTypeParams.forall(up => up.flags.contains("X")) && settings.discoveryMode) ||
+      unitDiscoveryParamIsSet(unit)
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
     unit.params.exists(
