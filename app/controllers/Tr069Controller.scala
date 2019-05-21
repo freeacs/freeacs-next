@@ -9,7 +9,7 @@ import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import services.UnitService
+import services.{UnitService, UnitTypeService}
 import util.MonadTransformers._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,6 +18,7 @@ import scala.xml.{Node, NodeSeq}
 class Tr069Controller(
     cc: ControllerComponents,
     unitService: UnitService,
+    unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,
     settings: Settings
@@ -88,16 +89,7 @@ class Tr069Controller(
         processEmpty(maybeSessionData.head)
 
       case CwmpMethod.GPNr if maybeSessionData.isDefined =>
-        // TODO:
-        // 1. Extract parameters from GPN response
-        // 2. Find all parameters that does not exist in unit type
-        // 3. Save those parameters in unit type
-        // 4. Update unit in sessionData
-        val sessionData  = maybeSessionData.head
-        val paramsToRead = getParamsToRead(sessionData)
-        Future.successful(
-          Right((sessionData, createGetParameterValues(paramsToRead, sessionData.cwmpVersion)))
-        )
+        processGetParameterNamesResponse(maybeSessionData.head, payload)
 
       case CwmpMethod.GPVr if maybeSessionData.isDefined =>
         // TODO:
@@ -129,6 +121,37 @@ class Tr069Controller(
         Future.successful(Right((finalSessionData, result)))
     }
   }
+
+  private def processGetParameterNamesResponse(sessionData: SessionData, payload: Node) =
+    Future
+      .sequence(
+        ParameterInfoStruct
+          .fromNode(payload)
+          .filter { info =>
+            sessionData.unit.unitTypeParams.exists(_.name != info.name)
+          }
+          .map { info =>
+            unitTypeService.createUnitTypeParameter(
+              sessionData.unit.profile.unitType.unitTypeId.head,
+              info.name,
+              s"R${if (info.writable) "W" else ""}"
+            )
+          }
+      )
+      .flatMap { addedUnitTypeParams =>
+        if (addedUnitTypeParams.nonEmpty) {
+          unitService.find(sessionData.unit.unitId).map {
+            case Some(unit) => sessionData.copy(unit = unit)
+            case _          => sessionData
+          }
+        } else {
+          Future.successful(sessionData)
+        }
+      }
+      .map { sessionData =>
+        val paramsToRead = getParamsToRead(sessionData)
+        Right((sessionData, createGetParameterValues(paramsToRead, sessionData.cwmpVersion)))
+      }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
     if (shouldDiscoverDeviceParameters(sessionData.unit)) {
@@ -207,7 +230,7 @@ class Tr069Controller(
     (for {
       header   <- getHeader(payload)
       events   <- getEvents(payload)
-      params   <- getParams(payload)
+      params   <- getParamValues(payload)
       deviceId <- getDeviceId(payload)
     } yield {
       val username = maybeUsername.getOrElse(deviceId.unitId)
@@ -311,7 +334,7 @@ class Tr069Controller(
       case _                                     => Left("Missing events")
     }
 
-  private def getParams(payload: Node): Either[String, Seq[ParameterValueStruct]] =
+  private def getParamValues(payload: Node): Either[String, Seq[ParameterValueStruct]] =
     ParameterValueStruct.fromNode(payload) match {
       case seq: Seq[ParameterValueStruct] if seq.nonEmpty => Right(seq)
       case _                                              => Left("Missing params")
