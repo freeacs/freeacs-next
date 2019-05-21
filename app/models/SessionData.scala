@@ -9,7 +9,7 @@ case class SessionData(
     events: Seq[EventStruct] = Seq.empty,
     params: Seq[ParameterValueStruct] = Seq.empty,
     requests: Seq[CwmpMethod] = Seq.empty,
-    recentlyUpdated: Seq[String] = Seq.empty,
+    recentlyCreated: Seq[String] = Seq.empty,
     cwmpVersion: String = "1-0"
 ) {
   import SessionData._

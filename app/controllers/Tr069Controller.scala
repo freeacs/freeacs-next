@@ -30,7 +30,7 @@ class Tr069Controller(
     with I18nSupport
     with Logging {
 
-  def provision: Action[_] = secureAction.authenticate.async(parseAsXmlOrText) { implicit request =>
+  def provision: Action[_] = secureAction.verify.async(parseAsXmlOrText) { implicit request =>
     getSessionData(request.sessionId).flatMap {
       case Right(sessionData) =>
         processRequest(request.sessionId, request.username, sessionData, getBodyAsXml(request.body)).flatMap {
@@ -65,7 +65,7 @@ class Tr069Controller(
         Future.successful(Left(Ok))
     }
 
-  private def getBodyAsXml(body: java.io.Serializable): Node =
+  private def getBodyAsXml(body: Any): Node =
     body match {
       case xml: NodeSeq =>
         xml.headOption.getOrElse(<Empty />)
@@ -98,7 +98,9 @@ class Tr069Controller(
         // 4. Update unit in sessionData
         val sessionData  = maybeSessionData.head
         val paramsToRead = getParamsToRead(sessionData)
-        Future.successful(Right((sessionData, createGPV(paramsToRead, sessionData.cwmpVersion))))
+        Future.successful(
+          Right((sessionData, createGetParameterValues(paramsToRead, sessionData.cwmpVersion)))
+        )
 
       case CwmpMethod.GPVr if maybeSessionData.isDefined =>
         // TODO:
@@ -107,14 +109,20 @@ class Tr069Controller(
         // 3. Ask CPE to save the values of those parameters
         // 4. Then save those units in the ACS
         val sessionData = maybeSessionData.head
-        Future.successful(Right((sessionData, createSPV(sessionData.cwmpVersion))))
+        Future.successful(
+          Right((sessionData, createSetParameterValues(sessionData.cwmpVersion)))
+        )
 
       case CwmpMethod.SPVr if maybeSessionData.isDefined =>
         val sessionData = maybeSessionData.head
-        Future.successful(Right((sessionData, Ok.withHeaders("Connection" -> "close"))))
+        Future.successful(
+          Right((sessionData, Ok.withHeaders("Connection" -> "close")))
+        )
 
       case otherMethod =>
-        Future.successful(Left(s"Got ${otherMethod.abbr}, but could not handle it."))
+        Future.successful(
+          Left(s"Got ${otherMethod.abbr}, but could not handle it.")
+        )
     }).flatMap {
       case Left(error: String) =>
         logger.error(s"Failed to process request: $error")
@@ -126,13 +134,13 @@ class Tr069Controller(
   }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
-    if (shouldDiscoverDeviceParameters(sessionData.unit, sessionData.recentlyUpdated)) {
+    if (shouldDiscoverDeviceParameters(sessionData.unit, sessionData.recentlyCreated)) {
       maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
-        (sessionData, createGPN(sessionData.keyRoot.get, sessionData.cwmpVersion))
+        (sessionData, createGetParameterNames(sessionData.keyRoot.get, sessionData.cwmpVersion))
       })
     } else {
       Future.successful(
-        Right((sessionData, createGPV(getParamsToRead(sessionData), sessionData.cwmpVersion)))
+        Right((sessionData, createGetParameterValues(getParamsToRead(sessionData), sessionData.cwmpVersion)))
       )
     }
 
@@ -171,11 +179,8 @@ class Tr069Controller(
 
   private def shouldDiscoverDeviceParameters(unit: AcsUnit, recentlyUpdated: Seq[String]) =
     unit.unitTypeParams.forall(
-      up =>
-        up.flags.contains("X")
-          || recentlyUpdated.contains(up.name)
-    ) &&
-      (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
+      up => up.flags.contains("X") || recentlyUpdated.contains(up.name)
+    ) && (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
     unit.params.exists(
@@ -201,7 +206,7 @@ class Tr069Controller(
       sessionId: String,
       maybeUsername: Option[String],
       payload: Node
-  ): Future[Either[String, (SessionData, Result)]] = {
+  ): Future[Either[String, (SessionData, Result)]] =
     (for {
       header   <- getHeader(payload)
       events   <- getEvents(payload)
@@ -231,14 +236,13 @@ class Tr069Controller(
           )
         )
         .flatMap(updateAcsParams)
-        .map(sessionData => (sessionData, createIN(sessionData.cwmpVersion)))
+        .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
     }).mapToFutureEither.recoverWith {
       case e: Exception =>
         val errorMsg = "Failed to load unit"
         logger.error(errorMsg, e)
         Future.successful(Left(errorMsg))
     }
-  }
 
   private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
     for {
@@ -251,7 +255,7 @@ class Tr069Controller(
     } yield
       maybeUpdatedUnit
         .map(
-          unit => sessionData.copy(unit = unit, recentlyUpdated = parameters.map(_.unitTypeParamName))
+          unit => sessionData.copy(unit = unit, recentlyCreated = deviceParams.map(_.unitTypeParamName))
         )
         .getOrElse(sessionData)
 
@@ -269,14 +273,12 @@ class Tr069Controller(
   private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] =
     for {
       softwareVersion <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.SOFTWARE_VERSION, "R"))
-      pII             <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.PERIODIC_INFORM_INTERVAL, "RW"))
       connReqUrl      <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_URL, "R"))
       connReqUser     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_USERNAME, "R"))
       connReqPass     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_PASSWORD, "R"))
     } yield
       Seq(
         makeUnitParam(unit.unitId, softwareVersion, sessionData.params),
-        makeUnitParam(unit.unitId, pII, sessionData.params),
         makeUnitParam(unit.unitId, connReqUrl, sessionData.params),
         makeUnitParam(unit.unitId, connReqUser, sessionData.params),
         makeUnitParam(unit.unitId, connReqPass, sessionData.params)
@@ -298,7 +300,7 @@ class Tr069Controller(
       unit: AcsUnit,
       param: Parameter,
       update: Boolean
-  ): Future[AcsUnitParameter] = {
+  ): Future[AcsUnitParameter] =
     getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
       val timestamp = LocalDateTime.now().toString
       unit.params
@@ -318,7 +320,6 @@ class Tr069Controller(
           )
         )
     }
-  }
 
   private def getOrCreateUnitTypeParameter(unit: AcsUnit, param: Parameter) =
     unit.unitTypeParams.find(_.name == param.name) match {
@@ -332,7 +333,7 @@ class Tr069Controller(
         )
     }
 
-  private def createSPV(cwmpVersion: String): Result =
+  private def createSetParameterValues(cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:SetParameterValues>
         <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
@@ -342,7 +343,7 @@ class Tr069Controller(
       </cwmp:SetParameterValues>
     }
 
-  private def createGPN(keyRoot: String, cwmpVersion: String): Result =
+  private def createGetParameterNames(keyRoot: String, cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:GetParameterNames>
         <ParameterNames>
@@ -352,7 +353,7 @@ class Tr069Controller(
       </cwmp:GetParameterNames>
     }
 
-  private def createGPV(
+  private def createGetParameterValues(
       params: Seq[AcsUnitTypeParameter],
       cwmpVersion: String
   ): Result =
@@ -364,7 +365,7 @@ class Tr069Controller(
       </cwmp:GetParameterValues>
     }
 
-  private def createIN(cwmpVersion: String): Result =
+  private def createInformResponse(cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:InformResponse>
         <MaxEnvelopes>1</MaxEnvelopes>

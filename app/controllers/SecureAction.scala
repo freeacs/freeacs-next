@@ -25,9 +25,7 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
 
   private val sessionKey = "uuid"
 
-  private val loggingAction = new LoggingAction(parser)
-
-  val authenticate = loggingAction.andThen(this)
+  val verify = new LoggingAction(parser).andThen(this)
 
   override def refine[A](req: Request[A]): Future[Either[Result, SecureRequest[A]]] = {
     logger.debug(s"HTTP request: ${req.method} ${req.uri}")
@@ -75,7 +73,7 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
     )
 
   private class LoggingAction(parser: BodyParser[AnyContent]) extends ActionBuilderImpl(parser) {
-    override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]) = {
+    override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
       logger.info("Receiving request from " + request.remoteAddress)
       block(request)
     }
