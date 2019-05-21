@@ -1,17 +1,15 @@
 package controllers
 
-import java.time.LocalDateTime
 import java.util.Locale
 
 import akka.Done
 import config.Settings
-import models.SystemParameters._
 import models._
 import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import services.{UnitService, UnitTypeService}
+import services.UnitService
 import util.MonadTransformers._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -20,7 +18,6 @@ import scala.xml.{Node, NodeSeq}
 class Tr069Controller(
     cc: ControllerComponents,
     unitService: UnitService,
-    unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,
     settings: Settings
@@ -134,7 +131,7 @@ class Tr069Controller(
   }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
-    if (shouldDiscoverDeviceParameters(sessionData.unit, sessionData.recentlyCreated)) {
+    if (shouldDiscoverDeviceParameters(sessionData.unit)) {
       maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
         (sessionData, createGetParameterNames(sessionData.keyRoot.get, sessionData.cwmpVersion))
       })
@@ -177,10 +174,9 @@ class Tr069Controller(
   private def getDiscoverUnitParam(unit: AcsUnit) =
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
-  private def shouldDiscoverDeviceParameters(unit: AcsUnit, recentlyUpdated: Seq[String]) =
-    unit.unitTypeParams.forall(
-      up => up.flags.contains("X") || recentlyUpdated.contains(up.name)
-    ) && (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
+  private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
+    unit.unitTypeParams.forall(up => up.flags.contains("X")) &&
+      (settings.discoveryMode || unitDiscoveryParamIsSet(unit))
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
     unit.params.exists(
@@ -235,102 +231,12 @@ class Tr069Controller(
               header = header
           )
         )
-        .flatMap(updateAcsParams)
         .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
     }).mapToFutureEither.recoverWith {
       case e: Exception =>
         val errorMsg = "Failed to load unit"
         logger.error(errorMsg, e)
         Future.successful(Left(errorMsg))
-    }
-
-  private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
-    for {
-      firstConnect <- getTimestamp(sessionData.unit, FIRST_CONNECT_TMS, update = false)
-      lastConnect  <- getTimestamp(sessionData.unit, LAST_CONNECT_TMS, update = true)
-      deviceParams <- getDeviceParameters(sessionData, sessionData.unit)
-      parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, sessionData.unit.params)
-      _                <- unitService.upsertParameters(parameters)
-      maybeUpdatedUnit <- unitService.find(sessionData.unit.unitId)
-    } yield
-      maybeUpdatedUnit
-        .map(
-          unit => sessionData.copy(unit = unit, recentlyCreated = deviceParams.map(_.unitTypeParamName))
-        )
-        .getOrElse(sessionData)
-
-  private def getParamsToUpdate(
-      newParameters: Seq[AcsUnitParameter],
-      existingParams: Seq[AcsUnitParameter]
-  ) =
-    newParameters.filter(
-      p =>
-        existingParams.exists(
-          up => up.unitTypeParamName == p.unitTypeParamName && up.value != p.value
-        ) || p.value.isDefined
-    )
-
-  private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] =
-    for {
-      softwareVersion <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.SOFTWARE_VERSION, "R"))
-      connReqUrl      <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_URL, "R"))
-      connReqUser     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_USERNAME, "R"))
-      connReqPass     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_PASSWORD, "R"))
-    } yield
-      Seq(
-        makeUnitParam(unit.unitId, softwareVersion, sessionData.params),
-        makeUnitParam(unit.unitId, connReqUrl, sessionData.params),
-        makeUnitParam(unit.unitId, connReqUser, sessionData.params),
-        makeUnitParam(unit.unitId, connReqPass, sessionData.params)
-      )
-
-  private def makeUnitParam(
-      unitId: String,
-      param: AcsUnitTypeParameter,
-      paramValues: Seq[ParameterValueStruct]
-  ) =
-    AcsUnitParameter(
-      unitId,
-      param.unitTypeParamId,
-      param.name,
-      paramValues.find(_.name == param.name).map(_.value)
-    )
-
-  private def getTimestamp(
-      unit: AcsUnit,
-      param: Parameter,
-      update: Boolean
-  ): Future[AcsUnitParameter] =
-    getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
-      val timestamp = LocalDateTime.now().toString
-      unit.params
-        .find(_.unitTypeParamName == param.name)
-        .map { up =>
-          if (update)
-            up.copy(value = Some(timestamp))
-          else
-            up
-        }
-        .getOrElse(
-          AcsUnitParameter(
-            unit.unitId,
-            unitTypeParameter.unitTypeParamId,
-            unitTypeParameter.name,
-            Some(timestamp)
-          )
-        )
-    }
-
-  private def getOrCreateUnitTypeParameter(unit: AcsUnit, param: Parameter) =
-    unit.unitTypeParams.find(_.name == param.name) match {
-      case Some(unitTypeParameter) =>
-        Future.successful(unitTypeParameter)
-      case None =>
-        unitTypeService.createUnitTypeParameter(
-          unit.profile.unitType.unitTypeId.get,
-          param.name,
-          param.flag
-        )
     }
 
   private def createSetParameterValues(cwmpVersion: String): Result =
