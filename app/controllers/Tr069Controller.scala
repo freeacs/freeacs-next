@@ -167,9 +167,10 @@ class Tr069Controller(
     }
 
   private def getParamsToRead(sessionData: SessionData) =
-    sessionData.unit.unitTypeParams.filter { utp =>
-      utp.name == sessionData.PERIODIC_INFORM_INTERVAL || utp.flags.contains("A")
-    }
+    sessionData.PERIODIC_INFORM_INTERVAL +: sessionData.unit.unitTypeParams
+      .filter(_.flags.contains("A"))
+      .map(_.name)
+      .distinct
 
   private def getDiscoverUnitParam(unit: AcsUnit) =
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
@@ -260,13 +261,13 @@ class Tr069Controller(
     }
 
   private def createGetParameterValues(
-      params: Seq[AcsUnitTypeParameter],
+      params: Seq[String],
       cwmpVersion: String
   ): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:GetParameterValues>
         <ParameterNames soapenc:arrayType={s"xsd:string[${params.length}]"}>
-          {params.map(param => <string>{param.name}</string>)}
+          {params.map(param => <string>{param}</string>)}
         </ParameterNames>
       </cwmp:GetParameterValues>
     }
