@@ -18,7 +18,7 @@ class UnitService(
 
   def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
     db.run(findUnitQuery(unitId)).flatMap {
-      case Some(unit) => db.run(addUnitTypeParamsQuery(unit)).map(Some.apply)
+      case Some(unit) => db.run(getUnitTypeParamsQuery(unit)).map(Some.apply)
       case _          => Future.successful(None)
     }
 
@@ -39,7 +39,7 @@ class UnitService(
       unitTypeId <- unitTypeService.createUnitTypeQuery(unitTypeName, AcsProtocol.TR069)
       profileId  <- profileService.createProfileQuery(profileName, unitTypeId)
       acsUnit    <- createUnitQuery(unitId, profileId, unitTypeId)
-      withParams <- addUnitTypeParamsQuery(acsUnit)
+      withParams <- getUnitTypeParamsQuery(acsUnit)
     } yield withParams).transactionally)
 
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnit]]] =
@@ -79,7 +79,7 @@ class UnitService(
   private def getUnitQuery =
     Unit.join(Profile).on(_.profileId === _.profileId).join(UnitType).on(_._1.unitTypeId === _.unitTypeId)
 
-  private def addUnitTypeParamsQuery(unit: AcsUnit)(implicit ec: ExecutionContext): DBIO[AcsUnit] =
+  private def getUnitTypeParamsQuery(unit: AcsUnit)(implicit ec: ExecutionContext): DBIO[AcsUnit] =
     unitTypeService
       .getParamsQuery(unit.profile.unitType.unitTypeId.get)
       .map(

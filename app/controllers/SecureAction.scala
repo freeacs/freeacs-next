@@ -3,7 +3,7 @@ package controllers
 import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import com.github.jarlah.authenticscala.Authenticator.challenge
 import com.typesafe.config.Config
-import play.api.Logging
+import play.api.{Environment, Logging}
 import play.api.mvc._
 import play.api.mvc.Results._
 import services.UnitService
@@ -17,20 +17,18 @@ class SecureRequest[A](
     request: Request[A]
 ) extends WrappedRequest[A](request)
 
-class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[AnyContent])(
+class SecureAction(unitDetails: UnitService, config: Config, env: Environment, parser: BodyParser[AnyContent])(
     implicit ec: ExecutionContext
 ) extends ActionBuilderImpl(parser)
     with ActionRefiner[Request, SecureRequest]
     with Logging {
 
-  private val sessionKey = "uuid"
+  private val sessionKey    = "uuid"
+  private val loggingAction = new LoggingAction(parser, env)
 
-  private val loggingAction = new LoggingAction(parser)
-
-  val authenticate = loggingAction.andThen(this)
+  val verify = loggingAction.andThen(this)
 
   override def refine[A](req: Request[A]): Future[Either[Result, SecureRequest[A]]] = {
-    logger.debug(s"HTTP request: ${req.method} ${req.uri}")
     val authMethod = config.getString("auth.method")
     val session    = getSession(req)
     val sessionId  = session.get(sessionKey).get
@@ -73,12 +71,5 @@ class SecureAction(unitDetails: UnitService, config: Config, parser: BodyParser[
       (unitId: String) => unitDetails.getSecret(unitId).map(_.orNull),
       method
     )
-
-  private class LoggingAction(parser: BodyParser[AnyContent]) extends ActionBuilderImpl(parser) {
-    override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]) = {
-      logger.info("Receiving request from " + request.remoteAddress)
-      block(request)
-    }
-  }
 
 }

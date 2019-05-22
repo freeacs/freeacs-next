@@ -7,7 +7,7 @@ trait AppConfig {
 }
 
 class Settings(config: Config) {
-  val defaultDatabaseName  = "default"
-  lazy val discoveryMode   = config.getBoolean("discovery.mode")
-  lazy val appendHwVersion = config.getBoolean("unit.type.append-hw-version")
+  val defaultDatabaseName = "default"
+  val discoveryMode       = config.getBoolean("discovery.mode")
+  val appendHwVersion     = config.getBoolean("unit.type.append-hw-version")
 }
