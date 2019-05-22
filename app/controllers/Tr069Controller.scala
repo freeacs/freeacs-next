@@ -95,13 +95,10 @@ class Tr069Controller(
         processGetParameterValuesResponse(maybeSessionData.head, payload)
 
       case CwmpMethod.SPVr if maybeSessionData.isDefined =>
-        val sessionData = maybeSessionData.head
-        closeConnection(sessionData)
+        closeConnection(maybeSessionData.head)
 
       case otherMethod =>
-        Future.successful(
-          Left(s"Got ${otherMethod.abbr}, but could not handle it.")
-        )
+        Future.successful(Left(s"Got ${otherMethod.abbr}, but could not handle it."))
     }).flatMap {
       case Left(error: String) =>
         logger.error(s"Failed to process request: $error")
