@@ -5,7 +5,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitTypeService}
 import views.CreateProfile
-import views.html.templates.{profileCreate, profileOverview}
+import views.html.templates.{profileCreate, profileDetails, profileOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,6 +20,14 @@ class ProfileController(
     with Logging {
 
   import ProfileForm.form
+
+  def viewProfile(id: Int) = Action.async {
+    profileService.list.map {
+      case Right(profileList) if profileList.exists(_.id.contains(id)) =>
+        Ok(profileDetails(profileList.find(_.id.contains(id)).head))
+      case Left(error) => InternalServerError(error)
+    }
+  }
 
   def viewCreate = Action.async { implicit request =>
     unitTypeService.list.map {

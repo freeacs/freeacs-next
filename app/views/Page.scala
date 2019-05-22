@@ -11,6 +11,7 @@ case object UnitTypeOverview extends Page("Unit Type Overview", "fa fa-desktop",
 case object UnitTypeDetails  extends Page("Unit Type Details", "fa fa-desktop", "/unittype/details")
 case object CreateUnitType   extends Page("Create Unit Type", "fa fa-desktop", "/unittype/create")
 case object ProfileOverview  extends Page("Profile Overview", "fa fa-desktop", "/profile/overview")
+case object ProfileDetails   extends Page("Profile Details", "fa fa-desktop", "/profile/details")
 case object CreateProfile    extends Page("Create Profile", "fa fa-desktop", "/profile/create")
 case object UnitOverview     extends Page("Unit Search", "fa fa-desktop", "/unit/overview")
 case object UnitDetails      extends Page("Unit Details", "fa fa-desktop", "/unit/details")

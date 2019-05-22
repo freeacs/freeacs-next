@@ -23,8 +23,8 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsProfile]]] =
     db.run(
         for {
-          unitTypeRows <- ProfileDao.join(UnitTypeDao).on(_.unitTypeId === _.unitTypeId).result
-        } yield unitTypeRows.map(mapToProfile)
+          profileRows <- ProfileDao.join(UnitTypeDao).on(_.unitTypeId === _.unitTypeId).result
+        } yield profileRows.map(mapToProfile)
       )
       .map(Right.apply)
       .recoverWith {

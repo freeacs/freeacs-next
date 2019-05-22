@@ -1,15 +1,21 @@
-@import views.ProfileOverview
 @import views.ProfileDetails
 
-@(profiles: Seq[AcsProfile])
+@(profile: AcsProfile)
 
-@layouts.default(ProfileOverview) {
+@layouts.default(ProfileDetails) {
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="#">Profile</a>
         </li>
-        <li class="breadcrumb-item active">Overview</li>
+        <li class="breadcrumb-item">Details</li>
+        <li class="breadcrumb-item active">@profile.name</li>
     </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Name: <b>@profile.name</b></p>
+            <p>Unit Type: @profile.unitType.name</p>
+        </div>
+    </div>
     <div class="card mb-3">
         <div class="card-body">
             <div class="table-responsive">
@@ -17,20 +23,20 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Unit Type</th>
+                            <th>Value</th>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
                             <th>Name</th>
-                            <th>Unit Type</th>
+                            <th>Value</th>
                         </tr>
                     </tfoot>
                     <tbody>
-                    @for(profile <- profiles) {
+                    @for(param <- profile.params) {
                         <tr>
-                            <td><a href="@ProfileDetails.url/@profile.id">@profile.name</a></td>
-                            <td>@profile.unitType.name</td>
+                            <td>@param.unitTypeParamName</td>
+                            <td>@param.value</td>
                         </tr>
                     }
                     </tbody>

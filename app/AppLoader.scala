@@ -27,6 +27,7 @@ class AppComponents(context: Context)
     case GET(p"/profile/create")                 => profileController.viewCreate
     case POST(p"/profile/create")                => profileController.postCreate
     case GET(p"/profile/overview")               => profileController.overview
+    case GET(p"/profile/details/$profileId")     => profileController.viewProfile(profileId.toInt)
     case GET(p"/unit/create")                    => unitController.viewCreate
     case POST(p"/unit/create")                   => unitController.postCreate
     case GET(p"/unit/overview")                  => unitController.overview
