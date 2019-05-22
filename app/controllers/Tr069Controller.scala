@@ -92,21 +92,11 @@ class Tr069Controller(
         processGetParameterNamesResponse(maybeSessionData.head, payload)
 
       case CwmpMethod.GPVr if maybeSessionData.isDefined =>
-        // TODO:
-        // 1. Extract parameter values from GPV response
-        // 2. Find all parameters where ACS has a different set value
-        // 3. Ask CPE to save the values of those parameters
-        // 4. Then save those units in the ACS
-        val sessionData = maybeSessionData.head
-        Future.successful(
-          Right((sessionData, createSetParameterValues(sessionData.cwmpVersion)))
-        )
+        processGetParameterValuesResponse(maybeSessionData.head, payload)
 
       case CwmpMethod.SPVr if maybeSessionData.isDefined =>
         val sessionData = maybeSessionData.head
-        Future.successful(
-          Right((sessionData, Ok.withHeaders("Connection" -> "close")))
-        )
+        closeConnection(sessionData)
 
       case otherMethod =>
         Future.successful(
@@ -121,6 +111,33 @@ class Tr069Controller(
         Future.successful(Right((finalSessionData, result)))
     }
   }
+
+  private def processGetParameterValuesResponse(
+      sessionData: SessionData,
+      payload: Node
+  ): Future[Right[String, (SessionData, Result)]] = {
+    val params = ParameterValueStruct.fromNode(payload).flatMap { p =>
+      sessionData.unit.params.find(_.unitTypeParamName == p.name).flatMap { up =>
+        if (up.value.isDefined && !up.value.contains(p.value)) {
+          Some(p.copy(value = up.value.head))
+        } else {
+          None
+        }
+      }
+    }
+    if (params.isEmpty) {
+      closeConnection(sessionData)
+    } else {
+      Future.successful(
+        Right((sessionData, createSetParameterValues(params, sessionData.cwmpVersion)))
+      )
+    }
+  }
+
+  private def closeConnection(sessionData: SessionData) =
+    Future.successful(
+      Right((sessionData, Ok.withHeaders("Connection" -> "close")))
+    )
 
   private def processGetParameterNamesResponse(sessionData: SessionData, payload: Node) =
     Future
@@ -263,12 +280,14 @@ class Tr069Controller(
         Future.successful(Left(errorMsg))
     }
 
-  private def createSetParameterValues(cwmpVersion: String): Result =
+  private def createSetParameterValues(params: Seq[ParameterValueStruct], cwmpVersion: String): Result =
     SoapEnvelope(cwmpVersion) {
       <cwmp:SetParameterValues>
-        <ParameterNames soapenc:arrayType="cwmp:ParameterValueStruct[1]">
-          <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
-          <Value>8600</Value>
+        <ParameterNames soapenc:arrayType= {s"cwmp:ParameterValueStruct[${params.length}]"}>
+          {params.map(param => {
+            <Name>{param.name}</Name>
+            <Value>{param.value}</Value>
+          })}
         </ParameterNames>
       </cwmp:SetParameterValues>
     }
