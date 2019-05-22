@@ -98,7 +98,9 @@ class Tr069Controller(
         closeConnection(maybeSessionData.head)
 
       case otherMethod =>
-        Future.successful(Left(s"Got ${otherMethod.abbr}, but could not handle it."))
+        Future.successful(
+          Left(s"Got ${otherMethod.abbr}, but could not handle it. SessionData: $maybeSessionData")
+        )
     }).flatMap {
       case Left(error: String) =>
         logger.error(s"Failed to process request: $error")
@@ -113,20 +115,22 @@ class Tr069Controller(
       sessionData: SessionData,
       payload: Node
   ): Future[Right[String, (SessionData, Result)]] = {
-    val params = ParameterValueStruct.fromNode(payload).flatMap { p =>
+    val flagMap = sessionData.unit.unitTypeParams.map(p => p.name -> p.flags).toMap
+    val paramToSet = ParameterValueStruct.fromNode(payload).flatMap { p =>
       sessionData.unit.params.find(_.unitTypeParamName == p.name).flatMap { up =>
-        if (up.value.isDefined && !up.value.contains(p.value)) {
+        if (up.value.isDefined && !up.value.contains(p.value)
+            && flagMap(up.unitTypeParamName).contains("W")) {
           Some(p.copy(value = up.value.head))
         } else {
           None
         }
       }
     }
-    if (params.isEmpty) {
+    if (paramToSet.isEmpty) {
       closeConnection(sessionData)
     } else {
       Future.successful(
-        Right((sessionData, createSetParameterValues(params, sessionData.cwmpVersion)))
+        Right((sessionData, createSetParameterValues(paramToSet, sessionData.cwmpVersion)))
       )
     }
   }
