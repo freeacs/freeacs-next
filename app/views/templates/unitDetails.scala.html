@@ -1,39 +1,43 @@
 @import views.UnitOverview
-@import views.UnitDetails
 
-@(units: List[AcsUnit])
+@(unit: AcsUnit)
 
 @layouts.default(UnitOverview) {
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="#">Unit</a>
         </li>
-        <li class="breadcrumb-item active">Overview</li>
+        <li class="breadcrumb-item">Details</li>
+        <li class="breadcrumb-item active">@unit.unitId</li>
     </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Unit Id: <b>@unit.unitId</b></p>
+            <p>Profile: @unit.profile.name</p>
+            <p>Unit Type: @unit.profile.unitType.name</p>
+        </div>
+    </div>
     <div class="card mb-3">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>UnitId</th>
-                            <th>Profile</th>
-                            <th>Unit Type</th>
+                            <th>Name</th>
+                            <th>Value</th>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
-                            <th>UnitId</th>
-                            <th>Profile</th>
-                            <th>Unit Type</th>
+                            <th>Name</th>
+                            <th>Value</th>
                         </tr>
                     </tfoot>
                     <tbody>
-                    @for(unit <- units) {
+                    @for(param <- unit.params) {
                         <tr>
-                            <td><a href="@UnitDetails.url/@unit.unitId">@unit.unitId</a></td>
-                            <td>@unit.profile.name</td>
-                            <td>@unit.profile.unitType.name</td>
+                            <td>@param.unitTypeParamName</td>
+                            <td>@param.value</td>
                         </tr>
                     }
                     </tbody>

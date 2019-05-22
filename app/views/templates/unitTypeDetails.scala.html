@@ -1,15 +1,23 @@
 @import views.UnitTypeOverview
-@import views.UnitTypeDetails
 
-@(unitTypes: Seq[AcsUnitType])
+@(unitType: AcsUnitType)
 
 @layouts.default(UnitTypeOverview) {
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="#">Unit Type</a>
         </li>
-        <li class="breadcrumb-item active">Overview</li>
+        <li class="breadcrumb-item">Details</li>
+        <li class="breadcrumb-item active">@unitType.name</li>
     </ol>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>Name: <b>@unitType.name</b></p>
+            <p>Vendor: @unitType.vendor</p>
+            <p>Description: @unitType.description</p>
+            <p>Protocol: @unitType.protocol</p>
+        </div>
+    </div>
     <div class="card mb-3">
         <div class="card-body">
             <div class="table-responsive">
@@ -17,26 +25,20 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Vendor</th>
-                            <th>Description</th>
-                            <th>Protocol</th>
+                            <th>Flags</th>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
                             <th>Name</th>
-                            <th>Vendor</th>
-                            <th>Description</th>
-                            <th>Protocol</th>
+                            <th>Flags</th>
                         </tr>
                     </tfoot>
                     <tbody>
-                    @for(unitType <- unitTypes) {
+                    @for(param <- unitType.params) {
                         <tr>
-                            <td><a href="@UnitTypeDetails.url/@unitType.name">@unitType.name</a></td>
-                            <td>@unitType.vendor</td>
-                            <td>@unitType.description</td>
-                            <td>@unitType.protocol</td>
+                            <td>@param.name</td>
+                            <td>@param.flags</td>
                         </tr>
                     }
                     </tbody>

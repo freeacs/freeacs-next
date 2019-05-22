@@ -19,6 +19,15 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     with Logging {
   import UnitTypeForm._
 
+  def viewUnitType(name: String) = Action.async {
+    unitTypeService.find(name).map {
+      case Some(unitType) =>
+        Ok(views.html.templates.unitTypeDetails(unitType))
+      case None =>
+        BadRequest
+    }
+  }
+
   def viewCreate = Action { implicit request =>
     Ok(views.html.templates.unitTypeCreate(form))
   }

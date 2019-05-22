@@ -32,6 +32,13 @@ class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
       case e => Future.successful(Left("Failed to create unit type " + e.getLocalizedMessage))
     }
 
+  def find(name: String)(implicit ec: ExecutionContext): Future[Option[AcsUnitType]] =
+    db.run(for {
+      unitType <- UnitTypeDao.filter(_.unitTypeName === name).result.headOption
+      params <- if (unitType.isDefined) getParamsQuery(unitType.head.unitTypeId)
+               else DBIO.successful(Seq.empty)
+    } yield unitType.map(mapToUnitType).map(_.copy(params = params)))
+
   def list(implicit ec: ExecutionContext): Future[Either[String, Seq[AcsUnitType]]] =
     db.run(for {
         unitTypeRows <- UnitTypeDao.result

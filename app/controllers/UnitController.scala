@@ -5,7 +5,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.CreateUnit
-import views.html.templates.{unitCreate, unitOverview}
+import views.html.templates.{unitCreate, unitDetails, unitOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,6 +21,15 @@ class UnitController(
     with Logging {
 
   import UnitForm._
+
+  def viewUnit(unitId: String) = Action.async {
+    unitService.find(unitId).map {
+      case Some(unit) =>
+        Ok(unitDetails(unit))
+      case None =>
+        BadRequest
+    }
+  }
 
   def viewCreate = Action.async { implicit request =>
     unitTypeService.list.flatMap {
