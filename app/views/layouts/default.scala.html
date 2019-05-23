@@ -13,6 +13,9 @@
 @import views.CreateJob
 @import java.time.LocalDate
 
+@import views.UnitTypeDetails
+@import views.ProfileDetails
+@import views.UnitDetails
 @(currentPage: Page)(content: Html)
 
 <!DOCTYPE html>
@@ -89,9 +92,9 @@
         <div id="wrapper">
             <ul class="sidebar navbar-nav">
                 @MenuItem("Dashboard", List(Dashboard), currentPage, displayChildren = false)
-                @MenuItem("Unit Type", List(UnitTypeOverview, CreateUnitType), currentPage)
-                @MenuItem("Profiles", List(ProfileOverview, CreateProfile), currentPage)
-                @MenuItem("Units", List(UnitOverview, CreateUnit), currentPage)
+                @MenuItem("Unit Type", List(UnitTypeOverview, CreateUnitType, UnitTypeDetails), currentPage)
+                @MenuItem("Profiles", List(ProfileOverview, CreateProfile, ProfileDetails), currentPage)
+                @MenuItem("Units", List(UnitOverview, CreateUnit, UnitDetails), currentPage)
                 @MenuItem("Groups", List(GroupOverview, CreateGroup), currentPage)
                 @MenuItem("Jobs", List(JobOverview, CreateJob), currentPage)
             </ul>

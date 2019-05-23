@@ -15,7 +15,7 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="@title-Dropdown">
         @for(page <- pages) {
-            <a class="dropdown-item@{if(currentPage == page) " active" else ""}" href="@page.url">@page.name</a>
+            <a class="dropdown-item@{if(currentPage == page) " active" else ""}" href="@{if (page.link) page.url else "#"}">@page.name</a>
         }
         </div>
     </li>
