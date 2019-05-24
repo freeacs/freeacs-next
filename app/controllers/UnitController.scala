@@ -2,9 +2,10 @@ package controllers
 
 import play.api.Logging
 import play.api.i18n.I18nSupport
+import play.api.libs.ws.{WSAuthScheme, WSClient}
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
-import views.{CreateUnit, UnitDetails}
+import views.CreateUnit
 import views.html.templates.{unitCreate, unitDetails, unitOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,7 +14,8 @@ class UnitController(
     cc: ControllerComponents,
     unitService: UnitService,
     profileService: ProfileService,
-    unitTypeService: UnitTypeService
+    unitTypeService: UnitTypeService,
+    wsClient: WSClient
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -26,16 +28,35 @@ class UnitController(
     unitService.find(unitId).flatMap {
       case Some(unit) =>
         (for {
-          _ <- unit.params.find(
-                p => p.unitTypeParamName.endsWith("ConnectionRequestURL") && p.value.exists(!_.isBlank)
-              )
-          _ <- unit.params.find(
-                p => p.unitTypeParamName.endsWith("ConnectionRequestUsername") && p.value.exists(!_.isBlank)
-              )
-          _ <- unit.params.find(
-                p => p.unitTypeParamName.endsWith("ConnectionRequestPassword") && p.value.exists(!_.isBlank)
-              )
-        } yield Future.successful(Redirect(UnitDetails.url + "/" + unitId))) match {
+          urlParam <- unit.params.find(
+                       p =>
+                         p.unitTypeParamName.endsWith("ConnectionRequestURL")
+                           && p.value.exists(!_.isEmpty)
+                     )
+          urlValue <- urlParam.value
+          userParam <- unit.params.find(
+                        p =>
+                          p.unitTypeParamName.endsWith("ConnectionRequestUsername")
+                            && p.value.exists(!_.isEmpty)
+                      )
+          userValue <- userParam.value
+          passwordParam <- unit.params.find(
+                            p =>
+                              p.unitTypeParamName.endsWith("ConnectionRequestPassword")
+                                && p.value.exists(!_.isEmpty)
+                          )
+          passwordValue <- passwordParam.value
+        } yield {
+          wsClient
+            .url(urlValue)
+            .withAuth(userValue, passwordValue, WSAuthScheme.BASIC)
+            .stream()
+            .map(_ => Ok(s"Kicked unit $unitId"))
+            .recoverWith {
+              case e: Exception =>
+                Future.successful(InternalServerError(e.getLocalizedMessage))
+            }
+        }) match {
           case Some(f) => f
           case _       => Future.successful(BadRequest("Required params was not found"))
         }

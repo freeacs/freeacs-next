@@ -1,19 +1,21 @@
 package config
 import controllers._
 import play.api.BuiltInComponentsFromContext
+import play.api.libs.ws.ahc.AhcWSComponents
 
 trait AppControllersConfig {
   this: AppServicesConfig
     with BuiltInComponentsFromContext
     with AppConfig
     with AppCacheConfig
-    with AppDatabaseConfig =>
+    with AppDatabaseConfig
+    with AhcWSComponents =>
 
   lazy val redirectController =
     new RedirectController(controllerComponents)
 
   lazy val unitController =
-    new UnitController(controllerComponents, unitService, profileService, unitTypeService)
+    new UnitController(controllerComponents, unitService, profileService, unitTypeService, wsClient)
 
   lazy val userAction =
     new SecureAction(unitService, config, environment, controllerComponents.parsers.defaultBodyParser)

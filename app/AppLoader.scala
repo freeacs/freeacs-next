@@ -1,6 +1,7 @@
 import config._
 import controllers._
 import play.api.ApplicationLoader.Context
+import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext, LoggerConfigurator}
@@ -13,6 +14,7 @@ class AppComponents(context: Context)
     with AppConfig
     with AppDatabaseConfig
     with AppServicesConfig
+    with AhcWSComponents
     with AppControllersConfig {
 
   override val httpFilters = Nil
