@@ -1,11 +1,13 @@
 package controllers
 
+import models.{AcsUnit, AcsUnitParameter}
 import play.api.Logging
+import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.libs.ws.{WSAuthScheme, WSClient}
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
 import services.{ProfileService, UnitService, UnitTypeService}
-import views.CreateUnit
+import views.{CreateUnit, UnitDetails}
 import views.html.templates.{unitCreate, unitDetails, unitOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,34 +24,50 @@ class UnitController(
     with I18nSupport
     with Logging {
 
-  import UnitForm._
+  def addParam(unitId: String) = Action.async { implicit request =>
+    import UpdateUnitParamForm._
+    upsertParam(unitId, "add", form)
+  }
+
+  def updateParam(unitId: String) = Action.async { implicit request =>
+    import UpdateUnitParamForm._
+    upsertParam(unitId, "update", form)
+  }
+
+  private def upsertParam(unitId: String, tpe: String, form: Form[UpdateUnitParamForm.UpdateUnitParam])(
+      implicit request: Request[AnyContent]
+  ) = {
+    form.bindFromRequest.fold(
+      err => {
+        println(err.toString)
+        Future.successful(
+          Redirect(s"${UnitDetails.url}/$unitId")
+            .flashing("error" -> s"Failed to $tpe param: ${err.errors.toString()}")
+        )
+      },
+      data =>
+        unitService
+          .upsertParameters(Seq(AcsUnitParameter(unitId, data.unitTypeParamId, null, Some(data.value))))
+          .map(
+            _ =>
+              Redirect(s"${UnitDetails.url}/$unitId").flashing(
+                "success" -> s"Have ${tpe}ed param ${data.unitTypeParamId} with value ${data.value}"
+            )
+        )
+    )
+  }
 
   def kickUnit(unitId: String) = Action.async {
     unitService.find(unitId).flatMap {
       case Some(unit) =>
         (for {
-          urlParam <- unit.params.find(
-                       p =>
-                         p.unitTypeParamName.endsWith("ConnectionRequestURL")
-                           && p.value.exists(!_.isEmpty)
-                     )
-          urlValue <- urlParam.value
-          userParam <- unit.params.find(
-                        p =>
-                          p.unitTypeParamName.endsWith("ConnectionRequestUsername")
-                            && p.value.exists(!_.isEmpty)
-                      )
-          userValue <- userParam.value
-          passwordParam <- unit.params.find(
-                            p =>
-                              p.unitTypeParamName.endsWith("ConnectionRequestPassword")
-                                && p.value.exists(!_.isEmpty)
-                          )
-          passwordValue <- passwordParam.value
+          urlValue      <- getParam(unit, "ConnectionRequestURL")
+          usernameValue <- getParam(unit, "ConnectionRequestUsername")
+          passwordValue <- getParam(unit, "ConnectionRequestPassword")
         } yield {
           wsClient
             .url(urlValue)
-            .withAuth(userValue, passwordValue, WSAuthScheme.BASIC)
+            .withAuth(usernameValue, passwordValue, WSAuthScheme.BASIC)
             .stream()
             .map(_ => Ok(s"Kicked unit $unitId"))
             .recoverWith {
@@ -65,16 +83,27 @@ class UnitController(
     }
   }
 
-  def viewUnit(unitId: String) = Action.async {
+  private def getParam(unit: AcsUnit, name: String): Option[String] =
+    unit.params
+      .find(
+        p =>
+          p.unitTypeParamName.endsWith(name)
+            && p.value.exists(!_.isEmpty)
+      )
+      .flatMap(_.value)
+
+  def viewUnit(unitId: String) = Action.async { implicit request =>
+    import UpdateUnitParamForm._
     unitService.find(unitId).map {
       case Some(unit) =>
-        Ok(unitDetails(unit))
+        Ok(unitDetails(unit, form))
       case None =>
         BadRequest
     }
   }
 
   def viewCreate = Action.async { implicit request =>
+    import UnitForm._
     unitTypeService.list.flatMap {
       case Right(unitTypeList) =>
         profileService.list.map {
@@ -89,6 +118,7 @@ class UnitController(
   }
 
   def postCreate = Action.async { implicit request =>
+    import UnitForm._
     unitTypeService.list.flatMap {
       case Right(unitTypeList) =>
         profileService.list.flatMap {
@@ -122,6 +152,23 @@ class UnitController(
         InternalServerError(error)
     }
   }
+}
+
+object UpdateUnitParamForm {
+  import play.api.data.Form
+  import play.api.data.Forms._
+
+  case class UpdateUnitParam(
+      unitTypeParamId: Int,
+      value: String
+  )
+
+  val form = Form(
+    mapping(
+      "unitTypeParamId" -> number,
+      "value"           -> nonEmptyText
+    )(UpdateUnitParam.apply)(UpdateUnitParam.unapply)
+  )
 }
 
 object UnitForm {

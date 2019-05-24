@@ -8,6 +8,9 @@ values(1, 'Test', null, 'Vendor', 'Description', 'TR069');
 insert into acs.unit_type_param(unit_type_param_id, unit_type_id, name, flags)
 values(1, 1, 'System.X_FREEACS-COM.Secret', 'X');
 
+insert into acs.unit_type_param(unit_type_param_id, unit_type_id, name, flags)
+values(2, 1, 'System.X_FREEACS-COM.Debug', 'X');
+
 insert into acs.profile(profile_id, unit_type_id, profile_name)
 values(1, 1, 'Default');
 

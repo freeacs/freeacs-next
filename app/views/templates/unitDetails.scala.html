@@ -1,7 +1,8 @@
 @import views.UnitDetails
 @import views.UnitKick
+@import views.AddUnitParam
 
-@(unit: AcsUnit)
+@(unit: AcsUnit, addUnitParamForm: Form[UpdateUnitParamForm.UpdateUnitParam])(implicit messagesProvider: MessagesProvider, flash: Flash)
 
 @layouts.default(UnitDetails) {
     <ol class="breadcrumb">
@@ -20,6 +21,22 @@
                 <p><a href={s"${UnitKick.url}/${unit.unitId}"}>Kick unit</a></p>
             else
                 <p>Not able to kick (missing params)</p>}
+        </div>
+    </div>
+    @{if(flash.get("success").isDefined || flash.get("error").isDefined)
+        <div class="card mb-3">
+            <div class="card-body">
+                {if(flash.get("success").isDefined) <span style="color: green">{flash.get("success").orNull}</span>}
+                {if(flash.get("error").isDefined) <span style="color: red">{flash.get("error").orNull}</span>}
+            </div>
+        </div>}
+    <div class="card mb-3">
+        <div class="card-body">
+        @b4.vertical.form(Call(method = "POST", url = s"${AddUnitParam.url}/${unit.unitId}")) { implicit vfc =>
+            @b4.select(addUnitParamForm("unitTypeParamId"), options = List(("", "Add Unit Type Param")) ++ unit.unitTypeParams.filter(p => !unit.params.exists(_.unitTypeParamName == p.name)).map(ut => (ut.unitTypeParamId.toString, ut.name)).toList, '_label -> "Select Unit Type Param" )
+            @b4.text(addUnitParamForm("value"), '_label -> "Value", 'placeholder -> "Enter value")
+            @b4.submit('class -> "btn btn-primary"){ Submit }
+        }
         </div>
     </div>
     <div class="card mb-3">
@@ -41,8 +58,14 @@
                     <tbody>
                     @for(param <- unit.params) {
                         <tr>
-                            <td>@param.unitTypeParamName</td>
-                            <td>@param.value</td>
+                              <td>@param.unitTypeParamName</td>
+                              <td>
+                                  <form action="@UnitDetails.url/updateparam/@unit.unitId" method="POST">
+                                    <input type="hidden" value="@param.unitTypeParamId" name="unitTypeParamId" />
+                                    <input type="text" name="value" value="@param.value" />
+                                    <button type="submit">Update</button>
+                                  </form>
+                              </td>
                         </tr>
                     }
                     </tbody>
