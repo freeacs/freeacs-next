@@ -34,6 +34,7 @@ class AppComponents(context: Context)
     case POST(p"/unit/create")                      => unitController.postCreate
     case GET(p"/unit/overview")                     => unitController.overview
     case GET(p"/unit/details/$unitId")              => unitController.viewUnit(unitId)
+    case GET(p"/unit/kick/$unitId")                 => unitController.kickUnit(unitId)
     case POST(p"/unit/details/updateparam/$unitId") => unitController.updateParam(unitId)
     case POST(p"/unit/details/addparam/$unitId")    => unitController.addParam(unitId)
     case POST(p"/tr069")                            => tr069Controller.provision

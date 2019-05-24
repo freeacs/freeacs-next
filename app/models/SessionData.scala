@@ -16,12 +16,16 @@ case class SessionData(
   lazy val CONFIG_FILES: String             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
   lazy val SOFTWARE_VERSION: String         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
   lazy val PERIODIC_INFORM_INTERVAL: String = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
-  lazy val CONNECTION_URL: String           = keyRoot.map(_ + "ManagementServer.ConnectionRequestURL").get
-  lazy val CONNECTION_PASSWORD: String      = keyRoot.map(_ + "ManagementServer.ConnectionRequestPassword").get
-  lazy val CONNECTION_USERNAME: String      = keyRoot.map(_ + "ManagementServer.ConnectionRequestUsername").get
+  lazy val CONNECTION_URL: String           = keyRoot.map(_ + connectionRequestUrlSuffix).get
+  lazy val CONNECTION_PASSWORD: String      = keyRoot.map(_ + connectionRequestUsernameSuffix).get
+  lazy val CONNECTION_USERNAME: String      = keyRoot.map(_ + connectionRequestPasswordSuffix).get
 }
 
 object SessionData {
+  val connectionRequestUrlSuffix      = "ManagementServer.ConnectionRequestURL"
+  val connectionRequestUsernameSuffix = "ManagementServer.ConnectionRequestUsername"
+  val connectionRequestPasswordSuffix = "ManagementServer.ConnectionRequestPassword"
+
   def getKeyRoot(params: Seq[ParameterValueStruct]): Option[String] =
     params
       .map(_.name.split('.'))

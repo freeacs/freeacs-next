@@ -1,8 +1,7 @@
 package controllers
 
-import models.{AcsUnit, AcsUnitParameter}
+import models.{AcsUnit, AcsUnitParameter, SessionData}
 import play.api.Logging
-import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.libs.ws.{WSAuthScheme, WSClient}
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
@@ -58,22 +57,25 @@ class UnitController(
     unitService.find(unitId).flatMap {
       case Some(unit) =>
         (for {
-          urlValue      <- getParam(unit, "ConnectionRequestURL")
-          usernameValue <- getParam(unit, "ConnectionRequestUsername")
-          passwordValue <- getParam(unit, "ConnectionRequestPassword")
+          urlValue      <- getParam(unit, SessionData.connectionRequestUrlSuffix)
+          usernameValue <- getParam(unit, SessionData.connectionRequestUsernameSuffix)
+          passwordValue <- getParam(unit, SessionData.connectionRequestPasswordSuffix)
         } yield {
           wsClient
             .url(urlValue)
             .withAuth(usernameValue, passwordValue, WSAuthScheme.BASIC)
             .stream()
-            .map(_ => Ok(s"Kicked unit $unitId"))
+            .map(_ => Redirect(s"${UnitDetails.url}/$unitId").flashing("success" -> s"Kicked unit $unitId"))
             .recoverWith {
               case e: Exception =>
                 Future.successful(InternalServerError(e.getLocalizedMessage))
             }
         }) match {
           case Some(f) => f
-          case _       => Future.successful(BadRequest("Required params was not found"))
+          case _ =>
+            Future.successful(
+              Redirect(s"${UnitDetails.url}/$unitId").flashing("error" -> "Required params was not found")
+            )
         }
       case None =>
         Future.successful(BadRequest("Unit was not found"))
