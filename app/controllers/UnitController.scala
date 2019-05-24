@@ -25,18 +25,15 @@ class UnitController(
     with Logging {
 
   def addParam(unitId: String) = Action.async { implicit request =>
-    import UpdateUnitParamForm._
-    upsertParam(unitId, "add", form)
+    upsertParam(unitId, "add")
   }
 
   def updateParam(unitId: String) = Action.async { implicit request =>
-    import UpdateUnitParamForm._
-    upsertParam(unitId, "update", form)
+    upsertParam(unitId, "update")
   }
 
-  private def upsertParam(unitId: String, tpe: String, form: Form[UpdateUnitParamForm.UpdateUnitParam])(
-      implicit request: Request[AnyContent]
-  ) = {
+  private def upsertParam(unitId: String, tpe: String)(implicit request: Request[AnyContent]) = {
+    import UpdateUnitParamForm._
     form.bindFromRequest.fold(
       err => {
         println(err.toString)
@@ -51,7 +48,7 @@ class UnitController(
           .map(
             _ =>
               Redirect(s"${UnitDetails.url}/$unitId").flashing(
-                "success" -> s"Have ${tpe}ed param ${data.unitTypeParamId} with value ${data.value}"
+                "success" -> s"Have ${tpe.stripSuffix("e")}ed param ${data.unitTypeParamId} with value ${data.value}"
             )
         )
     )
