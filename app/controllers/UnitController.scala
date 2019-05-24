@@ -4,7 +4,7 @@ import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ProfileService, UnitService, UnitTypeService}
-import views.CreateUnit
+import views.{CreateUnit, UnitDetails}
 import views.html.templates.{unitCreate, unitDetails, unitOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,6 +21,28 @@ class UnitController(
     with Logging {
 
   import UnitForm._
+
+  def kickUnit(unitId: String) = Action.async {
+    unitService.find(unitId).flatMap {
+      case Some(unit) =>
+        (for {
+          _ <- unit.params.find(
+                p => p.unitTypeParamName.endsWith("ConnectionRequestURL") && p.value.exists(!_.isBlank)
+              )
+          _ <- unit.params.find(
+                p => p.unitTypeParamName.endsWith("ConnectionRequestUsername") && p.value.exists(!_.isBlank)
+              )
+          _ <- unit.params.find(
+                p => p.unitTypeParamName.endsWith("ConnectionRequestPassword") && p.value.exists(!_.isBlank)
+              )
+        } yield Future.successful(Redirect(UnitDetails.url + "/" + unitId))) match {
+          case Some(f) => f
+          case _       => Future.successful(BadRequest("Required params was not found"))
+        }
+      case None =>
+        Future.successful(BadRequest("Unit was not found"))
+    }
+  }
 
   def viewUnit(unitId: String) = Action.async {
     unitService.find(unitId).map {

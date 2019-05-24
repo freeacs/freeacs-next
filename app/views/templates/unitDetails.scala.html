@@ -1,4 +1,5 @@
 @import views.UnitDetails
+@import views.UnitKick
 
 @(unit: AcsUnit)
 
@@ -15,6 +16,7 @@
             <p>Unit Id: <b>@unit.unitId</b></p>
             <p>Profile: @unit.profile.name</p>
             <p>Unit Type: @unit.profile.unitType.name</p>
+            @{if(unit.canKick) <p><a href={s"${UnitKick.url}/${unit.unitId}"}>Kick unit</a></p> else <p>Not able to kick (missing params)</p>}
         </div>
     </div>
     <div class="card mb-3">

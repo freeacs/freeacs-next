@@ -15,6 +15,7 @@ case object ProfileDetails   extends Page("Profile Details", "/profile/details",
 case object CreateProfile    extends Page("Create Profile", "/profile/create")
 case object UnitOverview     extends Page("Unit Search", "/unit/overview")
 case object UnitDetails      extends Page("Unit Details", "/unit/details", false)
+case object UnitKick         extends Page("Kick Unit", "/unit/kick", false)
 case object CreateUnit       extends Page("Create Unit", "/unit/create")
 case object GroupOverview    extends Page("Group Overview", "/group/overview")
 case object CreateGroup      extends Page("Create Group", "/group/create")
