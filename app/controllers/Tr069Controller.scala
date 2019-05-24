@@ -349,10 +349,7 @@ class Tr069Controller(
     }
 
   private def getEvents(payload: Node): Either[String, Seq[EventStruct]] =
-    EventStruct.fromNode(payload) match {
-      case seq: Seq[EventStruct] if seq.nonEmpty => Right(seq)
-      case _                                     => Left("Missing events")
-    }
+    Right(EventStruct.fromNode(payload))
 
   private def getParamValues(payload: Node): Either[String, Seq[ParameterValueStruct]] =
     ParameterValueStruct.fromNode(payload) match {
