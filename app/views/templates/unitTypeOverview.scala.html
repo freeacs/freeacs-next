@@ -33,7 +33,7 @@
                     <tbody>
                     @for(unitType <- unitTypes) {
                         <tr>
-                            <td><a href="@UnitTypeDetails.url/@unitType.name">@unitType.name</a></td>
+                            <td><a href="@routes.UnitTypeController.viewUnitType(unitType.name)">@unitType.name</a></td>
                             <td>@unitType.vendor</td>
                             <td>@unitType.description</td>
                             <td>@unitType.protocol</td>

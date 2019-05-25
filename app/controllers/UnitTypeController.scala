@@ -1,25 +1,26 @@
 package controllers
 
+import com.google.inject.Inject
 import models.AcsProtocol
 import play.api.Logging
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import services.UnitTypeService
 import views.CreateUnitType
 import views.html.templates.{unitTypeCreate, unitTypeOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeService)(
+class UnitTypeController @Inject()(cc: ControllerComponents, unitTypeService: UnitTypeService)(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
     with I18nSupport
     with Logging {
   import UnitTypeForm._
 
-  def viewUnitType(name: String) = Action.async {
+  def viewUnitType(name: String): Action[AnyContent] = Action.async {
     unitTypeService.find(name).map {
       case Some(unitType) =>
         Ok(views.html.templates.unitTypeDetails(unitType))
@@ -28,11 +29,11 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     }
   }
 
-  def viewCreate = Action { implicit request =>
+  def viewCreate: Action[AnyContent] = Action { implicit request =>
     Ok(views.html.templates.unitTypeCreate(form))
   }
 
-  def postCreate = Action.async { implicit request =>
+  def postCreate: Action[AnyContent] = Action.async { implicit request =>
     form.bindFromRequest.fold(
       formWithErrors => Future.successful(BadRequest(unitTypeCreate(formWithErrors))),
       unitTypeData =>
@@ -53,7 +54,7 @@ class UnitTypeController(cc: ControllerComponents, unitTypeService: UnitTypeServ
     )
   }
 
-  def overview = Action.async {
+  def overview: Action[AnyContent] = Action.async {
     unitTypeService.list.map {
       case Right(unitTypeList) =>
         Ok(unitTypeOverview(unitTypeList))

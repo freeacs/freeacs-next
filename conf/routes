@@ -1,0 +1,19 @@
+GET     /                                   controllers.DashboardController.index
+GET     /unittype/create                    controllers.UnitTypeController.viewCreate
+POST    /unittype/create                    controllers.UnitTypeController.postCreate
+GET     /unittype/overview                  controllers.UnitTypeController.overview
+GET     /unittype/details/:unitTypeName     controllers.UnitTypeController.viewUnitType(unitTypeName: String)
+GET     /profile/create                     controllers.ProfileController.viewCreate
+POST    /profile/create                     controllers.ProfileController.postCreate
+GET     /profile/overview                   controllers.ProfileController.overview
+GET     /profile/details/:profileId         controllers.ProfileController.viewProfile(profileId: Int)
+GET     /unit/create                        controllers.UnitController.viewCreate
+POST    /unit/create                        controllers.UnitController.postCreate
+GET     /unit/overview                      controllers.UnitController.overview
+GET     /unit/details/:unitId               controllers.UnitController.viewUnit(unitId)
+GET     /unit/kick/:unitId                  controllers.UnitController.kickUnit(unitId)
+POST    /unit/details/updateparam/:unitId   controllers.UnitController.updateParam(unitId)
+POST    /unit/details/addparam/:unitId      controllers.UnitController.addParam(unitId)
+POST    /tr069                              controllers.Tr069Controller.provision
+POST    /tr069/prov                         controllers.Tr069Controller.provision
+GET     /assets/*file                       controllers.Assets.at(path="/public", file: String)

@@ -31,7 +31,7 @@
                     <tbody>
                     @for(unit <- units) {
                         <tr>
-                            <td><a href="@UnitDetails.url/@unit.unitId">@unit.unitId</a></td>
+                            <td><a href="@routes.UnitController.viewUnit(unit.unitId)">@unit.unitId</a></td>
                             <td>@unit.profile.name</td>
                             <td>@unit.profile.unitType.name</td>
                         </tr>

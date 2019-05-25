@@ -1,17 +1,18 @@
 package controllers
 
+import com.google.inject.Inject
 import models.{AcsUnit, AcsUnitParameter, SessionData}
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.libs.ws.{WSAuthScheme, WSClient}
-import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents, Request}
 import services.{ProfileService, UnitService, UnitTypeService}
 import views.{CreateUnit, UnitDetails}
 import views.html.templates.{unitCreate, unitDetails, unitOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitController(
+class UnitController @Inject()(
     cc: ControllerComponents,
     unitService: UnitService,
     profileService: ProfileService,
@@ -23,11 +24,11 @@ class UnitController(
     with I18nSupport
     with Logging {
 
-  def addParam(unitId: String) = Action.async { implicit request =>
+  def addParam(unitId: String): Action[AnyContent] = Action.async { implicit request =>
     upsertParam(unitId, "add")
   }
 
-  def updateParam(unitId: String) = Action.async { implicit request =>
+  def updateParam(unitId: String): Action[AnyContent] = Action.async { implicit request =>
     upsertParam(unitId, "update")
   }
 
@@ -53,7 +54,7 @@ class UnitController(
     )
   }
 
-  def kickUnit(unitId: String) = Action.async {
+  def kickUnit(unitId: String): Action[AnyContent] = Action.async {
     unitService.find(unitId).flatMap {
       case Some(unit) =>
         (for {
@@ -91,7 +92,7 @@ class UnitController(
       )
       .flatMap(_.value)
 
-  def viewUnit(unitId: String) = Action.async { implicit request =>
+  def viewUnit(unitId: String): Action[AnyContent] = Action.async { implicit request =>
     import UpdateUnitParamForm._
     unitService.find(unitId).map {
       case Some(unit) =>
@@ -101,7 +102,7 @@ class UnitController(
     }
   }
 
-  def viewCreate = Action.async { implicit request =>
+  def viewCreate: Action[AnyContent] = Action.async { implicit request =>
     import UnitForm._
     unitTypeService.list.flatMap {
       case Right(unitTypeList) =>
@@ -116,7 +117,7 @@ class UnitController(
     }
   }
 
-  def postCreate = Action.async { implicit request =>
+  def postCreate: Action[AnyContent] = Action.async { implicit request =>
     import UnitForm._
     unitTypeService.list.flatMap {
       case Right(unitTypeList) =>
@@ -143,7 +144,7 @@ class UnitController(
     }
   }
 
-  def overview = Action.async {
+  def overview: Action[AnyContent] = Action.async {
     unitService.list.map {
       case Right(unitList) =>
         Ok(unitOverview(unitList.toList))

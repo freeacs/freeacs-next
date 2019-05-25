@@ -29,7 +29,7 @@
                     <tbody>
                     @for(profile <- profiles) {
                         <tr>
-                            <td><a href="@ProfileDetails.url/@profile.id">@profile.name</a></td>
+                            <td><a href="@routes.ProfileController.viewProfile(profile.id)">@profile.name</a></td>
                             <td>@profile.unitType.name</td>
                         </tr>
                     }

@@ -1,10 +1,11 @@
 package controllers
 
-import play.api.mvc.{AbstractController, ControllerComponents}
+import com.google.inject.Inject
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-class HealthController(cc: ControllerComponents) extends AbstractController(cc) {
+class HealthController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
-  def ok = Action {
+  def ok: Action[AnyContent] = Action {
     Ok("FREEACSOK")
   }
 }

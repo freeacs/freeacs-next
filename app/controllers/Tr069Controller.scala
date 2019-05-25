@@ -3,9 +3,10 @@ package controllers
 import java.util.Locale
 
 import akka.Done
-import config.Settings
+import com.google.inject.Inject
+import config.AppConfig
 import models._
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.cache.AsyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.mvc._
@@ -15,20 +16,22 @@ import util.MonadTransformers._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Node, NodeSeq}
 
-class Tr069Controller(
+class Tr069Controller @Inject()(
     cc: ControllerComponents,
     unitService: UnitService,
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,
-    settings: Settings
+    config: Configuration
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
     with I18nSupport
     with Logging {
 
-  def provision: Action[_] = secureAction.verify.async(parseAsXmlOrText) { implicit request =>
+  private val appConfig = config.get[AppConfig]("app")
+
+  def provision = secureAction.verify.async(parseAsXmlOrText) { implicit request =>
     getSessionData(request.sessionId).flatMap {
       case Right(sessionData) =>
         processRequest(request.sessionId, request.username, sessionData, getBodyAsXml(request.body)).flatMap {
@@ -217,7 +220,7 @@ class Tr069Controller(
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
   private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
-    (unit.unitTypeParams.forall(up => up.flags.contains("X")) && settings.discoveryMode) ||
+    (unit.unitTypeParams.forall(up => up.flags.contains("X")) && appConfig.discoveryMode) ||
       unitDiscoveryParamIsSet(unit)
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
