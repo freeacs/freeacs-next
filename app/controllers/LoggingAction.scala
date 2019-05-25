@@ -1,12 +1,13 @@
 package controllers
 
+import com.google.inject.Inject
 import play.api.mvc._
 import play.api.{Environment, Logging, Mode}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
 
-class LoggingAction(parser: BodyParser[AnyContent], env: Environment)(implicit ec: ExecutionContext)
+class LoggingAction @Inject()(parser: BodyParsers.Default, env: Environment)(implicit ec: ExecutionContext)
     extends ActionBuilderImpl(parser)
     with Logging {
 

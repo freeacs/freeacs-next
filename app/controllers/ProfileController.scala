@@ -1,15 +1,16 @@
 package controllers
 
+import com.google.inject.Inject
 import play.api.Logging
 import play.api.i18n.I18nSupport
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import services.{ProfileService, UnitTypeService}
 import views.CreateProfile
 import views.html.templates.{profileCreate, profileDetails, profileOverview}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ProfileController(
+class ProfileController @Inject()(
     cc: ControllerComponents,
     profileService: ProfileService,
     unitTypeService: UnitTypeService
@@ -21,22 +22,22 @@ class ProfileController(
 
   import ProfileForm.form
 
-  def viewProfile(id: Int) = Action.async {
+  def viewProfile(id: Int): Action[AnyContent] = Action.async {
     profileService.list.map {
-      case Right(profileList) if profileList.exists(_.id.contains(id)) =>
-        Ok(profileDetails(profileList.find(_.id.contains(id)).head))
+      case Right(profileList) if profileList.exists(_.id == id) =>
+        Ok(profileDetails(profileList.find(_.id == id).head))
       case Left(error) => InternalServerError(error)
     }
   }
 
-  def viewCreate = Action.async { implicit request =>
+  def viewCreate: Action[AnyContent] = Action.async { implicit request =>
     unitTypeService.list.map {
       case Right(unitTypeList) => Ok(profileCreate(form, unitTypeList))
       case Left(error)         => InternalServerError(error)
     }
   }
 
-  def postCreate = Action.async { implicit request =>
+  def postCreate: Action[AnyContent] = Action.async { implicit request =>
     unitTypeService.list.flatMap {
       case Right(unitTypeList) =>
         form.bindFromRequest.fold(
@@ -55,7 +56,7 @@ class ProfileController(
     }
   }
 
-  def overview = Action.async {
+  def overview: Action[AnyContent] = Action.async {
     profileService.list.map {
       case Right(profileList) => Ok(profileOverview(profileList))
       case Left(error)        => InternalServerError(error)

@@ -14,24 +14,9 @@ val slickVersion = "3.3.0"
 
 val playSlick = "4.0.1"
 
-scalacOptions ++= Seq(
-  "-encoding", "UTF-8",
-  "-unchecked",
-  "-deprecation",
-  "-Xfuture",
-  "-Yno-adapted-args",
-  "-Ywarn-dead-code",
-  "-Ywarn-numeric-widen",
-  "-Ywarn-value-discard",
-  "-Ywarn-unused:implicits",
-  "-Ywarn-unused:locals",
-  "-Ywarn-unused:params",
-  "-Ywarn-unused:patvars",
-  "-Ywarn-unused:privates",
-  "-Xfatal-warnings"
-)
+scalacOptions += "-Xfatal-warnings"
 
-libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
+libraryDependencies ++= Seq( ehcache , ws , specs2 % Test , guice )
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"
 libraryDependencies += "com.github.jarlah" % "AuthenticScala" % "v1.0.3"
 libraryDependencies += "com.adrianhurt" %% "play-bootstrap" % "1.4-P26-B4"

@@ -1,19 +1,23 @@
 package services
 
+import com.google.inject.{Inject, Singleton}
 import daos.Tables.UnitTypeParamRow
 import models._
-import slick.basic.DatabaseConfig
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitTypeService(val dbConfig: DatabaseConfig[JdbcProfile]) {
+@Singleton
+class UnitTypeService @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
+    extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import daos.Tables.{UnitType => UnitTypeDao, UnitTypeRow, UnitTypeParam => UnitTypeParamDao}
-  import dbConfig._
-  import dbConfig.profile.api._
+  import profile.api._
 
-  def createUnitTypeParameter(unitTypeId: Int, name: String, flag: String)(implicit ec: ExecutionContext) =
+  def createUnitTypeParameter(unitTypeId: Int, name: String, flag: String)(
+      implicit ec: ExecutionContext
+  ): Future[AcsUnitTypeParameter] =
     db.run(
       for {
         unitTypeParamId <- UnitTypeParamDao returning UnitTypeParamDao

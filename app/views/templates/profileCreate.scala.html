@@ -11,7 +11,7 @@
     </ol>
     <div class="card mb-3">
         <div class="card-body">
-            @b4.vertical.form(Call(method = "POST", url = CreateProfile.url)) { implicit vfc =>
+            @b4.vertical.form(routes.ProfileController.postCreate) { implicit vfc =>
                 @b4.select(form("unitTypeId"), options = List(("", "Select Unit Type")) ++ unitTypes.map(ut => (ut.unitTypeId.map(_.toString).getOrElse(""), ut.name)).toList, '_label -> "Select Unit Type" )
                 @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
                 @b4.submit('class -> "btn btn-primary"){ Submit }

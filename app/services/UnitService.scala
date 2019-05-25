@@ -1,20 +1,22 @@
 package services
 
+import com.google.inject.{Inject, Singleton}
 import models._
-import slick.basic.DatabaseConfig
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnitService(
-    val dbConfig: DatabaseConfig[JdbcProfile],
+@Singleton
+class UnitService @Inject()(
     unitTypeService: UnitTypeService,
-    profileService: ProfileService
-) {
+    profileService: ProfileService,
+    protected val dbConfigProvider: DatabaseConfigProvider
+) extends HasDatabaseConfigProvider[JdbcProfile] {
 
   import daos.Tables._
-  import dbConfig._
-  import dbConfig.profile.api._
+
+  import profile.api._
 
   def find(unitId: String)(implicit ec: ExecutionContext): Future[Option[AcsUnit]] =
     db.run(findUnitQuery(unitId)).flatMap {
@@ -67,7 +69,7 @@ class UnitService(
                  .result
     } yield if (result.isEmpty) None else result.head)
 
-  def upsertParameters(params: Seq[AcsUnitParameter]) =
+  def upsertParameters(params: Seq[AcsUnitParameter]): Future[Seq[Int]] =
     db.run(
       DBIO
         .sequence(
@@ -125,7 +127,7 @@ class UnitService(
     AcsUnit(
       t._1._1.unitId,
       AcsProfile(
-        Some(t._1._2.profileId),
+        t._1._2.profileId,
         t._1._2.profileName,
         AcsUnitType(
           Some(t._2.unitTypeId),

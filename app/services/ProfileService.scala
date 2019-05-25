@@ -1,17 +1,19 @@
 package services
 
-import models._
+import com.google.inject.{Inject, Singleton}
 import daos.Tables.ProfileRow
-import slick.basic.DatabaseConfig
+import models._
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
+@Singleton
+class ProfileService @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
+    extends HasDatabaseConfigProvider[JdbcProfile] {
 
-  import daos.Tables.{Profile => ProfileDao, UnitType => UnitTypeDao, UnitTypeRow}
-  import dbConfig._
-  import dbConfig.profile.api._
+  import daos.Tables.{UnitTypeRow, Profile => ProfileDao, UnitType => UnitTypeDao}
+  import profile.api._
 
   def createOrFail(name: String, unitTypeId: Int)(
       implicit ec: ExecutionContext
@@ -46,7 +48,7 @@ class ProfileService(val dbConfig: DatabaseConfig[JdbcProfile]) {
 
   private def mapToProfile(row: (ProfileRow, UnitTypeRow)) =
     AcsProfile(
-      Some(row._1.profileId),
+      row._1.profileId,
       row._1.profileName,
       AcsUnitType(
         unitTypeId = Some(row._1.unitTypeId),
