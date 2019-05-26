@@ -1,91 +1,61 @@
-import models.{AcsUnit, SessionData, SystemParameters}
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.inject.guice.GuiceApplicationBuilder
+package integrationtests
+
+import models.AcsUnit
+import play.api.inject.Injector
 import play.api.libs.ws.{DefaultWSCookie, WSClient, WSResponse}
-import play.api.{Application, Configuration, Mode}
 import services.UnitService
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
 import scala.xml.Elem
-import scala.xml.Utility.trim
 
-class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
+abstract class IntegrationTest(port: Int, injector: Injector)(implicit ec: ExecutionContext) {
+  val client      = injector.instanceOf[WSClient]
+  val unitService = injector.instanceOf[UnitService]
+  val baseUrl     = s"http://localhost:$port/tr069"
 
-  override def fakeApplication(): Application =
-    GuiceApplicationBuilder()
-      .loadConfig(
-        env =>
-          Configuration.load(
-            env,
-            Map(
-              "app.auth.method" -> "none"
-            )
-        )
-      )
-      .in(Mode.Test)
-      .build()
+  var session: Option[DefaultWSCookie] = None
 
-  "the tr069 server can provision a unit" in new StatefulTr069Conversation {
-    // 1. IN
-    var response = post(baseUrl, Some(informRequest))
-    response.status mustBe 200
-    trim(response.xml) mustBe trim(informResponse)
-    val unit = getUnit("000000-FakeProductClass-FakeSerialNumber")
-    unit.map(_.profile.name) mustBe Some("Default")
-    unit.map(_.profile.unitType.name) mustBe Some("FakeProductClass")
-    unit.map(_.profile.params.length) mustBe Some(0)
-    unit.map(_.profile.unitType.params.length) mustBe Some(33)
-    unit.map(_.unitTypeParams.length) mustBe Some(33)
-    unit.map(_.params.length) mustBe Some(3)
-    unit.flatMap(
-      _.params.find(_.unitTypeParamName.endsWith(SessionData.deviceSoftwareVersionSuffix)).flatMap(_.value)
-    ) mustBe Some("V5.2.10P4T26")
-    unit.flatMap(
-      _.params
-        .find(_.unitTypeParamName.equals(SystemParameters.LAST_CONNECT_TMS.name))
-        .flatMap(_.value.map(_.length))
-    ) mustBe Some(26)
-    unit.flatMap(
-      _.params
-        .find(_.unitTypeParamName.equals(SystemParameters.FIRST_CONNECT_TMS.name))
-        .flatMap(_.value.map(_.length))
-    ) mustBe Some(26)
-
-    // 2. EM
-    response = post(baseUrl, None)
-    response.status mustBe 200
-    trim(response.xml) mustBe trim(getParameterValuesRequest)
-
-    // 3. TODO
+  def post(body: Option[Elem]): WSResponse = {
+    val request = session.map(client.url(baseUrl).withCookies(_)).getOrElse(client.url(baseUrl))
+    Await.result(
+      body.map(request.post(_)).getOrElse(request.post("")).map { response =>
+        session = response.header("Set-Cookie").map { header =>
+          DefaultWSCookie("SESSION", header.stripPrefix("SESSION=").split(";")(0))
+        }
+        response
+      },
+      Duration.Inf
+    )
   }
 
-  trait StatefulTr069Conversation {
-    val baseUrl: String                  = s"http://localhost:$port/tr069"
-    var session: Option[DefaultWSCookie] = None
+  def getUnit = Await.result(
+    unitService.find("000000-FakeProductClass-FakeSerialNumber"),
+    Duration.Inf
+  )
 
-    def post(url: String, body: Option[Elem]): WSResponse = {
-      val client  = app.injector.instanceOf[WSClient]
-      val request = session.map(client.url(url).withCookies(_)).getOrElse(client.url(url))
-      Await.result(
-        body.map(request.post(_)).getOrElse(request.post("")).map { response =>
-          session = response.header("Set-Cookie").map { header =>
-            DefaultWSCookie("SESSION", header.stripPrefix("SESSION=").split(";")(0))
-          }
-          response
-        },
-        Duration.Inf
-      )
-    }
+  def unsafeGetUnit(unitId: String): AcsUnit = getUnit.get
 
-    def getUnit(unitId: String): Option[AcsUnit] =
-      Await.result(
-        app.injector.instanceOf[UnitService].find("000000-FakeProductClass-FakeSerialNumber"),
-        Duration.Inf
-      )
-  }
+  val getParameterValuesResponse =
+    <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                       xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                       xmlns:cwmp="urn:dslforum-org:cwmp-1-2">
+      <SOAP-ENV:Header>
+        <cwmp:ID SOAP-ENV:mustUnderstand="1">FREEACS-0</cwmp:ID>
+      </SOAP-ENV:Header>
+      <SOAP-ENV:Body SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+        <cwmp:GetParameterValuesResponse>
+          <ParameterList xsi:type="SOAP-ENC:Array" SOAP-ENC:arrayType="cwmp:ParameterValueStruct[1]">
+            <ParameterValueStruct>
+              <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
+              <Value xsi:type="xsd:unsignedInt">360</Value>
+            </ParameterValueStruct>
+          </ParameterList>
+        </cwmp:GetParameterValuesResponse>
+      </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>
 
   val getParameterValuesRequest =
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -124,7 +94,8 @@ class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
   val informRequest =
     <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
                        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                        xmlns:cwmp="urn:dslforum-org:cwmp-1-2">
       <SOAP-ENV:Header>
         <cwmp:ID SOAP-ENV:mustUnderstand="1">1</cwmp:ID>
