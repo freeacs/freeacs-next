@@ -2,8 +2,9 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerTest
 import play.api.{Application, Configuration, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{DefaultWSCookie, WSClient}
 import services.UnitService
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.xml.Utility.trim
@@ -25,17 +26,38 @@ class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
       .in(Mode.Test)
       .build()
 
-  "test sending inform when auth.method is disabled" in {
+  "the tr069 server creates a unit and completes a normal non-discovery mode provisioning cycle" in {
     val wsClient = app.injector.instanceOf[WSClient]
     val baseUrl  = s"http://localhost:$port/tr069"
-    val response = Await.result(wsClient.url(baseUrl).post(inform), Duration.Inf)
+    var response = Await.result(wsClient.url(baseUrl).post(inform), Duration.Inf)
 
     response.status mustBe 200
     trim(response.xml) mustBe trim(expectedInformResponse)
 
     val unitService = app.injector.instanceOf[UnitService]
     unitService.find("000000-FakeProductClass-FakeSerialNumber") must not be None
+
+    val session = response.header("Set-Cookie").get.stripPrefix("SESSION=").split(";")(0)
+    val cookie  = DefaultWSCookie("SESSION", session)
+    response = Await.result(wsClient.url(baseUrl).withCookies(cookie).post(""), Duration.Inf)
+
+    response.status mustBe 200
+    trim(response.xml) mustBe trim(expectedEmptyResponse)
   }
+
+  val expectedEmptyResponse =
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+      <soapenv:Header>
+        <cwmp:ID soapenv:mustUnderstand="1">1</cwmp:ID>
+      </soapenv:Header>
+      <soapenv:Body>
+        <cwmp:GetParameterValues>
+          <ParameterNames soapenc:arrayType="xsd:string[1]">
+            <string>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</string>
+          </ParameterNames>
+        </cwmp:GetParameterValues>
+      </soapenv:Body>
+    </soapenv:Envelope>
 
   val expectedInformResponse =
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
