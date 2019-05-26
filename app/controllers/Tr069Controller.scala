@@ -146,28 +146,26 @@ class Tr069Controller @Inject()(
       Right((sessionData, Ok.withHeaders("Connection" -> "close")))
     )
 
-  private def processGetParameterNamesResponse(sessionData: SessionData, payload: Node) =
+  private def processGetParameterNamesResponse(sessionData: SessionData, payload: Node) = {
+    val newParameters = ParameterInfoStruct.fromNode(payload).filter { info =>
+      !sessionData.unit.unitTypeParams.exists(_.name == info.name)
+    }
     Future
       .sequence(
-        ParameterInfoStruct
-          .fromNode(payload)
-          .filter { info =>
-            sessionData.unit.unitTypeParams.exists(_.name != info.name)
-          }
-          .map { info =>
-            unitTypeService
-              .createUnitTypeParameter(
-                sessionData.unit.profile.unitType.unitTypeId.head,
-                info.name,
-                s"R${if (info.writable) "W" else ""}"
-              )
-              .map(Option.apply)
-              .recoverWith {
-                case e: Exception =>
-                  logger.error(s"Failed to insert param $info", e)
-                  Future.successful(None)
-              }
-          }
+        newParameters.map { info =>
+          unitTypeService
+            .createUnitTypeParameter(
+              sessionData.unit.profile.unitType.unitTypeId.head,
+              info.name,
+              s"R${if (info.writable) "W" else ""}"
+            )
+            .map(Option.apply)
+            .recoverWith {
+              case e: Exception =>
+                logger.error(s"Failed to insert param $info", e)
+                Future.successful(None)
+            }
+        }
       )
       .flatMap { addedUnitTypeParams =>
         if (addedUnitTypeParams.nonEmpty) {
@@ -183,6 +181,7 @@ class Tr069Controller @Inject()(
         val paramsToRead = getParamsToRead(sessionData)
         Right((sessionData, createGetParameterValues(paramsToRead, sessionData.cwmpVersion)))
       }
+  }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
     if (shouldDiscoverDeviceParameters(sessionData)) {
