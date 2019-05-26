@@ -153,18 +153,11 @@ class Tr069Controller @Inject()(
     Future
       .sequence(
         newParameters.map { info =>
-          unitTypeService
-            .createUnitTypeParameter(
-              sessionData.unit.profile.unitType.unitTypeId.head,
-              info.name,
-              s"R${if (info.writable) "W" else ""}"
-            )
-            .map(Option.apply)
-            .recoverWith {
-              case e: Exception =>
-                logger.error(s"Failed to insert param $info", e)
-                Future.successful(None)
-            }
+          unitTypeService.createUnitTypeParameter(
+            sessionData.unit.profile.unitType.unitTypeId.head,
+            info.name,
+            s"R${if (info.writable) "W" else ""}"
+          )
         }
       )
       .flatMap { addedUnitTypeParams =>
@@ -307,11 +300,7 @@ class Tr069Controller @Inject()(
       parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, sessionData.unit.params)
       _           <- unitService.upsertParameters(parameters)
       updatedUnit <- unitService.find(sessionData.unit.unitId)
-    } yield {
-      logger.error(s"Reloaded unit $updatedUnit")
-      logger.error(s"Updated parameters: $parameters")
-      updatedUnit.map(unit => sessionData.copy(unit = unit)).getOrElse(sessionData)
-    }
+    } yield updatedUnit.map(unit => sessionData.copy(unit = unit)).getOrElse(sessionData)
 
   private def getParamsToUpdate(
       newParameters: Seq[AcsUnitParameter],
