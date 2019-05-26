@@ -15,5 +15,6 @@ GET     /unit/kick/:unitId                  controllers.UnitController.kickUnit(
 POST    /unit/details/updateparam/:unitId   controllers.UnitController.updateParam(unitId)
 POST    /unit/details/addparam/:unitId      controllers.UnitController.addParam(unitId)
 + nocsrf # Don't CSRF protect this route
++ anyhost # Allow access from any host
 POST    /tr069                              controllers.Tr069Controller.provision
 GET     /assets/*file                       controllers.Assets.at(path="/public", file: String)
