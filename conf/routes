@@ -14,6 +14,6 @@ GET     /unit/details/:unitId               controllers.UnitController.viewUnit(
 GET     /unit/kick/:unitId                  controllers.UnitController.kickUnit(unitId)
 POST    /unit/details/updateparam/:unitId   controllers.UnitController.updateParam(unitId)
 POST    /unit/details/addparam/:unitId      controllers.UnitController.addParam(unitId)
++ nocsrf # Don't CSRF protect this route
 POST    /tr069                              controllers.Tr069Controller.provision
-POST    /tr069/prov                         controllers.Tr069Controller.provision
 GET     /assets/*file                       controllers.Assets.at(path="/public", file: String)

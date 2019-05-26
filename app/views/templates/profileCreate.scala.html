@@ -1,6 +1,7 @@
 @import views.CreateProfile
 
-@(form: Form[ProfileForm.Profile], unitTypes: Seq[AcsUnitType], error: Option[String] = None)(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(form: Form[ProfileForm.Profile], unitTypes: Seq[AcsUnitType], error: Option[String] = None)(
+        implicit messagesProvider: MessagesProvider, flash: Flash, req: RequestHeader)
 
 @layouts.default(CreateProfile) {
     <ol class="breadcrumb">
@@ -11,7 +12,7 @@
     </ol>
     <div class="card mb-3">
         <div class="card-body">
-            @b4.vertical.form(routes.ProfileController.postCreate) { implicit vfc =>
+            @b4.vertical.formCSRF(routes.ProfileController.postCreate) { implicit vfc =>
                 @b4.select(form("unitTypeId"), options = List(("", "Select Unit Type")) ++ unitTypes.map(ut => (ut.unitTypeId.map(_.toString).getOrElse(""), ut.name)).toList, '_label -> "Select Unit Type" )
                 @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
                 @b4.submit('class -> "btn btn-primary"){ Submit }

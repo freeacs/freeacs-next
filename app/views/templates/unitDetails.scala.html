@@ -2,7 +2,8 @@
 @import views.UnitKick
 @import views.AddUnitParam
 
-@(unit: AcsUnit, addUnitParamForm: Form[UpdateUnitParamForm.UpdateUnitParam])(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(unit: AcsUnit, addUnitParamForm: Form[UpdateUnitParamForm.UpdateUnitParam])(
+        implicit messagesProvider: MessagesProvider, flash: Flash, req: RequestHeader)
 
 @layouts.default(UnitDetails) {
     <ol class="breadcrumb">
@@ -32,7 +33,7 @@
         </div>}
     <div class="card mb-3">
         <div class="card-body">
-        @b4.vertical.form(routes.UnitController.addParam(unit.unitId)) { implicit vfc =>
+        @b4.vertical.formCSRF(routes.UnitController.addParam(unit.unitId)) { implicit vfc =>
             @b4.select(addUnitParamForm("unitTypeParamId"), options = List(("", "Add Unit Type Param")) ++ unit.unitTypeParams.filter(p => !unit.params.exists(_.unitTypeParamName == p.name)).map(ut => (ut.unitTypeParamId.toString, ut.name)).toList, '_label -> "Select Unit Type Param" )
             @b4.text(addUnitParamForm("value"), '_label -> "Value", 'placeholder -> "Enter value")
             @b4.submit('class -> "btn btn-primary"){ Submit }

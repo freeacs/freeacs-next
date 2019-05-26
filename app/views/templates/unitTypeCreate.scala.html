@@ -1,7 +1,8 @@
 @import controllers.UnitTypeForm
 @import views.CreateUnitType
 
-@(form: Form[UnitTypeForm.UnitType], error: Option[String] = None)(implicit messagesProvider: MessagesProvider, flash: Flash)
+@(form: Form[UnitTypeForm.UnitType], error: Option[String] = None)(
+        implicit messagesProvider: MessagesProvider, flash: Flash, req: RequestHeader)
 
 @layouts.default(CreateUnitType) {
     <ol class="breadcrumb">
@@ -12,7 +13,7 @@
     </ol>
     <div class="card mb-3">
         <div class="card-body">
-            @b4.vertical.form(routes.UnitTypeController.postCreate) { implicit vfc =>
+            @b4.vertical.formCSRF(routes.UnitTypeController.postCreate) { implicit vfc =>
                 @b4.text(form("name"), '_label -> "Name", 'placeholder -> "Enter name")
                 @b4.text(form("vendor"), '_label -> "Vendor", 'placeholder -> "Enter vendor")
                 @b4.textarea(form("description"), '_label -> "Description", 'placeholder -> "Enter description")
