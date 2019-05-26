@@ -61,11 +61,11 @@
                         <tr>
                               <td>@param.unitTypeParamName</td>
                               <td>
-                                  <form action="@routes.UnitController.updateParam(unit.unitId)" method="POST">
-                                    <input type="hidden" value="@param.unitTypeParamId" name="unitTypeParamId" />
-                                    <input type="text" name="value" value="@param.value" />
-                                    <button type="submit">Update</button>
-                                  </form>
+                                  @b4.clear.formCSRF(routes.UnitController.updateParam(unit.unitId)) { implicit fc =>
+                                      <input type="hidden" value="@param.unitTypeParamId" name="unitTypeParamId" />
+                                      <input type="text" name="value" value="@param.value" />
+                                      <button type="submit">Update</button>
+                                  }
                               </td>
                         </tr>
                     }

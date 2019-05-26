@@ -1,10 +1,12 @@
 package controllers
 
+import java.time.LocalDateTime
 import java.util.Locale
 
 import akka.Done
 import com.google.inject.Inject
 import config.AppConfig
+import models.SystemParameters.{FIRST_CONNECT_TMS, LAST_CONNECT_TMS, NamedParameter, Parameter}
 import models._
 import play.api.{Configuration, Logging}
 import play.api.cache.AsyncCacheApi
@@ -175,7 +177,7 @@ class Tr069Controller @Inject()(
       }
 
   private def processEmpty(sessionData: SessionData): Future[Either[String, (SessionData, Result)]] =
-    if (shouldDiscoverDeviceParameters(sessionData.unit)) {
+    if (shouldDiscoverDeviceParameters(sessionData)) {
       maybeClearDiscoverParam(sessionData.unit).map(_.map { _ =>
         (sessionData, createGetParameterNames(sessionData.keyRoot.get, sessionData.cwmpVersion))
       })
@@ -219,9 +221,9 @@ class Tr069Controller @Inject()(
   private def getDiscoverUnitParam(unit: AcsUnit) =
     unit.params.find(_.unitTypeParamName == SystemParameters.DISCOVER.name)
 
-  private def shouldDiscoverDeviceParameters(unit: AcsUnit) =
-    (unit.unitTypeParams.forall(up => up.flags.contains("X")) && appConfig.discoveryMode) ||
-      unitDiscoveryParamIsSet(unit)
+  private def shouldDiscoverDeviceParameters(sessionData: SessionData) =
+    (sessionData.unitNewlyCreated && appConfig.discoveryMode) ||
+      unitDiscoveryParamIsSet(sessionData.unit)
 
   private def unitDiscoveryParamIsSet(unit: AcsUnit) =
     unit.params.exists(
@@ -259,29 +261,118 @@ class Tr069Controller @Inject()(
         .find(username)
         .flatMap {
           case Some(unit) =>
-            Future.successful(unit)
+            Future.successful((false, unit))
           case None =>
             val newUnitTypeName = deviceId.productClass.underlying
-            unitService.createAndReturnUnit(username, "Default", newUnitTypeName)
+            val eventualUnit    = unitService.createAndReturnUnit(username, "Default", newUnitTypeName)
+            eventualUnit.map(unit => (true, unit))
         }
         .map(
           unit =>
             SessionData(
               username = username,
               sessionId = sessionId,
-              unit = unit,
+              unit = unit._2,
+              unitNewlyCreated = unit._1,
               deviceId = deviceId,
               events = events,
               params = params,
               header = header
           )
         )
+        .flatMap(updateAcsParams)
         .map(sessionData => (sessionData, createInformResponse(sessionData.cwmpVersion)))
     }).mapToFutureEither.recoverWith {
       case e: Exception =>
         val errorMsg = "Failed to load unit"
         logger.error(errorMsg, e)
         Future.successful(Left(errorMsg))
+    }
+
+  private def updateAcsParams(sessionData: SessionData): Future[SessionData] =
+    for {
+      firstConnect <- getTimestamp(sessionData.unit, FIRST_CONNECT_TMS, update = false)
+      lastConnect  <- getTimestamp(sessionData.unit, LAST_CONNECT_TMS, update = true)
+      deviceParams <- getDeviceParameters(sessionData, sessionData.unit)
+      parameters = getParamsToUpdate(firstConnect +: lastConnect +: deviceParams, sessionData.unit.params)
+      _           <- unitService.upsertParameters(parameters)
+      updatedUnit <- unitService.find(sessionData.unit.unitId)
+    } yield updatedUnit.map(unit => sessionData.copy(unit = unit)).getOrElse(sessionData)
+
+  private def getParamsToUpdate(
+      newParameters: Seq[AcsUnitParameter],
+      existingParams: Seq[AcsUnitParameter]
+  ) =
+    newParameters.filter(
+      p =>
+        existingParams.exists(
+          up => up.unitTypeParamName == p.unitTypeParamName && up.value != p.value
+        ) || p.value.isDefined
+    )
+
+  private def getDeviceParameters(sessionData: SessionData, unit: AcsUnit): Future[Seq[AcsUnitParameter]] = {
+    if (sessionData.keyRoot.isEmpty) {
+      return Future.successful(Seq.empty)
+    }
+    for {
+      softwareVersion <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.SOFTWARE_VERSION, "R"))
+      pII             <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.PERIODIC_INFORM_INTERVAL, "RW"))
+      connReqUrl      <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_URL, "R"))
+      connReqUser     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_USERNAME, "R"))
+      connReqPass     <- getOrCreateUnitTypeParameter(unit, NamedParameter(sessionData.CONNECTION_PASSWORD, "R"))
+    } yield
+      Seq(
+        makeUnitParam(unit.unitId, softwareVersion, sessionData.params),
+        makeUnitParam(unit.unitId, pII, sessionData.params),
+        makeUnitParam(unit.unitId, connReqUrl, sessionData.params),
+        makeUnitParam(unit.unitId, connReqUser, sessionData.params),
+        makeUnitParam(unit.unitId, connReqPass, sessionData.params)
+      )
+  }
+
+  private def makeUnitParam(
+      unitId: String,
+      softwareVersion: AcsUnitTypeParameter,
+      params: Seq[ParameterValueStruct]
+  ) =
+    AcsUnitParameter(
+      unitId,
+      softwareVersion.unitTypeParamId,
+      softwareVersion.name,
+      params.find(_.name == softwareVersion.name).map(_.value)
+    )
+
+  private def getTimestamp(
+      unit: AcsUnit,
+      param: Parameter,
+      update: Boolean
+  ): Future[AcsUnitParameter] = {
+    getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
+      val ts = LocalDateTime.now().toString
+      unit.params
+        .find(_.unitTypeParamName == param.name)
+        .map { p =>
+          if (update)
+            p.copy(value = Some(ts))
+          else
+            p
+        }
+        .getOrElse(
+          AcsUnitParameter(unit.unitId, unitTypeParameter.unitTypeParamId, unitTypeParameter.name, Some(ts))
+        )
+    }
+  }
+
+  private def getOrCreateUnitTypeParameter(unit: AcsUnit, param: Parameter) =
+    unit.unitTypeParams.find(_.name == param.name) match {
+      case Some(unitTypeParameter) =>
+        Future.successful(unitTypeParameter)
+      case None =>
+        unitTypeService.createUnitTypeParameter(
+          unit.profile.unitType.unitTypeId.get,
+          param.name,
+          param.flag
+        )
     }
 
   private def createSetParameterValues(params: Seq[ParameterValueStruct], cwmpVersion: String): Result =

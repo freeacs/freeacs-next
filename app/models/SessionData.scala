@@ -3,6 +3,7 @@ package models
 case class SessionData(
     sessionId: String,
     unit: AcsUnit,
+    unitNewlyCreated: Boolean,
     username: String,
     header: HeaderStruct,
     deviceId: DeviceIdStruct,
