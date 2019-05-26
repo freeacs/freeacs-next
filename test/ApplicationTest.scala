@@ -1,15 +1,16 @@
+import models.{AcsUnit, SessionData, SystemParameters}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.{Application, Configuration, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.{DefaultWSCookie, WSClient, WSResponse}
+import play.api.{Application, Configuration, Mode}
 import services.UnitService
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
-import scala.xml.Utility.trim
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.xml.Elem
+import scala.xml.Utility.trim
 
 class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
 
@@ -32,8 +33,26 @@ class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
     var response = post(baseUrl, Some(informRequest))
     response.status mustBe 200
     trim(response.xml) mustBe trim(informResponse)
-    val unitService = app.injector.instanceOf[UnitService]
-    unitService.find("000000-FakeProductClass-FakeSerialNumber") must not be None
+    val unit = getUnit("000000-FakeProductClass-FakeSerialNumber")
+    unit.map(_.profile.name) mustBe Some("Default")
+    unit.map(_.profile.unitType.name) mustBe Some("FakeProductClass")
+    unit.map(_.profile.params.length) mustBe Some(0)
+    unit.map(_.profile.unitType.params.length) mustBe Some(33)
+    unit.map(_.unitTypeParams.length) mustBe Some(33)
+    unit.map(_.params.length) mustBe Some(3)
+    unit.flatMap(
+      _.params.find(_.unitTypeParamName.endsWith(SessionData.deviceSoftwareVersionSuffix)).flatMap(_.value)
+    ) mustBe Some("V5.2.10P4T26")
+    unit.flatMap(
+      _.params
+        .find(_.unitTypeParamName.equals(SystemParameters.LAST_CONNECT_TMS.name))
+        .flatMap(_.value.map(_.length))
+    ) mustBe Some(26)
+    unit.flatMap(
+      _.params
+        .find(_.unitTypeParamName.equals(SystemParameters.FIRST_CONNECT_TMS.name))
+        .flatMap(_.value.map(_.length))
+    ) mustBe Some(26)
 
     // 2. EM
     response = post(baseUrl, None)
@@ -60,6 +79,12 @@ class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
         Duration.Inf
       )
     }
+
+    def getUnit(unitId: String): Option[AcsUnit] =
+      Await.result(
+        app.injector.instanceOf[UnitService].find("000000-FakeProductClass-FakeSerialNumber"),
+        Duration.Inf
+      )
   }
 
   val getParameterValuesRequest =

@@ -15,7 +15,7 @@ case class SessionData(
   import SessionData._
   lazy val keyRoot: Option[String]          = getKeyRoot(params)
   lazy val CONFIG_FILES: String             = keyRoot.map(_ + "DeviceInfo.VendorConfigFile.").get
-  lazy val SOFTWARE_VERSION: String         = keyRoot.map(_ + "DeviceInfo.SoftwareVersion").get
+  lazy val SOFTWARE_VERSION: String         = keyRoot.map(_ + deviceSoftwareVersionSuffix).get
   lazy val PERIODIC_INFORM_INTERVAL: String = keyRoot.map(_ + "ManagementServer.PeriodicInformInterval").get
   lazy val CONNECTION_URL: String           = keyRoot.map(_ + connectionRequestUrlSuffix).get
   lazy val CONNECTION_PASSWORD: String      = keyRoot.map(_ + connectionRequestUsernameSuffix).get
@@ -23,6 +23,7 @@ case class SessionData(
 }
 
 object SessionData {
+  val deviceSoftwareVersionSuffix     = "DeviceInfo.SoftwareVersion"
   val connectionRequestUrlSuffix      = "ManagementServer.ConnectionRequestURL"
   val connectionRequestUsernameSuffix = "ManagementServer.ConnectionRequestUsername"
   val connectionRequestPasswordSuffix = "ManagementServer.ConnectionRequestPassword"
