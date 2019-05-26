@@ -26,7 +26,7 @@ class NoAuthenticationAndDiscoveryModeDisabledTest extends PlaySpec with GuiceOn
       .in(Mode.Test)
       .build()
 
-  "can provision a new unit" in new IntegrationTest(port, app.injector) {
+  "can provision a new unit" in new AbstractIntegrationTest(port, app.injector) {
     // 1. IN
     var response = post(Some(informRequest))
     response.status mustBe 200

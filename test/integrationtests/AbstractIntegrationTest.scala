@@ -9,7 +9,7 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 import scala.xml.Elem
 
-abstract class IntegrationTest(port: Int, injector: Injector)(implicit ec: ExecutionContext) {
+abstract class AbstractIntegrationTest(port: Int, injector: Injector)(implicit ec: ExecutionContext) {
   val client      = injector.instanceOf[WSClient]
   val unitService = injector.instanceOf[UnitService]
   val baseUrl     = s"http://localhost:$port/tr069"
