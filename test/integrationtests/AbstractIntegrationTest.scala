@@ -148,4 +148,112 @@ abstract class AbstractIntegrationTest(port: Int, injector: Injector)(implicit e
         </cwmp:Inform>
       </SOAP-ENV:Body>
     </SOAP-ENV:Envelope>
+
+  val getParameterNamesRequest =
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                      xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xmlns:cwmp="urn:dslforum-org:cwmp-1-2">
+      <soapenv:Header>
+        <cwmp:ID soapenv:mustUnderstand="1">1</cwmp:ID>
+      </soapenv:Header>
+      <soapenv:Body>
+        <cwmp:GetParameterNames>
+          <ParameterNames>
+            <ParameterPath>InternetGatewayDevice.</ParameterPath>
+            <NextLevel>false</NextLevel>
+          </ParameterNames>
+        </cwmp:GetParameterNames>
+      </soapenv:Body>
+    </soapenv:Envelope>
+
+  val getParameterNamesResponse =
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                      xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+                      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xmlns:cwmp="urn:dslforum-org:cwmp-1-2">
+      <soapenv:Header>
+        <cwmp:ID soapenv:mustUnderstand="1">1</cwmp:ID>
+      </soapenv:Header>
+      <soapenv:Body>
+        <cwmp:GetParameterNamesResponse>
+          <ParameterList soap:arrayType="cwmp:ParameterInfoStruct[18]">
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.Manufacturer</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.ManufacturerOUI</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.ModelName</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.Description</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.ProductClass</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.SerialNumber</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.ModemFirmwareVersion</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.AdditionalHardwareVersion</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+              <Writable>1</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.UpTime</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.X_000E50_Country</Name>
+              <Writable>1</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.X_000E50_SIMLocked</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.VendorConfigFileNumberOfEntries</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.DeviceInfo.VendorConfigFile.</Name>
+              <Writable>0</Writable>
+            </ParameterInfoStruct>
+            <ParameterInfoStruct>
+              <Name>InternetGatewayDevice.ManagementServer.PeriodicInformInterval</Name>
+              <Writable>1</Writable>
+            </ParameterInfoStruct>
+          </ParameterList>
+        </cwmp:GetParameterNamesResponse>
+      </soapenv:Body>
+    </soapenv:Envelope>
 }

@@ -2,29 +2,19 @@ package integrationtests
 
 import models.{SessionData, SystemParameters}
 import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.{Application, Configuration, Mode}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Utility.trim
 
-class NoAuthenticationAndDiscoveryModeEnabledTest extends PlaySpec with GuiceOneServerPerTest {
+class NoAuthenticationAndDiscoveryModeEnabledTest
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with AppWithFreshDatabase {
 
-  override def fakeApplication(): Application =
-    GuiceApplicationBuilder()
-      .loadConfig(
-        env =>
-          Configuration.load(
-            env,
-            Map(
-              "app.auth.method"    -> "none",
-              "app.discovery.mode" -> "true"
-            )
-        )
-      )
-      .in(Mode.Test)
-      .build()
+  override val dbPrefix      = "noauthdiscoveryenabled"
+  override val authMethod    = "none"
+  override val discoveryMode = true
 
   "can provision a new unit" in new AbstractIntegrationTest(port, app.injector) {
     // 1. IN
@@ -43,17 +33,22 @@ class NoAuthenticationAndDiscoveryModeEnabledTest extends PlaySpec with GuiceOne
       .flatMap(_.value) mustBe Some("V5.2.10P4T26")
     unit.params
       .find(_.unitTypeParamName.equals(SystemParameters.LAST_CONNECT_TMS.name))
-      .flatMap(_.value.map(_.length)) mustBe Some(26)
+      .flatMap(_.value) mustBe Some("2018-08-19T16:02:42")
     unit.params
       .find(_.unitTypeParamName.equals(SystemParameters.FIRST_CONNECT_TMS.name))
-      .flatMap(_.value.map(_.length)) mustBe Some(26)
+      .flatMap(_.value) mustBe Some("2018-08-19T16:02:42")
 
     // 2. EM
     response = post(None)
     response.status mustBe 200
+    trim(response.xml) mustBe trim(getParameterNamesRequest)
+
+    // 3. GPNr
+    response = post(Some(getParameterNamesResponse))
+    response.status mustBe 200
     trim(response.xml) mustBe trim(getParameterValuesRequest)
 
-    // 3. GPVr
+    // 4. GPVr
     response = post(Some(getParameterValuesResponse))
     response.status mustBe 200
     response.body mustBe ""

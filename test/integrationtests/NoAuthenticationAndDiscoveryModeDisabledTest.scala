@@ -2,29 +2,19 @@ package integrationtests
 
 import models.{SessionData, SystemParameters}
 import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.{Application, Configuration, Mode}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Utility.trim
 
-class NoAuthenticationAndDiscoveryModeDisabledTest extends PlaySpec with GuiceOneServerPerTest {
+class NoAuthenticationAndDiscoveryModeDisabledTest
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with AppWithFreshDatabase {
 
-  override def fakeApplication(): Application =
-    GuiceApplicationBuilder()
-      .loadConfig(
-        env =>
-          Configuration.load(
-            env,
-            Map(
-              "app.auth.method"    -> "none",
-              "app.discovery.mode" -> "false"
-            )
-        )
-      )
-      .in(Mode.Test)
-      .build()
+  override val dbPrefix      = "noauthnodiscovery"
+  override val authMethod    = "none"
+  override val discoveryMode = false
 
   "can provision a new unit" in new AbstractIntegrationTest(port, app.injector) {
     // 1. IN
@@ -43,10 +33,10 @@ class NoAuthenticationAndDiscoveryModeDisabledTest extends PlaySpec with GuiceOn
       .flatMap(_.value) mustBe Some("V5.2.10P4T26")
     unit.params
       .find(_.unitTypeParamName.equals(SystemParameters.LAST_CONNECT_TMS.name))
-      .flatMap(_.value.map(_.length)) mustBe Some(26)
+      .flatMap(_.value) mustBe Some("2018-08-19T16:02:42")
     unit.params
       .find(_.unitTypeParamName.equals(SystemParameters.FIRST_CONNECT_TMS.name))
-      .flatMap(_.value.map(_.length)) mustBe Some(26)
+      .flatMap(_.value) mustBe Some("2018-08-19T16:02:42")
 
     // 2. EM
     response = post(None)

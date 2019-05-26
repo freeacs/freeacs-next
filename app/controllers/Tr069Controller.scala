@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.LocalDateTime
+import java.time.{Clock, LocalDateTime}
 import java.util.Locale
 
 import akka.Done
@@ -24,7 +24,8 @@ class Tr069Controller @Inject()(
     unitTypeService: UnitTypeService,
     cache: AsyncCacheApi,
     secureAction: SecureAction,
-    config: Configuration
+    config: Configuration,
+    clock: Clock
 )(
     implicit ec: ExecutionContext
 ) extends AbstractController(cc)
@@ -284,7 +285,10 @@ class Tr069Controller @Inject()(
               deviceId = deviceId,
               events = events,
               params = params,
-              header = header
+              header = header,
+              cwmpVersion = Option(payload.getNamespace("cwmp"))
+                .map(_.stripPrefix("urn:dslforum-org:cwmp-"))
+                .getOrElse("1-0")
           )
         )
         .flatMap(updateAcsParams)
@@ -359,7 +363,7 @@ class Tr069Controller @Inject()(
       update: Boolean
   ): Future[AcsUnitParameter] = {
     getOrCreateUnitTypeParameter(unit, param).map { unitTypeParameter =>
-      val ts = LocalDateTime.now().toString
+      val ts = LocalDateTime.now(clock).toString
       unit.params
         .find(_.unitTypeParamName == param.name)
         .map { p =>

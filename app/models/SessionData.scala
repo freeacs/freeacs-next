@@ -10,7 +10,7 @@ case class SessionData(
     events: Seq[EventStruct] = Seq.empty,
     params: Seq[ParameterValueStruct] = Seq.empty,
     requests: Seq[CwmpMethod] = Seq.empty,
-    cwmpVersion: String = "1-0"
+    cwmpVersion: String
 ) {
   import SessionData._
   lazy val keyRoot: Option[String]          = getKeyRoot(params)
