@@ -18,8 +18,7 @@ class ApplicationTest extends PlaySpec with GuiceOneServerPerTest {
           Configuration.load(
             env,
             Map(
-              "app.auth.method" -> "none",
-              "discovery.mode"  -> "true"
+              "app.auth.method" -> "none"
             )
         )
       )
