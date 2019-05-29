@@ -3,7 +3,7 @@ package util
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
-object ScriptCompiler {
+object ScalaScriptCompiler {
 
   def compile[A](code: String): Map[String, Any] => A = {
     val tb      = runtimeMirror(getClass.getClassLoader).mkToolBox()
