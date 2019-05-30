@@ -9,7 +9,14 @@ object GroovyCompiler extends GroovyValueFilter with App {
     classOf[GroovyContext],
     classOf[java.lang.String],
     classOf[Integer],
-    classOf[java.lang.Boolean]
+    classOf[java.lang.Boolean],
+    classOf[java.lang.Double],
+    classOf[java.math.BigDecimal],
+    classOf[java.lang.CharSequence],
+    classOf[java.lang.Float],
+    classOf[java.lang.Short],
+    classOf[java.lang.Byte],
+    classOf[java.lang.Long]
   )
 
   override def filter(obj: Object): Object = {
