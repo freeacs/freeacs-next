@@ -28,8 +28,7 @@ libraryDependencies += "com.typesafe.slick" %% "slick" % slickVersion
 libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % slickVersion
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.0" % "test"
 libraryDependencies += "com.lihaoyi" %% "pprint" % "0.5.3"
-libraryDependencies += "org.codehaus.groovy" % "groovy-all" % "2.5.7"
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.8"
+libraryDependencies += "org.kohsuke" % "groovy-sandbox" % "1.19"
 
 enablePlugins(JavaAppPackaging)
 
