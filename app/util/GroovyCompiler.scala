@@ -8,7 +8,7 @@ object GroovyCompiler extends GroovyValueFilter with App {
   val ALLOWED_TYPES: Set[Class[_]] = Set(
     classOf[GroovyContext],
     classOf[java.lang.String],
-    classOf[Integer],
+    classOf[java.lang.Integer],
     classOf[java.lang.Boolean],
     classOf[java.lang.Double],
     classOf[java.math.BigDecimal],
