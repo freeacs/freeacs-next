@@ -1,3 +1,7 @@
+# ARCHIVED!
+
+Due to inactivity for several years and because no one wanted to maintain it, this project and all other projects in this org is archived.
+
 # FreeACS Next
 
 The goal of this project is to combine that which has previously been developed and deployed individually in the FreeACS project. 
